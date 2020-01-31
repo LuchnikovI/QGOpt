@@ -21,7 +21,7 @@ class StiefelSGD(tf.optimizers.Optimizer):
     def __init__(self,
                learning_rate=0.01,
                name="StiefelSGD"):
-        """Construct a new Stochastic Gradient Descent optimizer on Stiefel
+        """Constructs a new Stochastic Gradient Descent optimizer on Stiefel
         manifold.
         Comment:
             The StiefelSGD works only with real valued tf.Variable of shape
