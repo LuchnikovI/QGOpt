@@ -29,8 +29,8 @@ def real_to_complex(tensor):
 @tf.function
 def egrad_to_rgrad(u, egrad):
     """Returns riemannian gradient from euclidean gradient.
-    Here one uses canonical metric g(u, v)_x = Tr(u^dag(I-0.5xx^T)v)
-    on Stiefel manifold.
+    Equivalent to the projection of gradient on tangent
+    space of Stiefel manifold
     Args:
         u: complex valued tf.Tensor of shape (..., q, p),
         points on Stiefel manifold.
@@ -62,7 +62,7 @@ def canonical_metric(v1, v2, u):
 
 @tf.function
 def proj(u, vec):
-    """Returns projection of vector on tangen space.
+    """Returns projection of vector on tangen space of Stiefel manifold.
     Args:
         u: complex valued tf.Tensor of shape (..., q, p), points on a manifold
         vec: complex valued tf.Tensor of shape (..., q, p),
@@ -88,7 +88,7 @@ def retraction(v):
 
 @tf.function
 def vector_transport(u, vec):
-    """Returns vector approximatelly tranported to a new point u.
+    """Returns vector tranported to a new point u.
     This function is entirely equivalent to the projection on 
     the tangent space of u.
     Args:
