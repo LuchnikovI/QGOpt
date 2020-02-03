@@ -252,7 +252,7 @@ class StiefelAdam(tf.optimizers.Optimizer):
         #Update m, v and v_hat
         m_complex = self.beta1 * m_complex + (1 - self.beta1) * grad_proj
         v_complex = self.beta2 * v_complex +\
-        (1 - self.beta2) * tf.cast(tf.math.abs(grad_proj ** 2),
+        (1 - self.beta2) * tf.cast(tf.math.abs(grad_proj) ** 2,
         dtype=v_complex.dtype)
         if self.ams:
             v_hat_complex = tf.math.maximum(tf.math.abs(v_complex),
@@ -266,10 +266,14 @@ class StiefelAdam(tf.optimizers.Optimizer):
         #New value of var
         if self.ams:
             new_var = complex_var - lr_corr * m_complex /\
-            (tf.math.sqrt(v_hat_complex) + self.eps)
+            (tf.math.sqrt(tf.reduce_mean(v_hat_complex,
+                                        axis=(-2, -1),
+                                        keepdims=True)) + self.eps)
         else:
             new_var = complex_var - lr_corr * m_complex /\
-            (tf.math.sqrt(v_complex) + self.eps)
+            (tf.math.sqrt(tf.reduce_mean(v_complex,
+                                         axis=(-2, -1),
+                                         keepdims=True)) + self.eps)
         new_var = retraction(new_var)
 
         #Vector transport of v and assigning new value of v
