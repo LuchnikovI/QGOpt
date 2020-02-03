@@ -1,4 +1,5 @@
 import tensorflow as tf
+from math import sqrt
 
 @tf.function
 def complex_to_real(tensor):
@@ -178,6 +179,7 @@ class StiefelAdam(tf.optimizers.Optimizer):
                beta1=0.9,
                beta2=0.999,
                eps=1e-8,
+               ams=False,
                name="StiefelAdam"):
         """Constructs a new Adam optimizer on Stiefel
         manifold.
@@ -197,6 +199,7 @@ class StiefelAdam(tf.optimizers.Optimizer):
             Defaults to 0.999.
             eps: floating point number. Regularization coeff.
             Defaults to 1e-8.
+            ams: boolean number. Use ams or not.
             name: Optional name prefix for the operations created when applying
             gradients.  Defaults to 'StiefelAdam'."""
         
@@ -211,6 +214,7 @@ class StiefelAdam(tf.optimizers.Optimizer):
         if isinstance(beta2, (int, float)) and (beta2 < 0 or beta2 > 1):
             raise ValueError("`beta2` must be between [0, 1].")
         self.beta2 = beta2
+        self.ams=ams
 
 
     def _create_slots(self, var_list):
@@ -218,6 +222,8 @@ class StiefelAdam(tf.optimizers.Optimizer):
         for var in var_list:
             self.add_slot(var, "m")
             self.add_slot(var, "v")
+            if self.ams:
+                self.add_slot(var, "v_hat")
 
 
     def _resource_apply_dense(self, grad, var):
@@ -237,30 +243,43 @@ class StiefelAdam(tf.optimizers.Optimizer):
         #Complex versions of m and v
         m = self.get_slot(var, "m")
         v = self.get_slot(var, "v")
+        if self.ams:
+            v_hat = self.get_slot(var, "v_hat")
+            v_hat_complex = real_to_complex(v_hat)
         m_complex = real_to_complex(m)
         v_complex = real_to_complex(v)
         
-        #Update m and v
+        #Update m, v and v_hat
         m_complex = self.beta1 * m_complex + (1 - self.beta1) * grad_proj
         v_complex = self.beta2 * v_complex +\
         (1 - self.beta2) * tf.cast(tf.math.abs(grad_proj ** 2),
         dtype=v_complex.dtype)
+        if self.ams:
+            v_hat_complex = tf.math.maximum(tf.math.abs(v_complex),
+                                    tf.math.abs(v_hat_complex))
+            v_hat_complex = tf.cast(v_hat_complex, dtype=v_complex.dtype)
         
         #Bias correction
-        m_corr = m_complex / (1 - self.beta1 ** self.iter)
-        v_corr = v_complex / (1 - self.beta2 ** self.iter)
+        lr_corr = lr_t * (sqrt(1 - self.beta2 ** self.iter) /\
+                          (1 - self.beta1 ** self.iter))
 
         #New value of var
-        new_var = complex_var - lr_t * m_corr /\
-        (tf.math.sqrt(v_corr) + self.eps)
+        if self.ams:
+            new_var = complex_var - lr_corr * m_complex /\
+            (tf.math.sqrt(v_hat_complex) + self.eps)
+        else:
+            new_var = complex_var - lr_corr * m_complex /\
+            (tf.math.sqrt(v_complex) + self.eps)
         new_var = retraction(new_var)
 
         #Vector transport of v and assigning new value of v
         m_complex = vector_transport(new_var, m_complex)
         m.assign(complex_to_real(m_complex))
         
-        #Assigning new value of v
+        #Assigning new value of v and v_hat
         v.assign(complex_to_real(v_complex))
+        if self.ams:
+            v_hat.assign(complex_to_real(v_hat_complex))
 
         #Update of var
         var.assign(complex_to_real(new_var))
