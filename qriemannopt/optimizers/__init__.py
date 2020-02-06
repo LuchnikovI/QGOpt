@@ -1,2 +1,2 @@
-from qriemannopt.optimizers.SGD import SGD
-from qriemannopt.optimizers.Adam import Adam
+from qriemannopt.optimizers.SGD import RSGD
+from qriemannopt.optimizers.Adam import RAdam

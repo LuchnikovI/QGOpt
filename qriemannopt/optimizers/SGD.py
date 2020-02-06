@@ -1,29 +1,30 @@
 import tensorflow as tf
 import qriemannopt.manifold as m
 
-class SGD(tf.optimizers.Optimizer):
+class RSGD(tf.optimizers.Optimizer):
 
     def __init__(self,
                  manifold,
                  learning_rate=0.01,
                  momentum=0.0,
-                 name="SGD"):
-        """Constructs a new Stochastic Gradient Descent optimizer on Stiefel
-        manifold.
+                 name="RSGD"):
+        """Constructs a new Riemannian Stochastic Gradient Descent optimizer
+        on manifold.
         Comment:
-            The StiefelSGD works only with real valued tf.Variable of shape
+            The RSGD works only with real valued tf.Variable of shape
             (..., q, p, 2), where ... -- enumerates manifolds 
             (can be either empty or any shaped),
-            q and p size of an isometric matrix, the last index marks
-            real and imag parts of an isometric matrix
+            q and p size of a matrix, the last index marks
+            real and imag parts of a matrix
             (0 -- real part, 1 -- imag part)
         Args:
+            manifold: object marks particular manifold.
             learning_rate: floating point number. The learning rate.
             Defaults to 0.01.
             name: Optional name prefix for the operations created when applying
-            gradients.  Defaults to 'StiefelSGD'."""
+            gradients.  Defaults to 'RSGD'."""
         
-        super(SGD, self).__init__(name)
+        super(RSGD, self).__init__(name)
         self.manifold = manifold
         self._lr = learning_rate
         self._lr_t = self._lr_t = tf.convert_to_tensor(self._lr, name="learning_rate")
@@ -80,7 +81,7 @@ class SGD(tf.optimizers.Optimizer):
         raise NotImplementedError("Sparse gradient updates are not supported.")
     
     def get_config(self):
-        config = super(SGD, self).get_config()
+        config = super(RSGD, self).get_config()
         config.update({
             "learning_rate": self._lr,
             "momentum": self.momentum,

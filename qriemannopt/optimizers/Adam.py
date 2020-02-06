@@ -2,7 +2,7 @@ import tensorflow as tf
 import qriemannopt.manifold as m
 from math import sqrt
 
-class Adam(tf.optimizers.Optimizer):
+class RAdam(tf.optimizers.Optimizer):
 
     def __init__(self,
                  manifold,
@@ -11,16 +11,17 @@ class Adam(tf.optimizers.Optimizer):
                  beta2=0.999,
                  eps=1e-8,
                  ams=False,
-                 name="Adam"):
+                 name="RAdam"):
         """Constructs a new Adam optimizer.
         Comment:
-            The StiefelAdam works only with real valued tf.Variable of shape
+            The Adam works only with real valued tf.Variable of shape
             (..., q, p, 2), where ... -- enumerates manifolds 
             (can be either empty or any shaped),
-            q and p size of an isometric matrix, the last index marks
-            real and imag parts of an isometric matrix
+            q and p size of a matrix, the last index marks
+            real and imag parts of a matrix
             (0 -- real part, 1 -- imag part)
         Args:
+            manifold: object marks particular manifold.
             learning_rate: floating point number. The learning rate.
             Defaults to 0.001.
             beta1: floating point number. exp decay rate for first moment.
@@ -31,9 +32,9 @@ class Adam(tf.optimizers.Optimizer):
             Defaults to 1e-8.
             ams: boolean number. Use ams or not.
             name: Optional name prefix for the operations created when applying
-            gradients.  Defaults to 'StiefelAdam'."""
+            gradients.  Defaults to 'RAdam'."""
         
-        super(Adam, self).__init__(name)
+        super(RAdam, self).__init__(name)
         self.manifold = manifold
         self.iter = 0
         self.eps = eps
@@ -49,7 +50,7 @@ class Adam(tf.optimizers.Optimizer):
 
 
     def _create_slots(self, var_list):
-        # create m and v slots
+        #Create m and v slots
         for var in var_list:
             self.add_slot(var, "momentum")
             self.add_slot(var, "v")
@@ -98,7 +99,7 @@ class Adam(tf.optimizers.Optimizer):
 
         #New value of var
         if self.ams:
-            # search direction
+            #Search direction
             search_dir = -lr_corr * momentum_complex /\
             (tf.math.sqrt(tf.reduce_mean(v_hat_complex,
                                         axis=(-2, -1),
@@ -108,7 +109,7 @@ class Adam(tf.optimizers.Optimizer):
                                                momentum_complex,
                                                search_dir)
         else:
-            # search direction
+            #Search direction
             search_dir = - lr_corr * momentum_complex /\
             (tf.math.sqrt(tf.reduce_mean(v_complex,
                                          axis=(-2, -1),
@@ -132,7 +133,7 @@ class Adam(tf.optimizers.Optimizer):
         raise NotImplementedError("Sparse gradient updates are not supported.")
     
     def get_config(self):
-        config = super(Adam, self).get_config()
+        config = super(RAdam, self).get_config()
         config.update({
             "learning_rate": self._lr,
             "beta1": self.beta1,
