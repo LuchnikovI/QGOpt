@@ -8,7 +8,7 @@ class StiefelManifold:
         """Returns object of class StiefelManifold.
         Args:
             retruction: string specifies type of retraction. Defaults to
-            'svd'. Types of retraction is available now: 'svd'.
+            'svd'. Types of retraction is available now: 'svd', 'cayley'.
             
             metric: string specifies type of metric, Defaults to 'euclidean'.
             Types of metrics is available now: 'euclidean'.
