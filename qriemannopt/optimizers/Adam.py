@@ -1,6 +1,5 @@
 import tensorflow as tf
 import qriemannopt.manifold as m
-from math import sqrt
 
 class RAdam(tf.optimizers.Optimizer):
 
@@ -38,15 +37,14 @@ class RAdam(tf.optimizers.Optimizer):
         self.manifold = manifold
         self.iter = 0
         self.eps = eps
-        self._lr = learning_rate
-        self._lr_t = self._lr_t = tf.convert_to_tensor(self._lr, name="learning_rate")
+        self._set_hyper('learning_rate', learning_rate)
         if isinstance(beta1, (int, float)) and (beta1 < 0 or beta1 > 1):
             raise ValueError("`beta1` must be between [0, 1].")
-        self.beta1 = beta1
+        self._set_hyper('beta1', beta1)
         if isinstance(beta2, (int, float)) and (beta2 < 0 or beta2 > 1):
             raise ValueError("`beta2` must be between [0, 1].")
-        self.beta2 = beta2
-        self.ams=ams
+        self._set_hyper('beta2', beta2)
+        self.ams = ams
 
 
     def _create_slots(self, var_list):
@@ -66,8 +64,8 @@ class RAdam(tf.optimizers.Optimizer):
         complex_var = m.real_to_complex(var)
         complex_grad = m.real_to_complex(grad)
 
-        #tf version of learning rate
-        lr_t = tf.cast(self._lr_t, complex_var.dtype)
+        #learning rate
+        lr = tf.cast(self._get_hyper("learning_rate"), complex_grad.dtype)
 
         #Riemannian gradient
         grad_proj = self.manifold.egrad_to_rgrad(complex_var, complex_grad)
@@ -82,10 +80,12 @@ class RAdam(tf.optimizers.Optimizer):
         v_complex = m.real_to_complex(v)
         
         #Update m, v and v_hat
-        momentum_complex = self.beta1 * momentum_complex +\
-        (1 - self.beta1) * grad_proj
-        v_complex = self.beta2 * v_complex +\
-        (1 - self.beta2) * tf.cast(tf.math.abs(grad_proj) ** 2,
+        beta1 = tf.cast(self._get_hyper("beta1"), dtype=momentum_complex.dtype)
+        beta2 = tf.cast(self._get_hyper("beta2"), dtype=momentum_complex.dtype)
+        momentum_complex = beta1 * momentum_complex +\
+        (1 - beta1) * grad_proj
+        v_complex = beta2 * v_complex +\
+        (1 - beta2) * tf.cast(tf.math.abs(grad_proj) ** 2,
         dtype=v_complex.dtype)
         if self.ams:
             #TODO corret v_hat update
@@ -94,8 +94,8 @@ class RAdam(tf.optimizers.Optimizer):
             v_hat_complex = tf.cast(v_hat_complex, dtype=v_complex.dtype)
         
         #Bias correction
-        lr_corr = lr_t * (sqrt(1 - self.beta2 ** self.iter) /\
-                          (1 - self.beta1 ** self.iter))
+        lr_corr = lr * (tf.math.sqrt(1 - beta2 ** self.iter) /\
+                        (1 - beta1 ** self.iter))
 
         #New value of var
         if self.ams:
@@ -135,9 +135,9 @@ class RAdam(tf.optimizers.Optimizer):
     def get_config(self):
         config = super(RAdam, self).get_config()
         config.update({
-            "learning_rate": self._lr,
-            "beta1": self.beta1,
-            "beta2": self.beta2,
+            "learning_rate": self._serialize_hyperparameter("learning_rate"),
+            "beta1": self._serialize_hyperparameter("beta1"),
+            "beta2": self._serialize_hyperparameter("beta2"),
             "eps": self.eps,
             "iter": self.iter,
             "manifold": self.manifold

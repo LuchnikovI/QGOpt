@@ -25,15 +25,14 @@ class RSGD(tf.optimizers.Optimizer):
             gradients.  Defaults to 'RSGD'."""
         
         super(RSGD, self).__init__(name)
+        self._set_hyper("learning_rate", learning_rate)
         self.manifold = manifold
-        self._lr = learning_rate
-        self._lr_t = self._lr_t = tf.convert_to_tensor(self._lr, name="learning_rate")
         self._momentum = False
         if isinstance(momentum, tf.Tensor) or callable(momentum) or momentum > 0:
             self._momentum = True
         if isinstance(momentum, (int, float)) and (momentum < 0 or momentum > 1):
             raise ValueError("`momentum` must be between [0, 1].")
-        self.momentum = momentum
+        self._set_hyper("momentum", momentum)
 
 
     def _create_slots(self, var_list):
@@ -49,8 +48,9 @@ class RSGD(tf.optimizers.Optimizer):
         complex_var = m.real_to_complex(var)
         complex_grad = m.real_to_complex(grad)
 
-        #tf version of learning rate
-        lr_t = tf.cast(self._lr_t, complex_var.dtype)
+        #learning rate
+        lr = tf.cast(self._get_hyper("learning_rate"),
+                       dtype=complex_grad.dtype)
 
         #Riemannian gradient
         grad_proj = self.manifold.egrad_to_rgrad(complex_var, complex_grad)
@@ -60,19 +60,21 @@ class RSGD(tf.optimizers.Optimizer):
             #Update momentum
             momentum_var = self.get_slot(var, "momentum")
             momentum_complex = m.real_to_complex(momentum_var)
-            momentum_complex = self.momentum * momentum_complex +\
-            (1 - self.momentum) * grad_proj
+            momentum = tf.cast(self._get_hyper("momentum"),
+                               dtype=momentum_complex.dtype)
+            momentum_complex = momentum * momentum_complex +\
+            (1 - momentum) * grad_proj
 
             #Transport and retruction
             new_var, momentum_complex =\
             self.manifold.retraction_transport(complex_var,
                                                momentum_complex,
-                                               -lr_t * momentum_complex)
+                                               -lr * momentum_complex)
             
             momentum_var.assign(m.complex_to_real(momentum_complex))
         else:
             #New value of var
-            new_var = self.manifold.retraction(complex_var, -lr_t * grad_proj)
+            new_var = self.manifold.retraction(complex_var, -lr * grad_proj)
 
         #Update of var
         var.assign(m.complex_to_real(new_var))
@@ -83,8 +85,8 @@ class RSGD(tf.optimizers.Optimizer):
     def get_config(self):
         config = super(RSGD, self).get_config()
         config.update({
-            "learning_rate": self._lr,
-            "momentum": self.momentum,
+            "learning_rate": self._serialize_hyperparameter("learning_rate"),
+            "momentum": self._serialize_hyperparameter("momentum"),
             "manifold": self.manifold
         })
         return config
