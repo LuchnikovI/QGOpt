@@ -1,7 +1,8 @@
 import tensorflow as tf
+from qriemannopt.manifold import base_manifold
 
-class StiefelManifold:
-    
+class StiefelManifold(base_manifold.Manifold):
+    # TODO proper description
     def __init__(self, retraction='svd',
                  metric='euclidean',
                  transport='projective'):
@@ -28,9 +29,45 @@ class StiefelManifold:
         if transport not in list_of_transports:
             raise ValueError("Incorrect transport")
             
-        self._retraction = retraction
-        self._metric = metric
-        self._transport = transport
+        super(StiefelManifold, self).__init__(retraction, metric, transport)
+        
+        
+    @tf.function
+    def inner(self, u, vec1, vec2):
+        """Returns manifold wise distance between points.
+        Args:
+            u: complex valued tensor of shape (..., q, p),
+            points on Stiefel manifolds
+            vec1: complex valued tensor of shape (..., q, p),
+            vector from tangent space.
+            vec2: complex valued tensor of shape (..., q, p),
+            vector from tangent spaces.
+        Returns:
+            complex valued tensor of shape (...,), distances between points"""
+        if self._metric=='euclidean':
+            s_sq = tf.linalg.trace(vec1 @ tf.linalg.adjoint(vec2))[...,
+                                  tf.newaxis,
+                                  tf.newaxis]
+        return tf.sqrt(s_sq)
+    
+    
+    @tf.function
+    def proj(self, u, vec):
+        """Returns projections of vectors on tangen spaces
+        of Stiefel manifolds.
+        Args:
+            u: complex valued tf.Tensor of shape (..., q, p),
+            points on a manifolds
+            vec: complex valued tf.Tensor of shape (..., q, p),
+            vectors to be projected
+        Returns:
+            complex valued tf.Tensor of shape (..., q, p), projected vectors"""
+            
+        if self._metric=='euclidean':
+            return 0.5 * u @ (tf.linalg.adjoint(u) @ vec -\
+                              tf.linalg.adjoint(vec) @ u) +\
+            (tf.eye(u.shape[-2], dtype=u.dtype) -\
+             u @ tf.linalg.adjoint(u)) @ vec
         
     
     @tf.function
@@ -55,7 +92,7 @@ class StiefelManifold:
              
     
     @tf.function
-    def retraction(self, v, vec):
+    def retraction(self, u, vec):
         """Transports Stiefel manifolds points via retraction map.
         Args:
             v: complex valued tf.Tensor of shape (..., q, p), points
@@ -66,35 +103,16 @@ class StiefelManifold:
         on Stiefel manifolds"""
         
         if self._retraction=='svd':
-            new_v = v + vec
-            _, u, w = tf.linalg.svd(new_v)
-            return u @ tf.linalg.adjoint(w)
+            new_u = u + vec
+            _, v, w = tf.linalg.svd(new_u)
+            return v @ tf.linalg.adjoint(w)
         
         elif self._retraction=='cayley':
-            W = vec @ tf.linalg.adjoint(v) -\
-            0.5 * v @ (tf.linalg.adjoint(v) @ vec @ tf.linalg.adjoint(v))
+            W = vec @ tf.linalg.adjoint(u) -\
+            0.5 * u @ (tf.linalg.adjoint(u) @ vec @ tf.linalg.adjoint(u))
             W = W - tf.linalg.adjoint(W)
             I = tf.eye(W.shape[-1], dtype=W.dtype)
-            return tf.linalg.inv(I - W / 2) @ (I + W / 2) @ v
-            
-            
-    @tf.function
-    def proj(self, u, vec):
-        """Returns projections of vectors on tangen spaces
-        of Stiefel manifolds.
-        Args:
-            u: complex valued tf.Tensor of shape (..., q, p),
-            points on a manifolds
-            vec: complex valued tf.Tensor of shape (..., q, p),
-            vectors to be projected
-        Returns:
-            complex valued tf.Tensor of shape (..., q, p), projected vectors"""
-            
-        if self._metric=='euclidean':
-            return 0.5 * u @ (tf.linalg.adjoint(u) @ vec -\
-                              tf.linalg.adjoint(vec) @ u) +\
-            (tf.eye(u.shape[-2], dtype=u.dtype) -\
-             u @ tf.linalg.adjoint(u)) @ vec
+            return tf.linalg.inv(I - W / 2) @ (I + W / 2) @ u
         
         
     @tf.function
@@ -131,20 +149,3 @@ class StiefelManifold:
         if self._transport=='projective':
             new_u = self.retraction(u, vec2)
             return new_u, self.proj(new_u, vec1)
-        
-        
-    @tf.function
-    def distance(self, u1, u2):
-        """Returns manifold wise distance between points.
-        Args:
-            u1: complex valued tensor of shape (..., q, p),
-            points on manifolds.
-            u2: complex valued tensor of shape (..., q, p),
-            points on manifolds.
-        Returns:
-            complex valued tensor of shape (...,), distances between points"""
-        if self._metric=='euclidean':
-            s_sq = tf.linalg.trace(u1 @ tf.linalg.adjoint(u2))[...,
-                                  tf.newaxis,
-                                  tf.newaxis]
-        return tf.sqrt(s_sq)
