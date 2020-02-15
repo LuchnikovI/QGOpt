@@ -2,7 +2,10 @@ import tensorflow as tf
 from qriemannopt.manifold import base_manifold
 
 class StiefelManifold(base_manifold.Manifold):
-    # TODO proper description
+    """Class is used to work with Stiefel manifold. It allows performing all
+    necessary operations with elements of manifolds direct product and
+    tangent spaces for optimization."""
+    
     def __init__(self, retraction='svd',
                  metric='euclidean',
                  transport='projective'):
@@ -34,16 +37,18 @@ class StiefelManifold(base_manifold.Manifold):
         
     @tf.function
     def inner(self, u, vec1, vec2):
-        """Returns manifold wise distance between points.
+        """Returns manifold wise inner product of vectors from
+        tangent space.
         Args:
             u: complex valued tensor of shape (..., q, p),
-            points on Stiefel manifolds
+            element of manifolds direct product
             vec1: complex valued tensor of shape (..., q, p),
             vector from tangent space.
             vec2: complex valued tensor of shape (..., q, p),
             vector from tangent spaces.
         Returns:
-            complex valued tensor of shape (...,), distances between points"""
+            complex valued tensor of shape (...,),
+            manifold wise inner product"""
         if self._metric=='euclidean':
             s_sq = tf.linalg.trace(vec1 @ tf.linalg.adjoint(vec2))[...,
                                   tf.newaxis,
@@ -53,15 +58,15 @@ class StiefelManifold(base_manifold.Manifold):
     
     @tf.function
     def proj(self, u, vec):
-        """Returns projections of vectors on tangen spaces
-        of Stiefel manifolds.
+        """Returns projection of vector on tangen space
+        of direct product of Stiefel manifolds.
         Args:
             u: complex valued tf.Tensor of shape (..., q, p),
-            points on a manifolds
+            point of direct product.
             vec: complex valued tf.Tensor of shape (..., q, p),
-            vectors to be projected
+            vectors to be projected.
         Returns:
-            complex valued tf.Tensor of shape (..., q, p), projected vectors"""
+            complex valued tf.Tensor of shape (..., q, p), projected vector"""
             
         if self._metric=='euclidean':
             return 0.5 * u @ (tf.linalg.adjoint(u) @ vec -\
@@ -72,17 +77,14 @@ class StiefelManifold(base_manifold.Manifold):
     
     @tf.function
     def egrad_to_rgrad(self, u, egrad):
-        """Returns riemannian gradients from euclidean gradients.
-        Equivalent to the projection of gradient on tangent
-        spaces of Stiefel manifolds
+        """Returns riemannian gradient from euclidean gradient.
         Args:
             u: complex valued tf.Tensor of shape (..., q, p),
-            points on Stiefel manifolds.
+            element of direct product.
             egrad: complex valued tf.Tensor of shape (..., q, p),
-            gradients calculated at corresponding manifolds points.
+            euclidean gradient.
         Returns:
-            tf.Tensor of shape (..., q, p), batch of projected reimannian
-            gradients."""
+            tf.Tensor of shape (..., q, p), reimannian gradient."""
             
         if self._metric=='euclidean':
             return 0.5 * u @ (tf.linalg.adjoint(u) @ egrad -\
@@ -93,14 +95,13 @@ class StiefelManifold(base_manifold.Manifold):
     
     @tf.function
     def retraction(self, u, vec):
-        """Transports Stiefel manifolds points via retraction map.
+        """Transports point via retraction map.
         Args:
-            v: complex valued tf.Tensor of shape (..., q, p), points
+            u: complex valued tf.Tensor of shape (..., q, p), point
             to be transported
-            vec: complex valued tf.Tensor of shape (..., q, p), vectors of 
-            directions
-        Returns tf.Tensor of shape (..., q, p) new points
-        on Stiefel manifolds"""
+            vec: complex valued tf.Tensor of shape (..., q, p), vector of 
+            direction
+        Returns tf.Tensor of shape (..., q, p) new point"""
         
         if self._retraction=='svd':
             new_u = u + vec
@@ -117,17 +118,17 @@ class StiefelManifold(base_manifold.Manifold):
         
     @tf.function
     def vector_transport(self, u, vec1, vec2):
-        """Returns vectors tranported to a new points u.
+        """Returns vector vec1 tranported from point u along vec2.
         Args:
             u: complex valued tf.Tensor of shape (..., q, p),
-            initial points on a manifolds
+            initial point of direct product.
             vec1: complex valued tf.Tensor of shape (..., q, p),
-            vectors to be transported
+            vector to be transported.
             vec2: complex valued tf.Tensor of shape (..., q, p),
-            direction vectors.
+            direction vector.
         Returns:
             complex valued tf.Tensor of shape (..., q, p),
-            transported vectors"""
+            transported vector."""
         if self._transport=='projective':
             new_u = self.retraction(u, vec2)
             return self.proj(new_u, vec1)
@@ -138,14 +139,14 @@ class StiefelManifold(base_manifold.Manifold):
         """Performs retraction and vector transport at the same time.
         Args:
             u: complex valued tf.Tensor of shape (..., q, p),
-            initial points on a manifolds
+            initial point from direct product.
             vec1: complex valued tf.Tensor of shape (..., q, p),
-            vectors to be transported
+            vector to be transported.
             vec2: complex valued tf.Tensor of shape (..., q, p),
-            direction vectors.
+            direction vector.
         Returns:
             two complex valued tf.Tensor of shape (..., q, p),
-            new points on manifolds and transported vectors"""
+            new point and transported vector."""
         if self._transport=='projective':
             new_u = self.retraction(u, vec2)
             return new_u, self.proj(new_u, vec1)
