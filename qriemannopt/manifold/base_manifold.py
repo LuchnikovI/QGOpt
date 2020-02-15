@@ -1,8 +1,12 @@
 from abc import ABC, abstractmethod
 
 class Manifold(ABC):
-    """Proper description here"""
-    # TODO proper description
+    """Base class is used to work with a direct product
+    of Riemannian manifolds. An element from a direct product of manifolds
+    is described by a complex tf.Tensor with a shape (..., a, b),
+    where (...) enumerates manifolds from a direct product (can be either
+    empty or not), (a, b) is the shape of a matrix from a particular manifold.
+    """
     
     def __init__(self, retraction,
                  metric,
@@ -24,25 +28,26 @@ class Manifold(ABC):
     
     @abstractmethod
     def inner(self, u, vec1, vec2):
-        """Returns scalar product of vectors in tangent spaces at points u.
+        """Returns scalar product of vectors in tangent space at point u of
+        manifolds direct product.
         Args:
-            u: points where one consider tangent space
+            u: point where one considers tangent space.
             vec1: complex valued tensor, vector from tangent space.
             vec2: complex valued tensor, vector from tangent space.
         Returns:
-            complex valued tensor, scalar products"""
+            complex valued tensor, manifold wise inner product"""
         pass
     
     
     @abstractmethod
     def proj(self, u, vec):
-        """Returns projections of vectors on tangen spaces
-        of manifolds.
+        """Returns projection of vector on tangen spaces
+        of manifolds direct product.
         Args:
-            u: complex valued tf.Tensor, points on a manifolds
-            vec: complex valued tf.Tensor, vectors to be projected
+            u: complex valued tf.Tensor, point of a direct product
+            vec: complex valued tf.Tensor, vector to be projected
         Returns:
-            complex valued tf.Tensor, projected vectors"""
+            complex valued tf.Tensor, projected vector"""
         pass
         
         
@@ -50,45 +55,47 @@ class Manifold(ABC):
     def egrad_to_rgrad(self, u, egrad):
         """Returns riemannian gradients from euclidean gradients.
         Args:
-            u: complex valued tf.Tensor, points on manifolds.
-            egrad: complex valued tf.Tensor gradients calculated
-            at corresponding manifolds points.
+            u: complex valued tf.Tensor, points of manifolds direct product.
+            egrad: complex valued tf.Tensor gradient calculated
+            at corresponding point.
         Returns:
-            tf.Tensor, batch of projected reimannian
-            gradients."""
+            tf.Tensor, reimannian gradient."""
         pass
     
     
     @abstractmethod
     def retraction(self, u, vec):
-        """Transports manifolds points via retraction map.
+        """Transports point via retraction map.
         Args:
-            u: complex valued tf.Tensor, points to be transported
-            vec: complex valued tf.Tensor, vectors of directions
-        Returns complex valued tf.Tensor new points on manifolds"""
+            u: complex valued tf.Tensor, point to be transported.
+            vec: complex valued tf.Tensor, vector of direction.
+        Returns complex valued tf.Tensor new point of manifolds
+        direct product"""
         pass
     
     
     @abstractmethod
     def vector_transport(self, u, vec1, vec2):
-        """Returns vectors vec1 tranported from points u along vec2.
+        """Returns vector vec1 tranported from point u along vector vec2.
         Args:
-            u: complex valued tf.Tensor, initial points on a manifolds
-            vec1: complex valued tf.Tensor, vectors to be transported
-            vec2: complex valued tf.Tensor, direction vectors.
+            u: complex valued tf.Tensor, initial point of a manifolds
+            direct product
+            vec1: complex valued tf.Tensor, vector to be transported
+            vec2: complex valued tf.Tensor, direction vector.
         Returns:
-            complex valued tf.Tensor, transported vectors"""
+            complex valued tf.Tensor, transported vector"""
         pass
     
     
     @abstractmethod
     def retraction_transport(self, u, vec1, vec2):
-        """Performs retraction and vector transport at the same time.
+        """Performs retraction and vector transport simultaneously.
         Args:
-            u: complex valued tf.Tensor, initial points on a manifolds
-            vec1: complex valued tf.Tensor, vectors to be transported
-            vec2: complex valued tf.Tensor, direction vectors.
+            u: complex valued tf.Tensor, initial point of a manifolds direct
+            product
+            vec1: complex valued tf.Tensor, vector to be transported
+            vec2: complex valued tf.Tensor, direction vector.
         Returns:
             two complex valued tf.Tensor,
-            new points on manifolds and transported vectors"""
+            new point and transported vector"""
         pass
