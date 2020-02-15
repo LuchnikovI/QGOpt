@@ -1,11 +1,21 @@
-import tensorflow as tf
 import qriemannopt.manifold as m
+import tensorflow.python.keras.optimizer_v2.optimizer_v2 as opt
 
-class RAdam(tf.optimizers.Optimizer):
+import tensorflow as tf
+from tensorflow.python.keras import initializers
+from tensorflow.python.distribute import distribution_strategy_context as distribute_ctx
+from tensorflow.python.ops import variables as tf_variables
+from tensorflow.python.keras import backend
 
+import functools
+import six
+
+class RAdam(opt.OptimizerV2):
+    # TODO proper description
+    
     def __init__(self,
                  manifold,
-                 learning_rate=0.001,
+                 learning_rate=0.05,
                  beta1=0.9,
                  beta2=0.999,
                  eps=1e-8,
@@ -22,7 +32,7 @@ class RAdam(tf.optimizers.Optimizer):
         Args:
             manifold: object marks particular manifold.
             learning_rate: floating point number. The learning rate.
-            Defaults to 0.001.
+            Defaults to 0.05.
             beta1: floating point number. exp decay rate for first moment.
             Defaults to 0.9.
             beta2: floating point number. exp decay rate for second moment.
@@ -38,22 +48,69 @@ class RAdam(tf.optimizers.Optimizer):
         self.iter = 0
         self.eps = eps
         self._set_hyper('learning_rate', learning_rate)
+        
         if isinstance(beta1, (int, float)) and (beta1 < 0 or beta1 > 1):
             raise ValueError("`beta1` must be between [0, 1].")
         self._set_hyper('beta1', beta1)
         if isinstance(beta2, (int, float)) and (beta2 < 0 or beta2 > 1):
             raise ValueError("`beta2` must be between [0, 1].")
         self._set_hyper('beta2', beta2)
+        
         self.ams = ams
 
-
+    # TODO explain why we update this method
+    def add_slot(self, var, slot_name, initializer="zeros",
+                 manifold_wise=False):
+        """Add a new slot variable for `var`."""
+        if slot_name not in self._slot_names:
+          self._slot_names.append(slot_name)
+        var_key = opt._var_key(var)
+        slot_dict = self._slots.setdefault(var_key, {})
+        weight = slot_dict.get(slot_name, None)
+        if weight is None:
+          if isinstance(initializer, six.string_types) or callable(initializer):
+            initializer = initializers.get(initializer)
+            if manifold_wise:
+                initial_value = functools.partial(
+                    initializer, shape=var.shape[:-3] + (1, 1, 2),
+                    dtype=var.dtype)
+            else:
+                initial_value = functools.partial(
+                    initializer, shape=var.shape, dtype=var.dtype)
+          else:
+            initial_value = initializer
+          strategy = distribute_ctx.get_strategy()
+          if not strategy.extended.variable_created_in_scope(var):
+            raise ValueError(
+                "Trying to create optimizer slot variable under the scope for "
+                "tf.distribute.Strategy ({}), which is different from the scope "
+                "used for the original variable ({}). Make sure the slot "
+                "variables are created under the same strategy scope. This may "
+                "happen if you're restoring from a checkpoint outside the scope"
+                .format(strategy, var))
+    
+          with strategy.extended.colocate_vars_with(var):
+            weight = tf_variables.Variable(
+                name="%s/%s" % (var._shared_name, slot_name),  # pylint: disable=protected-access
+                dtype=var.dtype,
+                trainable=False,
+                initial_value=initial_value)
+          backend.track_variable(weight)
+          slot_dict[slot_name] = weight
+          self._restore_slot_variable(
+              slot_name=slot_name, variable=var,
+              slot_variable=weight)
+          self._weights.append(weight)
+        return weight
+    
+    
     def _create_slots(self, var_list):
         #Create m and v slots
         for var in var_list:
             self.add_slot(var, "momentum")
-            self.add_slot(var, "v")
+            self.add_slot(var, "v", manifold_wise=True)
             if self.ams:
-                self.add_slot(var, "v_hat")
+                self.add_slot(var, "v_hat", manifold_wise=True)
 
 
     def _resource_apply_dense(self, grad, var):
@@ -85,12 +142,11 @@ class RAdam(tf.optimizers.Optimizer):
         momentum_complex = beta1 * momentum_complex +\
         (1 - beta1) * grad_proj
         v_complex = beta2 * v_complex +\
-        (1 - beta2) * tf.cast(tf.math.abs(grad_proj) ** 2,
-        dtype=v_complex.dtype)
+        (1 - beta2) * self.manifold.inner(complex_var, grad_proj, grad_proj)
         if self.ams:
             #TODO corret v_hat update
-            v_hat_complex = tf.math.maximum(tf.math.abs(v_complex),
-                                    tf.math.abs(v_hat_complex))
+            v_hat_complex = tf.math.maximum(tf.math.real(v_complex),
+                                    tf.math.real(v_hat_complex))
             v_hat_complex = tf.cast(v_hat_complex, dtype=v_complex.dtype)
         
         #Bias correction
@@ -101,9 +157,7 @@ class RAdam(tf.optimizers.Optimizer):
         if self.ams:
             #Search direction
             search_dir = -lr_corr * momentum_complex /\
-            (tf.math.sqrt(tf.reduce_mean(v_hat_complex,
-                                        axis=(-2, -1),
-                                        keepdims=True)) + self.eps)
+            (tf.math.sqrt(v_hat_complex) + self.eps)
             new_var, momentum_complex =\
             self.manifold.retraction_transport(complex_var,
                                                momentum_complex,
@@ -111,9 +165,7 @@ class RAdam(tf.optimizers.Optimizer):
         else:
             #Search direction
             search_dir = - lr_corr * momentum_complex /\
-            (tf.math.sqrt(tf.reduce_mean(v_complex,
-                                         axis=(-2, -1),
-                                         keepdims=True)) + self.eps)
+            (tf.math.sqrt(v_complex) + self.eps)
             new_var, momentum_complex =\
             self.manifold.retraction_transport(complex_var,
                                                momentum_complex,

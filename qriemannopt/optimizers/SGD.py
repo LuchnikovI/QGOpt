@@ -2,6 +2,7 @@ import tensorflow as tf
 import qriemannopt.manifold as m
 
 class RSGD(tf.optimizers.Optimizer):
+    # TODO proper description
 
     def __init__(self,
                  manifold,
@@ -9,7 +10,7 @@ class RSGD(tf.optimizers.Optimizer):
                  momentum=0.0,
                  name="RSGD"):
         """Constructs a new Riemannian Stochastic Gradient Descent optimizer
-        on manifold.
+        on a manifold.
         Comment:
             The RSGD works only with real valued tf.Variable of shape
             (..., q, p, 2), where ... -- enumerates manifolds 
@@ -28,14 +29,17 @@ class RSGD(tf.optimizers.Optimizer):
         self._set_hyper("learning_rate", learning_rate)
         self.manifold = manifold
         self._momentum = False
+        
         if isinstance(momentum, tf.Tensor) or callable(momentum) or momentum > 0:
             self._momentum = True
         if isinstance(momentum, (int, float)) and (momentum < 0 or momentum > 1):
             raise ValueError("`momentum` must be between [0, 1].")
+            
         self._set_hyper("momentum", momentum)
 
 
     def _create_slots(self, var_list):
+        
         # create momentum slot if necessary
         if self._momentum:
             for var in var_list:
@@ -57,6 +61,7 @@ class RSGD(tf.optimizers.Optimizer):
 
         #Upadte of vars (step and retruction)
         if self._momentum:
+            
             #Update momentum
             momentum_var = self.get_slot(var, "momentum")
             momentum_complex = m.real_to_complex(momentum_var)
@@ -73,6 +78,7 @@ class RSGD(tf.optimizers.Optimizer):
             
             momentum_var.assign(m.complex_to_real(momentum_complex))
         else:
+            
             #New value of var
             new_var = self.manifold.retraction(complex_var, -lr * grad_proj)
 
