@@ -23,8 +23,8 @@ class MERAOpt(tf.optimizers.Optimizer):
         complex_grad = m.real_to_complex(grad)
         
         # MERA like update
-        _, u, v = tf.linalg.svd(tf.linalg.adjoint(complex_grad))
-        var.assign(m.convert.complex_to_real(-v @ tf.linalg.adjoint(u)))
+        _, u, v = tf.linalg.svd(tf.transpose(tf.math.conj(complex_grad)))
+        var.assign(m.convert.complex_to_real(-v @ tf.transpose(tf.math.conj(u))))
 
     def _resource_apply_sparse(self, grad, var):
         raise NotImplementedError("Sparse gradient updates are not supported.")
