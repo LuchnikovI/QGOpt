@@ -51,15 +51,17 @@ class StiefelManifold(base_manifold.Manifold):
             complex valued tensor of shape (...,),
             manifold wise inner product"""
         if self._metric=='euclidean':
-            s_sq = tf.linalg.trace(tf.linalg.adjoint(vec1) @ vec2)[...,
+            s_sq = tf.linalg.trace(tf.transpose(tf.math.conj(vec1)) @ vec2)[...,
                                   tf.newaxis,
                                   tf.newaxis]
             
         elif self._metric=='canonical':
-            G = tf.eye(u.shape[-2], dtype=u.dtype) - u @ tf.linalg.adjoint(u) / 2
-            s_sq = tf.linalg.trace(tf.linalg.adjoint(vec1) @ G @ vec2)[...,
-                                  tf.newaxis,
-                                  tf.newaxis]
+            G = tf.eye(u.shape[-2], dtype=u.dtype) -\
+            u @ tf.transpose(tf.math.conj(u)) / 2
+            s_sq = tf.linalg.trace(tf.transpose(tf.math.conj(vec1))\
+                                   @ G @ vec2)[...,
+                                   tf.newaxis,
+                                   tf.newaxis]
         return tf.sqrt(s_sq)
     
     
@@ -75,10 +77,10 @@ class StiefelManifold(base_manifold.Manifold):
         Returns:
             complex valued tf.Tensor of shape (..., q, p), projected vector"""
             
-        return 0.5 * u @ (tf.linalg.adjoint(u) @ vec -\
-                          tf.linalg.adjoint(vec) @ u) +\
+        return 0.5 * u @ (tf.transpose(tf.math.conj(u)) @ vec -\
+                          tf.transpose(tf.math.conj(vec)) @ u) +\
         (tf.eye(u.shape[-2], dtype=u.dtype) -\
-         u @ tf.linalg.adjoint(u)) @ vec
+         u @ tf.transpose(tf.math.conj(u))) @ vec
         
     
     @tf.function
@@ -93,13 +95,13 @@ class StiefelManifold(base_manifold.Manifold):
             tf.Tensor of shape (..., q, p), reimannian gradient."""
             
         if self._metric=='euclidean':
-            return 0.5 * u @ (tf.linalg.adjoint(u) @ egrad -\
-                              tf.linalg.adjoint(egrad) @ u) +\
+            return 0.5 * u @ (tf.transpose(tf.math.conj(u)) @ egrad -\
+                              tf.transpose(tf.math.conj(egrad)) @ u) +\
             (tf.eye(u.shape[-2], dtype=u.dtype) -\
-             u @ tf.linalg.adjoint(u)) @ egrad
+             u @ tf.transpose(tf.math.conj(u))) @ egrad
              
         elif self._metric=='canonical':
-            return egrad - u @ tf.linalg.adjoint(egrad) @ u
+            return egrad - u @ tf.transpose(tf.math.conj(egrad)) @ u
              
     
     @tf.function
@@ -115,12 +117,13 @@ class StiefelManifold(base_manifold.Manifold):
         if self._retraction=='svd':
             new_u = u + vec
             _, v, w = tf.linalg.svd(new_u)
-            return v @ tf.linalg.adjoint(w)
+            return v @ tf.transpose(tf.math.conj(w))
         
         elif self._retraction=='cayley':
-            W = vec @ tf.linalg.adjoint(u) -\
-            0.5 * u @ (tf.linalg.adjoint(u) @ vec @ tf.linalg.adjoint(u))
-            W = W - tf.linalg.adjoint(W)
+            W = vec @ tf.transpose(tf.math.conj(u)) -\
+            0.5 * u @ (tf.transpose(tf.math.conj(u)) @\
+                       vec @ tf.transpose(tf.math.conj(u)))
+            W = W - tf.transpose(tf.math.conj(W))
             I = tf.eye(W.shape[-1], dtype=W.dtype)
             return tf.linalg.inv(I - W / 2) @ (I + W / 2) @ u
         
