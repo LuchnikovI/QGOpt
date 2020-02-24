@@ -1,6 +1,15 @@
 import tensorflow as tf
 from qriemannopt.manifold import base_manifold
 
+@tf.function
+def adj(A):
+    """
+    Since tf engineers do not care about complex numbers,
+    it is necessery to introduce correct hermitian conjugation.
+    """
+    return tf.math.conj(tf.linalg.matrix_transpose(A))
+    
+
 class StiefelManifold(base_manifold.Manifold):
     """Class is used to work with Stiefel manifold. It allows performing all
     necessary operations with elements of manifolds direct product and
@@ -36,7 +45,6 @@ class StiefelManifold(base_manifold.Manifold):
         super(StiefelManifold, self).__init__(retraction, metric, transport)
         
         
-    @tf.function
     def inner(self, u, vec1, vec2):
         """Returns manifold wise inner product of vectors from
         tangent space.
@@ -51,21 +59,18 @@ class StiefelManifold(base_manifold.Manifold):
             complex valued tensor of shape (...,),
             manifold wise inner product"""
         if self._metric=='euclidean':
-            s_sq = tf.linalg.trace(tf.transpose(tf.math.conj(vec1)) @ vec2)[...,
-                                  tf.newaxis,
+            s_sq = tf.linalg.trace(adj(vec1) @ vec2)[..., 
+                                  tf.newaxis, 
                                   tf.newaxis]
             
         elif self._metric=='canonical':
             G = tf.eye(u.shape[-2], dtype=u.dtype) -\
-            u @ tf.transpose(tf.math.conj(u)) / 2
-            s_sq = tf.linalg.trace(tf.transpose(tf.math.conj(vec1))\
-                                   @ G @ vec2)[...,
-                                   tf.newaxis,
-                                   tf.newaxis]
+            u @ adj(u) / 2
+            s_sq = tf.linalg.trace(adj(vec1)\
+                                   @ G @ vec2)[..., tf.newaxis, tf.newaxis]
         return tf.sqrt(s_sq)
     
     
-    @tf.function
     def proj(self, u, vec):
         """Returns projection of vector on tangen space
         of direct product of Stiefel manifolds.
@@ -77,13 +82,10 @@ class StiefelManifold(base_manifold.Manifold):
         Returns:
             complex valued tf.Tensor of shape (..., q, p), projected vector"""
             
-        return 0.5 * u @ (tf.transpose(tf.math.conj(u)) @ vec -\
-                          tf.transpose(tf.math.conj(vec)) @ u) +\
-        (tf.eye(u.shape[-2], dtype=u.dtype) -\
-         u @ tf.transpose(tf.math.conj(u))) @ vec
+        return 0.5 * u @ (adj(u) @ vec - adj(vec) @ u) +\
+        (tf.eye(u.shape[-2], dtype=u.dtype) - u @ adj(u)) @ vec
         
     
-    @tf.function
     def egrad_to_rgrad(self, u, egrad):
         """Returns riemannian gradient from euclidean gradient.
         Args:
@@ -95,16 +97,13 @@ class StiefelManifold(base_manifold.Manifold):
             tf.Tensor of shape (..., q, p), reimannian gradient."""
             
         if self._metric=='euclidean':
-            return 0.5 * u @ (tf.transpose(tf.math.conj(u)) @ egrad -\
-                              tf.transpose(tf.math.conj(egrad)) @ u) +\
-            (tf.eye(u.shape[-2], dtype=u.dtype) -\
-             u @ tf.transpose(tf.math.conj(u))) @ egrad
+            return 0.5 * u @ (adj(u) @ egrad - adj(egrad) @ u) +\
+            (tf.eye(u.shape[-2], dtype=u.dtype) - u @ adj(u)) @ egrad
              
         elif self._metric=='canonical':
-            return egrad - u @ tf.transpose(tf.math.conj(egrad)) @ u
+            return egrad - u @ adj(egrad) @ u
              
     
-    @tf.function
     def retraction(self, u, vec):
         """Transports point via retraction map.
         Args:
@@ -117,18 +116,17 @@ class StiefelManifold(base_manifold.Manifold):
         if self._retraction=='svd':
             new_u = u + vec
             _, v, w = tf.linalg.svd(new_u)
-            return v @ tf.transpose(tf.math.conj(w))
+            return v @ adj(w)
         
         elif self._retraction=='cayley':
-            W = vec @ tf.transpose(tf.math.conj(u)) -\
-            0.5 * u @ (tf.transpose(tf.math.conj(u)) @\
-                       vec @ tf.transpose(tf.math.conj(u)))
-            W = W - tf.transpose(tf.math.conj(W))
+            W = vec @ adj(u) -\
+            0.5 * u @ (adj(u) @\
+                       vec @ adj(u))
+            W = W - adj(W)
             I = tf.eye(W.shape[-1], dtype=W.dtype)
             return tf.linalg.inv(I - W / 2) @ (I + W / 2) @ u
         
         
-    @tf.function
     def vector_transport(self, u, vec1, vec2):
         """Returns vector vec1 tranported from point u along vec2.
         Args:
@@ -146,7 +144,6 @@ class StiefelManifold(base_manifold.Manifold):
             return self.proj(new_u, vec1)
     
     
-    @tf.function
     def retraction_transport(self, u, vec1, vec2):
         """Performs retraction and vector transport at the same time.
         Args:

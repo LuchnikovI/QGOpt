@@ -10,6 +10,7 @@ from tensorflow.python.keras import backend
 import functools
 import six
 
+
 class RAdam(opt.OptimizerV2):
     # TODO proper description
     

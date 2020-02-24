@@ -1,6 +1,14 @@
 import tensorflow as tf
 import qriemannopt.manifold as m
 
+@tf.function
+def adj(A):
+    """
+    Since tf engineers do not care about complex numbers,
+    it is necessery to introduce correct hermitian conjugation.
+    """
+    return tf.math.conj(tf.linalg.matrix_transpose(A))
+
 class MERAOpt(tf.optimizers.Optimizer):
 
     def __init__(self,
@@ -23,8 +31,8 @@ class MERAOpt(tf.optimizers.Optimizer):
         complex_grad = m.real_to_complex(grad)
         
         # MERA like update
-        _, u, v = tf.linalg.svd(tf.transpose(tf.math.conj(complex_grad)))
-        var.assign(m.convert.complex_to_real(-v @ tf.transpose(tf.math.conj(u))))
+        _, u, v = tf.linalg.svd(adj(complex_grad))
+        var.assign(m.convert.complex_to_real(-v @ adj(u)))
 
     def _resource_apply_sparse(self, grad, var):
         raise NotImplementedError("Sparse gradient updates are not supported.")
