@@ -1,17 +1,10 @@
-import tensorflow as tf
 import qriemannopt.manifold as m
+import tensorflow.python.keras.optimizer_v2.optimizer_v2 as opt
+from tensorflow.python.ops.linalg.linalg_impl import adjoint as adj
+from tensorflow.python.ops.linalg.linalg_impl import svd
 
 
-@tf.function
-def adj(A):
-    """
-    Since tf engineers do not care about complex numbers,
-    it is necessery to introduce correct hermitian conjugation.
-    """
-    return tf.math.conj(tf.linalg.matrix_transpose(A))
-
-
-class MERAOpt(tf.optimizers.Optimizer):
+class MERAOpt(opt.OptimizerV2):
 
     def __init__(self,
                  name="Fast"):
@@ -31,7 +24,7 @@ class MERAOpt(tf.optimizers.Optimizer):
         complex_grad = m.real_to_complex(grad)
 
         # MERA like update
-        _, u, v = tf.linalg.svd(adj(complex_grad))
+        _, u, v = svd(adj(complex_grad))
         var.assign(m.convert.complex_to_real(-v @ adj(u)))
 
     def _resource_apply_sparse(self, grad, var):
