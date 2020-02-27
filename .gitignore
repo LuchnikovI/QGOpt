@@ -3,3 +3,6 @@
 
 # IPython Notebook checkpoints
 .ipynb_checkpoints
+
+# Compiled python modules
+*.pyc
