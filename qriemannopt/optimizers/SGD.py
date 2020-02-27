@@ -1,7 +1,10 @@
-import tensorflow as tf
 import qriemannopt.manifold as m
+import tensorflow.python.keras.optimizer_v2.optimizer_v2 as opt
+from tensorflow.python.ops.math_ops import cast
+from tensorflow.python.framework.ops import Tensor
 
-class RSGD(tf.optimizers.Optimizer):
+
+class RSGD(opt.OptimizerV2):
     # TODO proper description
 
     def __init__(self,
@@ -13,7 +16,7 @@ class RSGD(tf.optimizers.Optimizer):
         on a manifold.
         Comment:
             The RSGD works only with real valued tf.Variable of shape
-            (..., q, p, 2), where ... -- enumerates manifolds 
+            (..., q, p, 2), where ... -- enumerates manifolds
             (can be either empty or any shaped),
             q and p size of a matrix, the last index marks
             real and imag parts of a matrix
@@ -24,70 +27,69 @@ class RSGD(tf.optimizers.Optimizer):
             Defaults to 0.01.
             name: Optional name prefix for the operations created when applying
             gradients.  Defaults to 'RSGD'."""
-        
+
         super(RSGD, self).__init__(name)
         self._set_hyper("learning_rate", learning_rate)
         self.manifold = manifold
         self._momentum = False
-        
-        if isinstance(momentum, tf.Tensor) or callable(momentum) or momentum > 0:
+
+        if isinstance(momentum, Tensor) or callable(momentum) or momentum > 0:
             self._momentum = True
-        if isinstance(momentum, (int, float)) and (momentum < 0 or momentum > 1):
+        if isinstance(momentum, (int, float)) and\
+                (momentum < 0 or momentum > 1):
             raise ValueError("`momentum` must be between [0, 1].")
-            
+
         self._set_hyper("momentum", momentum)
 
-
     def _create_slots(self, var_list):
-        
+
         # create momentum slot if necessary
         if self._momentum:
             for var in var_list:
                 self.add_slot(var, "momentum")
 
-
     def _resource_apply_dense(self, grad, var):
 
-        #Complex version of grad and var
+        # Complex version of grad and var
         complex_var = m.real_to_complex(var)
         complex_grad = m.real_to_complex(grad)
 
-        #learning rate
-        lr = tf.cast(self._get_hyper("learning_rate"),
-                       dtype=complex_grad.dtype)
+        # learning rate
+        lr = cast(self._get_hyper("learning_rate"),
+                  dtype=complex_grad.dtype)
 
-        #Riemannian gradient
+        # Riemannian gradient
         grad_proj = self.manifold.egrad_to_rgrad(complex_var, complex_grad)
 
-        #Upadte of vars (step and retruction)
+        # Upadte of vars (step and retruction)
         if self._momentum:
-            
-            #Update momentum
+
+            # Update momentum
             momentum_var = self.get_slot(var, "momentum")
             momentum_complex = m.real_to_complex(momentum_var)
-            momentum = tf.cast(self._get_hyper("momentum"),
-                               dtype=momentum_complex.dtype)
+            momentum = cast(self._get_hyper("momentum"),
+                            dtype=momentum_complex.dtype)
             momentum_complex = momentum * momentum_complex +\
-            (1 - momentum) * grad_proj
+                (1 - momentum) * grad_proj
 
-            #Transport and retruction
+            # Transport and retruction
             new_var, momentum_complex =\
-            self.manifold.retraction_transport(complex_var,
-                                               momentum_complex,
-                                               -lr * momentum_complex)
-            
+                self.manifold.retraction_transport(complex_var,
+                                                   momentum_complex,
+                                                   -lr * momentum_complex)
+
             momentum_var.assign(m.complex_to_real(momentum_complex))
         else:
-            
-            #New value of var
+
+            # New value of var
             new_var = self.manifold.retraction(complex_var, -lr * grad_proj)
 
-        #Update of var
+        # Update of var
         var.assign(m.complex_to_real(new_var))
 
     def _resource_apply_sparse(self, grad, var):
         raise NotImplementedError("Sparse gradient updates are not supported.")
-    
+
     def get_config(self):
         config = super(RSGD, self).get_config()
         config.update({
