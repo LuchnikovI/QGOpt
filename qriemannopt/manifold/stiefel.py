@@ -1,11 +1,11 @@
 from qriemannopt.manifold import base_manifold
-from tensorflow.python.ops.linalg.linalg_impl import adjoint as adj
-from tensorflow.python.ops.linalg.linalg_impl import trace
-from tensorflow.python.ops.linalg.linalg_impl import svd
-from tensorflow.python.ops.linalg.linalg_impl import inv
-from tensorflow.python.ops.linalg.linalg_impl import eye
-from tensorflow.python.ops.math_ops import sqrt
 import tensorflow as tf
+
+
+def adj(A):
+    """Correct adjoint"""
+
+    return tf.math.conj(tf.linalg.matrix_transpose(A))
 
 
 class StiefelManifold(base_manifold.Manifold):
@@ -57,11 +57,15 @@ class StiefelManifold(base_manifold.Manifold):
             manifold wise inner product"""
 
         if self._metric == 'euclidean':
-            s_sq = trace(adj(vec1) @ vec2)[..., tf.newaxis, tf.newaxis]
+            s_sq = tf.linalg.trace(adj(vec1) @ vec2)[...,
+                                                     tf.newaxis,
+                                                     tf.newaxis]
         elif self._metric == 'canonical':
-            G = eye(u.shape[-2], dtype=u.dtype) - u @ adj(u) / 2
-            s_sq = trace(adj(vec1) @ G @ vec2)[..., tf.newaxis, tf.newaxis]
-        return sqrt(s_sq)
+            G = tf.eye(u.shape[-2], dtype=u.dtype) - u @ adj(u) / 2
+            s_sq = tf.linalg.trace(adj(vec1) @ G @ vec2)[...,
+                                                         tf.newaxis,
+                                                         tf.newaxis]
+        return tf.math.sqrt(s_sq)
 
     def proj(self, u, vec):
         """Returns projection of vector on tangen space
@@ -75,7 +79,8 @@ class StiefelManifold(base_manifold.Manifold):
             complex valued tf.Tensor of shape (..., q, p), projected vector"""
 
         return 0.5 * u @ (adj(u) @ vec - adj(vec) @ u) +\
-            (eye(u.shape[-2], dtype=u.dtype) - u @ adj(u)) @ vec
+                         (tf.eye(u.shape[-2], dtype=u.dtype) -\
+                          u @ adj(u)) @ vec
 
     def egrad_to_rgrad(self, u, egrad):
         """Returns riemannian gradient from euclidean gradient.
@@ -89,7 +94,8 @@ class StiefelManifold(base_manifold.Manifold):
 
         if self._metric == 'euclidean':
             return 0.5 * u @ (adj(u) @ egrad - adj(egrad) @ u) +\
-                (eye(u.shape[-2], dtype=u.dtype) - u @ adj(u)) @ egrad
+                             (tf.eye(u.shape[-2], dtype=u.dtype) -\
+                              u @ adj(u)) @ egrad
 
         elif self._metric == 'canonical':
             return egrad - u @ adj(egrad) @ u
@@ -105,14 +111,14 @@ class StiefelManifold(base_manifold.Manifold):
 
         if self._retraction == 'svd':
             new_u = u + vec
-            _, v, w = svd(new_u)
+            _, v, w = tf.linalg.svd(new_u)
             return v @ adj(w)
 
         elif self._retraction == 'cayley':
             W = vec @ adj(u) - 0.5 * u @ (adj(u) @ vec @ adj(u))
             W = W - adj(W)
-            Id = eye(W.shape[-1], dtype=W.dtype)
-            return inv(Id - W / 2) @ (Id + W / 2) @ u
+            Id = tf.eye(W.shape[-1], dtype=W.dtype)
+            return tf.linalg.inv(Id - W / 2) @ (Id + W / 2) @ u
 
     def vector_transport(self, u, vec1, vec2):
         """Returns vector vec1 tranported from point u along vec2.

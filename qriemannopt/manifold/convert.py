@@ -1,7 +1,3 @@
-from tensorflow.python.ops.math_ops import real
-from tensorflow.python.ops.math_ops import imag
-from tensorflow.python.ops.math_ops import complex as c
-from tensorflow.python.ops.array_ops import concat
 import tensorflow as tf
 
 
@@ -13,8 +9,8 @@ def complex_to_real(tensor):
         tensor: complex valued tf.Tensor of shape (...,)
     Returns:
         real valued tf.Tensor of shape (..., 2)"""
-    return concat([real(tensor)[..., tf.newaxis],
-                   imag(tensor)[..., tf.newaxis]], axis=-1)
+    return tf.concat([tf.math.real(tensor)[..., tf.newaxis],
+                      tf.math.imag(tensor)[..., tf.newaxis]], axis=-1)
 
 
 def real_to_complex(tensor):
@@ -26,4 +22,4 @@ def real_to_complex(tensor):
         tensor: real valued tf.Tensor of shape (..., 2)
     Returns:
         complex valued tf.Tensor of shape (...,)"""
-    return c(tensor[..., 0], tensor[..., 1])
+    return tf.complex(tensor[..., 0], tensor[..., 1])

@@ -1,10 +1,7 @@
 import qriemannopt.manifold as m
 import tensorflow.python.keras.optimizer_v2.optimizer_v2 as opt
+import tensorflow as tf
 
-from tensorflow.python.ops.math_ops import sqrt
-from tensorflow.python.ops.math_ops import cast
-from tensorflow.python.ops.math_ops import real
-from tensorflow.python.ops.math_ops import maximum
 from tensorflow.python.keras import initializers
 from tensorflow.python.distribute import distribution_strategy_context as distribute_ctx
 from tensorflow.python.ops import variables as tf_variables
@@ -124,7 +121,7 @@ class RAdam(opt.OptimizerV2):
         complex_grad = m.real_to_complex(grad)
 
         # learning rate
-        lr = cast(self._get_hyper("learning_rate"), complex_grad.dtype)
+        lr = tf.cast(self._get_hyper("learning_rate"), complex_grad.dtype)
 
         # Riemannian gradient
         grad_proj = self.manifold.egrad_to_rgrad(complex_var, complex_grad)
@@ -139,8 +136,8 @@ class RAdam(opt.OptimizerV2):
         v_complex = m.real_to_complex(v)
 
         # Update m, v and v_hat
-        beta1 = cast(self._get_hyper("beta1"), dtype=momentum_complex.dtype)
-        beta2 = cast(self._get_hyper("beta2"), dtype=momentum_complex.dtype)
+        beta1 = tf.cast(self._get_hyper("beta1"), dtype=momentum_complex.dtype)
+        beta2 = tf.cast(self._get_hyper("beta2"), dtype=momentum_complex.dtype)
         momentum_complex = beta1 * momentum_complex +\
             (1 - beta1) * grad_proj
         v_complex = beta2 * v_complex +\
@@ -148,19 +145,19 @@ class RAdam(opt.OptimizerV2):
                                               grad_proj,
                                               grad_proj)
         if self.ams:
-            # TODO corret v_hat update
-            v_hat_complex = maximum(real(v_complex),
-                                    real(v_hat_complex))
-            v_hat_complex = cast(v_hat_complex, dtype=v_complex.dtype)
+            v_hat_complex = tf.maximum(tf.math.real(v_complex),
+                                       tf.math.real(v_hat_complex))
+            v_hat_complex = tf.cast(v_hat_complex, dtype=v_complex.dtype)
 
         # Bias correction
-        lr_corr = lr * sqrt(1 - beta2 ** self.iter) / (1 - beta1 ** self.iter)
+        lr_corr = lr * tf.math.sqrt(1 - beta2 ** self.iter) /\
+            (1 - beta1 ** self.iter)
 
         # New value of var
         if self.ams:
             # Search direction
             search_dir = -lr_corr * momentum_complex /\
-                (sqrt(v_hat_complex) + self.eps)
+                (tf.sqrt(v_hat_complex) + self.eps)
             new_var, momentum_complex =\
                 self.manifold.retraction_transport(complex_var,
                                                    momentum_complex,
@@ -168,7 +165,7 @@ class RAdam(opt.OptimizerV2):
         else:
             # Search direction
             search_dir = - lr_corr * momentum_complex /\
-                (sqrt(v_complex) + self.eps)
+                (tf.sqrt(v_complex) + self.eps)
             new_var, momentum_complex =\
                 self.manifold.retraction_transport(complex_var,
                                                    momentum_complex,

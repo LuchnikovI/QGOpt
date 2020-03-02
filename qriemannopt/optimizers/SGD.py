@@ -1,7 +1,6 @@
 import qriemannopt.manifold as m
 import tensorflow.python.keras.optimizer_v2.optimizer_v2 as opt
-from tensorflow.python.ops.math_ops import cast
-from tensorflow.python.framework.ops import Tensor
+import tensorflow as tf
 
 
 class RSGD(opt.OptimizerV2):
@@ -33,7 +32,7 @@ class RSGD(opt.OptimizerV2):
         self.manifold = manifold
         self._momentum = False
 
-        if isinstance(momentum, Tensor) or callable(momentum) or momentum > 0:
+        if isinstance(momentum, tf.Tensor) or callable(momentum) or momentum > 0:
             self._momentum = True
         if isinstance(momentum, (int, float)) and\
                 (momentum < 0 or momentum > 1):
@@ -55,8 +54,8 @@ class RSGD(opt.OptimizerV2):
         complex_grad = m.real_to_complex(grad)
 
         # learning rate
-        lr = cast(self._get_hyper("learning_rate"),
-                  dtype=complex_grad.dtype)
+        lr = tf.cast(self._get_hyper("learning_rate"),
+                     dtype=complex_grad.dtype)
 
         # Riemannian gradient
         grad_proj = self.manifold.egrad_to_rgrad(complex_var, complex_grad)
@@ -67,8 +66,8 @@ class RSGD(opt.OptimizerV2):
             # Update momentum
             momentum_var = self.get_slot(var, "momentum")
             momentum_complex = m.real_to_complex(momentum_var)
-            momentum = cast(self._get_hyper("momentum"),
-                            dtype=momentum_complex.dtype)
+            momentum = tf.cast(self._get_hyper("momentum"),
+                               dtype=momentum_complex.dtype)
             momentum_complex = momentum * momentum_complex +\
                 (1 - momentum) * grad_proj
 
