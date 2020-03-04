@@ -3,7 +3,11 @@ import tensorflow as tf
 
 
 def adj(A):
-    """Correct adjoint"""
+    """Correct adjoint
+    Args:
+        A: tf.tensor of shape (..., n, m)
+    Returns:
+        tf tensor of shape (..., m, n), adjoint matrix"""
 
     return tf.math.conj(tf.linalg.matrix_transpose(A))
 
