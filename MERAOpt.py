@@ -1,5 +1,5 @@
 import qriemannopt.manifold as m
-import tensorflow.python.keras.optimizer_v2.optimizer_v2 as opt
+from tensorflow.python.keras.optimizer_v2 import optimizer_v2 as opt
 import tensorflow as tf
 
 
