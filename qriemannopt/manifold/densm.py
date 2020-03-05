@@ -10,18 +10,6 @@ def adj(A):
 
     return tf.math.conj(tf.linalg.matrix_transpose(A))
 
-def safe_cholesky(X):
-
-    new_X = X + 1e-8 * tf.cast(tf.random.normal((X.shape[-1], X.shape[-1])), dtype=X.dtype)
-
-    return tf.linalg.cholesky(new_X)
-
-def safe_inverse(X):
-    
-    new_X = X + 1e-8 * tf.cast(tf.random.normal((X.shape[-1], X.shape[-1])), dtype=X.dtype)
-
-    return tf.linalg.inv(new_X)
-
 def lower(X):
     dim = X.shape[-1]
     dtype = X.dtype
@@ -80,8 +68,8 @@ class DensM(base_manifold.Manifold):
             complex valued tensor of shape (...,),
             manifold wise inner product"""
             
-        L = safe_cholesky(u)
-        inv_L = safe_inverse(L)
+        L = tf.linalg.cholesky(u)
+        inv_L = tf.linalg.inv(L)
 
         X = pull_back_tangent(vec1, L, inv_L)
         Y = pull_back_tangent(vec2, L, inv_L)
@@ -137,8 +125,8 @@ class DensM(base_manifold.Manifold):
             vec: complex valued tf.Tensor of shape (..., q, p), vector of 
             direction
         Returns tf.Tensor of shape (..., q, p) new point"""
-        L = safe_cholesky(u)
-        inv_L = safe_inverse(L)
+        L = tf.linalg.cholesky(u)
+        inv_L = tf.linalg.inv(L)
 
         X = pull_back_tangent(vec, L, inv_L)
 
@@ -146,6 +134,8 @@ class DensM(base_manifold.Manifold):
 
         cholesky_retraction = lower(L) + lower(X) + tf.linalg.band_part(L, 0, 0) * tf.exp(tf.linalg.band_part(X, 0, 0) * inv_diag_L)
         densm_retraction = cholesky_retraction @ adj(cholesky_retraction)
+
+        densm_retraction += 1e-8 * tf.eye(densm_retraction.shape[-1], dtype = densm_retraction.dtype)
         
         return densm_retraction / tf.linalg.trace(densm_retraction)[..., tf.newaxis, tf.newaxis]
         
@@ -174,14 +164,14 @@ class DensM(base_manifold.Manifold):
                       tf.linalg.adjoint(u_evec)'''
         v = self.retraction(u, vec2)
 
-        L = safe_cholesky(u)
-        inv_L = safe_inverse(L)
+        L = tf.linalg.cholesky(u)
+        inv_L = tf.linalg.inv(L)
         inv_diag_L = tf.linalg.diag(1 / tf.linalg.diag_part(L))
 
         X = pull_back_tangent(vec1, L, inv_L)
 
-        K = safe_cholesky(v)
-        inv_K = safe_inverse(L)
+        K = tf.linalg.cholesky(v)
+        inv_K = tf.linalg.inv(L)
 
         transport = K @ adj((lower(X) + tf.linalg.band_part(K, 0, 0) * inv_diag_L * tf.linalg.band_part(X, 0, 0)))
         transport += adj(transport)
@@ -204,14 +194,14 @@ class DensM(base_manifold.Manifold):
         
         v = self.retraction(u, vec2)
 
-        L = safe_cholesky(u)
-        inv_L = safe_inverse(L)
+        L = tf.linalg.cholesky(u)
+        inv_L = tf.linalg.inv(L)
         inv_diag_L = tf.linalg.diag(1 / tf.linalg.diag_part(L))
 
         X = pull_back_tangent(vec1, L, inv_L)
 
-        K = safe_cholesky(v)
-        inv_K = safe_inverse(L)
+        K = tf.linalg.cholesky(v)
+        inv_K = tf.linalg.inv(L)
 
         transport = K @ adj((lower(X) + tf.linalg.band_part(K, 0, 0) * inv_diag_L * tf.linalg.band_part(X, 0, 0)))
         transport += adj(transport)
