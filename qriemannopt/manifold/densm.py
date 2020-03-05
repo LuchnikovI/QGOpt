@@ -1,6 +1,47 @@
 import tensorflow as tf
 from qriemannopt.manifold import base_manifold
 
+def adj(A):
+    """Correct adjoint
+    Args:
+        A: tf.tensor of shape (..., n, m)
+    Returns:
+        tf tensor of shape (..., m, n), adjoint matrix"""
+
+    return tf.math.conj(tf.linalg.matrix_transpose(A))
+
+def lower(X):
+    dim = X.shape[-1]
+    dtype = X.dtype
+    lower = tf.ones((dim, dim), dtype=dtype) - tf.linalg.diag(tf.ones((dim,), dtype))
+    lower = tf.linalg.band_part(lower, -1, 0)
+
+    return lower * X
+
+def half(X):
+    dim = X.shape[-1]
+    dtype = X.dtype
+    half = tf.ones((dim, dim), dtype=dtype) -\
+                    0.5 * tf.linalg.diag(tf.ones((dim,), dtype))
+    half = tf.linalg.band_part(half, -1, 0)
+
+    return half * X
+
+
+def pull_back_tangent(W, L, inv_L):
+    """W is a vector from tangent space to S++.
+    L is cholesky decomposition of a point in S++."""
+
+    X = inv_L @ W @ tf.linalg.matrix_transpose(inv_L)
+    X = L @ (half(X))
+
+    return X
+
+def push_forward_tangent(X, L):
+
+    return L @ adj(X) + X @ adj(L)
+    
+
 class DensM(base_manifold.Manifold):
     """Class is used to work with manifold of density matrices.
     It allows performing all
@@ -27,21 +68,13 @@ class DensM(base_manifold.Manifold):
         Returns:
             complex valued tensor of shape (...,),
             manifold wise inner product"""
-        
-
-        dim = u.shape[-1]
-        dtype = u.dtype
-        
-        lower = tf.ones((dim, dim), dtype=dtype) -\
-                0.5 * tf.linalg.diag(tf.ones((dim,), dtype))
-        lower = tf.linalg.band_part(lower, -1, 0)
-        
+            
         L = tf.linalg.cholesky(u)
         inv_L = tf.linalg.inv(L)
-        X = inv_L @ vec1 @ tf.linalg.matrix_transpose(inv_L)
-        Y = inv_L @ vec2 @ tf.linalg.matrix_transpose(inv_L)
-        X = L @ (lower * X)
-        Y = L @ (lower * Y)
+
+        X = pull_back_tangent(vec1, L, inv_L)
+        Y = pull_back_tangent(vec2, L, inv_L)
+        
         diag_inner = tf.math.conj(tf.linalg.diag_part(X)) *\
             tf.linalg.diag_part(Y) /\
             (tf.linalg.diag_part(L) ** 2)
@@ -64,7 +97,7 @@ class DensM(base_manifold.Manifold):
         Returns:
             complex valued tf.Tensor of shape (..., q, q), projected vector"""
         n = u.shape[-1]
-        return (vec + tf.linalg.adjoint(vec)) / 2 - \
+        return (vec + adj(vec)) / 2 - \
         tf.linalg.trace(vec)[..., tf.newaxis, tf.newaxis] *\
         tf.eye(n, dtype=u.dtype) / n
         
@@ -81,7 +114,7 @@ class DensM(base_manifold.Manifold):
             tf.Tensor of shape (..., q, q), reimannian gradient."""
             
         n = u.shape[-1]
-        symgrad = (egrad + tf.linalg.adjoint(egrad)) / 2
+        symgrad = (egrad + adj(egrad)) / 2
         return u @ (symgrad - tf.eye(n, dtype=u.dtype) *\
                     (tf.linalg.trace(u @ symgrad @ u) /\
                     tf.linalg.trace(u @ u))[..., tf.newaxis, tf.newaxis]) @ u
@@ -96,24 +129,17 @@ class DensM(base_manifold.Manifold):
             vec: complex valued tf.Tensor of shape (..., q, p), vector of 
             direction
         Returns tf.Tensor of shape (..., q, p) new point"""
-        '''new_u = u + vec
-        new_u_evals, new_u_evec = tf.linalg.eigh(new_u)
-        new_u_evals = tf.cast(tf.math.abs(new_u_evals), dtype=u.dtype)
-        new_u_evals = new_u_evals / tf.reduce_sum(new_u_evals,
-                                                  axis=-1,
-                                                  keepdims=True)
-        new_u = (new_u_evec * new_u_evals[..., tf.newaxis, :]) @\
-                tf.linalg.adjoint(new_u_evec)'''
-        vec_lambda_min = tf.linalg.eigvalsh(vec)[..., 0]
-        u_lambda_min = tf.linalg.eigvalsh(u)[..., 0]
-        '''alpha = tf.math.abs((u_lambda_min + 1e-8) / (vec_lambda_min))
-        alpha = tf.cast(alpha, dtype=u.dtype)
-        step_length = alpha * tf.math.tanh(1 / alpha)'''
-        lambda_ratio = tf.math.abs(u_lambda_min / vec_lambda_min)
-        threshold = tf.constant(1, dtype=lambda_ratio.dtype)
-        step_length = tf.cast(tf.math.minimum(threshold, lambda_ratio), dtype=u.dtype)
+        L = tf.linalg.cholesky(u)
+        inv_L = tf.linalg.inv(L)
+
+        X = pull_back_tangent(vec, L, inv_L)
+
+        inv_diag_L = tf.linalg.diag(1 / tf.linalg.diag_part(L))
+
+        cholesky_retraction = lower(L) + lower(X) + tf.linalg.band_part(L, 0, 0) * tf.exp(tf.linalg.band_part(X, 0, 0) * inv_diag_L)
+        densm_retraction = cholesky_retraction @ adj(cholesky_retraction)
         
-        return u + vec * step_length[..., tf.newaxis, tf.newaxis]
+        return densm_retraction / tf.linalg.trace(densm_retraction)[..., tf.newaxis, tf.newaxis]
         
         
     @tf.function
@@ -139,8 +165,21 @@ class DensM(base_manifold.Manifold):
         sqrt_u_inv = (u_evec *\
                       1 / tf.math.sqrt(u_evals)[..., tf.newaxis, :]) @\
                       tf.linalg.adjoint(u_evec)'''
+        v = self.retraction(u, vec2)
+
+        L = tf.linalg.cholesky(u)
+        inv_L = tf.linalg.inv(L)
+        inv_diag_L = tf.linalg.diag(1 / tf.linalg.diag_part(L))
+
+        X = pull_back_tangent(vec1, L, inv_L)
+
+        K = tf.linalg.cholesky(v)
+        inv_K = tf.linalg.inv(L)
+
+        transport = K @ adj((lower(X) + tf.linalg.band_part(K, 0, 0) * inv_diag_L * tf.linalg.band_part(X, 0, 0)))
+        transport += adj(transport)
         
-        return vec1#self.proj(new_u, sqrt_u_new @ sqrt_u_inv @ vec1 @ sqrt_u_inv @ sqrt_u_new)
+        return self.proj(v, transport)
     
     
     @tf.function
@@ -157,24 +196,18 @@ class DensM(base_manifold.Manifold):
             two complex valued tf.Tensor of shape (..., q, p),
             new point and transported vector."""
         
-        '''new_u = u + vec2
-        new_u_evals, new_u_evec = tf.linalg.eigh(new_u)
-        new_u_evals = tf.cast(tf.math.abs(new_u_evals), dtype=u.dtype)
-        new_u_evals = new_u_evals / tf.reduce_sum(new_u_evals,
-                                                  axis=-1,
-                                                  keepdims=True)
-        new_u = (new_u_evec * new_u_evals[..., tf.newaxis, :]) @\
-                tf.linalg.adjoint(new_u_evec)'''
+        v = self.retraction(u, vec2)
+
+        L = tf.linalg.cholesky(u)
+        inv_L = tf.linalg.inv(L)
+        inv_diag_L = tf.linalg.diag(1 / tf.linalg.diag_part(L))
+
+        X = pull_back_tangent(vec1, L, inv_L)
+
+        K = tf.linalg.cholesky(v)
+        inv_K = tf.linalg.inv(L)
+
+        transport = K @ adj((lower(X) + tf.linalg.band_part(K, 0, 0) * inv_diag_L * tf.linalg.band_part(X, 0, 0)))
+        transport += adj(transport)
         
-        new_u = self.retraction(u, vec2)
-        
-        '''new_u_evals, new_u_evec = tf.linalg.eigh(new_u)
-        u_evals, u_evec = tf.linalg.eigh(u)
-        sqrt_u_new = (new_u_evec *\
-                      tf.math.sqrt(new_u_evals)[..., tf.newaxis, :]) @\
-                      tf.linalg.adjoint(new_u_evec)
-        sqrt_u_inv = (u_evec *\
-                      1 / tf.math.sqrt(u_evals)[..., tf.newaxis, :]) @\
-                      tf.linalg.adjoint(u_evec)'''
-        
-        return new_u, vec1#self.proj(new_u, sqrt_u_new @ sqrt_u_inv @ vec1 @ sqrt_u_inv @ sqrt_u_new)
+        return v, self.proj(v, transport)
