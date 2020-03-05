@@ -60,7 +60,6 @@ class DensM(base_manifold.Manifold):
         """Returns object of class DensM."""
         
         
-    @tf.function
     def inner(self, u, vec1, vec2):
         """Returns manifold wise inner product of vectors from
         tangent space.
@@ -91,7 +90,6 @@ class DensM(base_manifold.Manifold):
         return diag_inner + triag_inner
     
     
-    @tf.function
     def proj(self, u, vec):
         """Returns projection of vector on tangen space
         of direct product of manifolds.
@@ -107,8 +105,7 @@ class DensM(base_manifold.Manifold):
         tf.linalg.trace(vec)[..., tf.newaxis, tf.newaxis] *\
         tf.eye(n, dtype=u.dtype) / n
         
-    
-    @tf.function
+
     def egrad_to_rgrad(self, u, egrad):
         """Returns riemannian gradient from euclidean gradient.
         Args:
@@ -126,7 +123,6 @@ class DensM(base_manifold.Manifold):
                     tf.linalg.trace(u @ u))[..., tf.newaxis, tf.newaxis]) @ u
              
     
-    @tf.function
     def retraction(self, u, vec):
         """Transports point via retraction map.
         Args:
@@ -148,7 +144,6 @@ class DensM(base_manifold.Manifold):
         return densm_retraction / tf.linalg.trace(densm_retraction)[..., tf.newaxis, tf.newaxis]
         
         
-    @tf.function
     def vector_transport(self, u, vec1, vec2):
         """Returns vector vec1 tranported from point u along vec2.
         Args:
@@ -188,7 +183,6 @@ class DensM(base_manifold.Manifold):
         return self.proj(v, transport)
     
     
-    @tf.function
     def retraction_transport(self, u, vec1, vec2):
         """Performs retraction and vector transport at the same time.
         Args:
