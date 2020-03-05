@@ -8,6 +8,7 @@ class DensM(base_manifold.Manifold):
     tangent spaces for optimization."""
     # TODO check correctness of transport for canonical metric
     
+    
     def __init__(self):
         """Returns object of class DensM."""
         
@@ -27,21 +28,26 @@ class DensM(base_manifold.Manifold):
             complex valued tensor of shape (...,),
             manifold wise inner product"""
         
-        '''inv_u = tf.linalg.inv(u)
-        return tf.linalg.trace(inv_u @ vec1 @ inv_u @ vec2)'''
+
         dim = u.shape[-1]
         dtype = u.dtype
+        
+        lower = tf.ones((dim, dim), dtype=dtype) -\
+                0.5 * tf.linalg.diag(tf.ones((dim,), dtype))
+        lower = tf.linalg.band_part(lower, -1, 0)
+        
         L = tf.linalg.cholesky(u)
         inv_L = tf.linalg.inv(L)
-        X = inv_L @ vec1 @ tf.linalg(matrix_transpose(inv_L))
-        Y = inv_L @ vec2 @ tf.linalg(matrix_transpose(inv_L))
+        X = inv_L @ vec1 @ tf.linalg.matrix_transpose(inv_L)
+        Y = inv_L @ vec2 @ tf.linalg.matrix_transpose(inv_L)
         X = L @ (lower * X)
         Y = L @ (lower * Y)
-        diag_inner = tf.linalg.diag_part(X) * tf.linalg.diag_part(Y)\
-                        / (tf.linalg.diag_part(L) ** 2)
+        diag_inner = tf.math.conj(tf.linalg.diag_part(X)) *\
+            tf.linalg.diag_part(Y) /\
+            (tf.linalg.diag_part(L) ** 2)
         diag_inner = tf.reduce_sum(diag_inner, axis=-1)
         triag_inner = tf.reduce_sum(tf.math.conj(X - tf.linalg.diag_part(X))\
-                        * (Y - tf.linalg.diag_part(Y)), axes=(-2, -1))
+                        * (Y - tf.linalg.diag_part(Y)), axis=(-2, -1))
         
         return diag_inner + triag_inner
     
@@ -74,12 +80,11 @@ class DensM(base_manifold.Manifold):
         Returns:
             tf.Tensor of shape (..., q, q), reimannian gradient."""
             
-        '''n = u.shape[-1]
+        n = u.shape[-1]
         symgrad = (egrad + tf.linalg.adjoint(egrad)) / 2
         return u @ (symgrad - tf.eye(n, dtype=u.dtype) *\
                     (tf.linalg.trace(u @ symgrad @ u) /\
-                    tf.linalg.trace(u @ u))[..., tf.newaxis, tf.newaxis]) @ u'''
-        return self.proj(u, egrad)
+                    tf.linalg.trace(u @ u))[..., tf.newaxis, tf.newaxis]) @ u
              
     
     @tf.function
