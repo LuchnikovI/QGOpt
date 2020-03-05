@@ -29,7 +29,21 @@ class DensM(base_manifold.Manifold):
         
         '''inv_u = tf.linalg.inv(u)
         return tf.linalg.trace(inv_u @ vec1 @ inv_u @ vec2)'''
-        return tf.linalg.trace(vec1 @ vec2)
+        dim = u.shape[-1]
+        dtype = u.dtype
+        L = tf.linalg.cholesky(u)
+        inv_L = tf.linalg.inv(L)
+        X = inv_L @ vec1 @ tf.linalg(matrix_transpose(inv_L))
+        Y = inv_L @ vec2 @ tf.linalg(matrix_transpose(inv_L))
+        X = L @ (lower * X)
+        Y = L @ (lower * Y)
+        diag_inner = tf.linalg.diag_part(X) * tf.linalg.diag_part(Y)\
+                        / (tf.linalg.diag_part(L) ** 2)
+        diag_inner = tf.reduce_sum(diag_inner, axis=-1)
+        triag_inner = tf.reduce_sum(tf.math.conj(X - tf.linalg.diag_part(X))\
+                        * (Y - tf.linalg.diag_part(Y)), axes=(-2, -1))
+        
+        return diag_inner + triag_inner
     
     
     @tf.function
