@@ -11,14 +11,14 @@ def adj(A):
     return tf.math.conj(tf.linalg.matrix_transpose(A))
 
 def safe_cholesky(X):
-    
-    new_X = X + 1e-8 * tf.eye(X.shape[-1], dtype=X.dtype)
+
+    new_X = X + 1e-8 * tf.cast(tf.random.normal((X.shape[-1], X.shape[-1])), dtype=X.dtype)
 
     return tf.linalg.cholesky(new_X)
 
 def safe_inverse(X):
     
-    new_X = X + 1e-8 * tf.eye(X.shape[-1], dtype=X.dtype)
+    new_X = X + 1e-8 * tf.cast(tf.random.normal((X.shape[-1], X.shape[-1])), dtype=X.dtype)
 
     return tf.linalg.inv(new_X)
 
