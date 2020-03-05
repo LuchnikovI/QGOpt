@@ -10,6 +10,12 @@ def adj(A):
 
     return tf.math.conj(tf.linalg.matrix_transpose(A))
 
+def safe_cholesky(X):
+    
+    new_X = X + 1e-8 * tf.eye(X.shape[-1], dtype=X.dtype)
+
+    return tf.linalg.cholesky(new_X)
+
 def lower(X):
     dim = X.shape[-1]
     dtype = X.dtype
@@ -69,7 +75,7 @@ class DensM(base_manifold.Manifold):
             complex valued tensor of shape (...,),
             manifold wise inner product"""
             
-        L = tf.linalg.cholesky(u)
+        L = safe_cholesky(u)
         inv_L = tf.linalg.inv(L)
 
         X = pull_back_tangent(vec1, L, inv_L)
@@ -129,7 +135,7 @@ class DensM(base_manifold.Manifold):
             vec: complex valued tf.Tensor of shape (..., q, p), vector of 
             direction
         Returns tf.Tensor of shape (..., q, p) new point"""
-        L = tf.linalg.cholesky(u)
+        L = safe_cholesky(u)
         inv_L = tf.linalg.inv(L)
 
         X = pull_back_tangent(vec, L, inv_L)
@@ -167,13 +173,13 @@ class DensM(base_manifold.Manifold):
                       tf.linalg.adjoint(u_evec)'''
         v = self.retraction(u, vec2)
 
-        L = tf.linalg.cholesky(u)
+        L = safe_cholesky(u)
         inv_L = tf.linalg.inv(L)
         inv_diag_L = tf.linalg.diag(1 / tf.linalg.diag_part(L))
 
         X = pull_back_tangent(vec1, L, inv_L)
 
-        K = tf.linalg.cholesky(v)
+        K = safe_cholesky(v)
         inv_K = tf.linalg.inv(L)
 
         transport = K @ adj((lower(X) + tf.linalg.band_part(K, 0, 0) * inv_diag_L * tf.linalg.band_part(X, 0, 0)))
@@ -198,13 +204,13 @@ class DensM(base_manifold.Manifold):
         
         v = self.retraction(u, vec2)
 
-        L = tf.linalg.cholesky(u)
+        L = safe_cholesky(u)
         inv_L = tf.linalg.inv(L)
         inv_diag_L = tf.linalg.diag(1 / tf.linalg.diag_part(L))
 
         X = pull_back_tangent(vec1, L, inv_L)
 
-        K = tf.linalg.cholesky(v)
+        K = safe_cholesky(v)
         inv_K = tf.linalg.inv(L)
 
         transport = K @ adj((lower(X) + tf.linalg.band_part(K, 0, 0) * inv_diag_L * tf.linalg.band_part(X, 0, 0)))
