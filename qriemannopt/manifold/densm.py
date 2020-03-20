@@ -11,6 +11,13 @@ def adj(A):
     return tf.math.conj(tf.linalg.matrix_transpose(A))
 
 def lower(X):
+    """Returns lower triangular part of matrix without diagonal part.
+    Args:
+        X: tf tensor of shape (dim, dim)
+    Returns:
+        tf tensor of shape (dimm, dim), matrix without diagonal and upper
+        triangular parts"""
+
     dim = X.shape[-1]
     dtype = X.dtype
     lower = tf.ones((dim, dim), dtype=dtype) - tf.linalg.diag(tf.ones((dim,), dtype))
@@ -19,6 +26,13 @@ def lower(X):
     return lower * X
 
 def half(X):
+    """Returns lower triangular part of matrix with half of diagonal part.
+    Args:
+        X: tf tensor of shape (dim, dim)
+    Returns:
+        tf tensor of shape (dimm, dim), matrix with half of diagonal and
+        without upper triangular parts"""
+        
     dim = X.shape[-1]
     dtype = X.dtype
     half = tf.ones((dim, dim), dtype=dtype) -\
@@ -32,7 +46,7 @@ def pull_back_tangent(W, L, inv_L):
     """W is a vector from tangent space to S++.
     L is cholesky decomposition of a point in S++."""
 
-    X = inv_L @ W @ tf.linalg.matrix_transpose(inv_L)
+    X = inv_L @ W @ adj(inv_L)
     X = L @ (half(X))
 
     return X
@@ -75,11 +89,10 @@ class DensM(base_manifold.Manifold):
         Y = pull_back_tangent(vec2, L, inv_L)
         
         diag_inner = tf.math.conj(tf.linalg.diag_part(X)) *\
-            tf.linalg.diag_part(Y) /\
-            (tf.linalg.diag_part(L) ** 2)
+            tf.linalg.diag_part(Y) / (tf.linalg.diag_part(L) ** 2)
         diag_inner = tf.reduce_sum(diag_inner, axis=-1)
-        triag_inner = tf.reduce_sum(tf.math.conj(X - tf.linalg.diag_part(X))\
-                        * (Y - tf.linalg.diag_part(Y)), axis=(-2, -1))
+        triag_inner = tf.reduce_sum(tf.math.conj(lower(X))\
+                        * lower(Y), axis=(-2, -1))
         
         return diag_inner + triag_inner
     
