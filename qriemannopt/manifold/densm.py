@@ -83,7 +83,7 @@ class DensM(base_manifold.Manifold):
             manifold wise inner product"""
             
         L = tf.linalg.cholesky(u)
-        inv_L = tf.linalg.inv(L)
+        inv_L = tf.linalg.pinv(L)
 
         X = pull_back_tangent(vec1, L, inv_L)
         Y = pull_back_tangent(vec2, L, inv_L)
@@ -139,7 +139,7 @@ class DensM(base_manifold.Manifold):
             direction
         Returns tf.Tensor of shape (..., q, p) new point"""
         L = tf.linalg.cholesky(u)
-        inv_L = tf.linalg.inv(L)
+        inv_L = tf.linalg.pinv(L)
 
         X = pull_back_tangent(vec, L, inv_L)
 
@@ -178,13 +178,13 @@ class DensM(base_manifold.Manifold):
         v = self.retraction(u, vec2)
 
         L = tf.linalg.cholesky(u)
-        inv_L = tf.linalg.inv(L)
+        inv_L = tf.linalg.pinv(L)
         inv_diag_L = tf.linalg.diag(1 / tf.linalg.diag_part(L))
 
         X = pull_back_tangent(vec1, L, inv_L)
 
         K = tf.linalg.cholesky(v)
-        inv_K = tf.linalg.inv(L)
+        inv_K = tf.linalg.pinv(K)
 
         transport = K @ adj((lower(X) + tf.linalg.band_part(K, 0, 0) * inv_diag_L * tf.linalg.band_part(X, 0, 0)))
         transport += adj(transport)
@@ -208,13 +208,13 @@ class DensM(base_manifold.Manifold):
         v = self.retraction(u, vec2)
 
         L = tf.linalg.cholesky(u)
-        inv_L = tf.linalg.inv(L)
+        inv_L = tf.linalg.pinv(L)
         inv_diag_L = tf.linalg.diag(1 / tf.linalg.diag_part(L))
 
         X = pull_back_tangent(vec1, L, inv_L)
 
         K = tf.linalg.cholesky(v)
-        inv_K = tf.linalg.inv(L)
+        inv_K = tf.linalg.inv(K)
 
         transport = K @ adj((lower(X) + tf.linalg.band_part(K, 0, 0) * inv_diag_L * tf.linalg.band_part(X, 0, 0)))
         transport += adj(transport)
