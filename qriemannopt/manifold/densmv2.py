@@ -10,61 +10,29 @@ def adj(A):
 
     return tf.math.conj(tf.linalg.matrix_transpose(A))
 
-def lower(X):
-    """Returns lower triangular part of matrix without diagonal part.
-    Args:
-        X: tf tensor of shape (dim, dim)
-    Returns:
-        tf tensor of shape (dimm, dim), matrix without diagonal and upper
-        triangular parts"""
-
-    dim = X.shape[-1]
-    dtype = X.dtype
-    lower = tf.ones((dim, dim), dtype=dtype) - tf.linalg.diag(tf.ones((dim,), dtype))
-    lower = tf.linalg.band_part(lower, -1, 0)
-
-    return lower * X
-
-def half(X):
-    """Returns lower triangular part of matrix with half of diagonal part.
-    Args:
-        X: tf tensor of shape (dim, dim)
-    Returns:
-        tf tensor of shape (dimm, dim), matrix with half of diagonal and
-        without upper triangular parts"""
-        
-    dim = X.shape[-1]
-    dtype = X.dtype
-    half = tf.ones((dim, dim), dtype=dtype) -\
-                    0.5 * tf.linalg.diag(tf.ones((dim,), dtype))
-    half = tf.linalg.band_part(half, -1, 0)
-
-    return half * X
-
-
-def pull_back_tangent(W, L, inv_L):
-    """W is a vector from tangent space to S++.
-    L is cholesky decomposition of a point in S++."""
-
-    X = inv_L @ W @ adj(inv_L)
-    X = L @ (half(X))
-
-    return X
-
-def push_forward_tangent(X, L):
-
-    return L @ adj(X) + X @ adj(L)
-
-'''def pinv(X):
+def f_matrix(lmbd):
     
-    s, u, v = tf.linalg.svd(X)
-    s_inv = tf.cast(s > 1e-8, dtype=s.dtype) / s
-    s_inv = tf.cast(s_inv, dtype=u.dtype)
-    return tf.einsum('ij,j,jk->ik', v, s_inv, adj(u))'''
+    n = lmbd.shape[-1]
+    l_i = lmbd[..., tf.newaxis]
+    l_j = lmbd[..., tf.newaxis, :]
+    denom = tf.math.log(l_i) - tf.math.log(l_j) + tf.eye(n, dtype=lmbd.dtype)
+    return (l_i - l_j) / denom + tf.linalg.diag(lmbd)
+
+def pull_back(W, U, lmbd):
+    """
+    Takes tangent vector to S++ and computes tangent vector to S
+    """
+    f = f_matrix(lmbd)
     
-def pinv(X):
+    return U @ ((1/f) * (adj(U) @ W @ U)) @ adj(U)
+
+def push_forward(W, U, lmbd):
+    """
+    Takes tangent vector to S and computes tangent vector to S++
+    """
+    f = f_matrix(lmbd)
     
-    return tf.linalg.inv(X)
+    return U @ (f * (adj(U) @ W @ U)) @ adj(U)
     
 
 class DensM(base_manifold.Manifold):
@@ -92,20 +60,13 @@ class DensM(base_manifold.Manifold):
         Returns:
             complex valued tensor of shape (...,),
             manifold wise inner product"""
-            
-        L = tf.linalg.cholesky(u)
-        inv_L = pinv(L)
-
-        X = pull_back_tangent(vec1, L, inv_L)
-        Y = pull_back_tangent(vec2, L, inv_L)
+        lmbd, U = tf.linalg.eigh(u)
         
-        diag_inner = tf.math.conj(tf.linalg.diag_part(X)) *\
-            tf.linalg.diag_part(Y) / (tf.linalg.diag_part(L) ** 2)
-        diag_inner = tf.reduce_sum(diag_inner, axis=-1)
-        triag_inner = tf.reduce_sum(tf.math.conj(lower(X))\
-                        * lower(Y), axis=(-2, -1))
+        W = pull_back(vec1, U, lmbd)
+        V = pull_back(vec2, U, lmbd)
         
-        return diag_inner + triag_inner
+        return tf.linalg.trace(adj(W) @ V)
+        
     
     
     def proj(self, u, vec):
@@ -135,20 +96,16 @@ class DensM(base_manifold.Manifold):
             tf.Tensor of shape (..., q, q), reimannian gradient."""
             
         n = u.shape[-1]
-        L = tf.linalg.cholesky(u)
         
-        dtype = L.dtype
-        half = tf.ones((n, n), dtype=dtype) - tf.linalg.diag(tf.ones((n,), dtype))
-        G = tf.linalg.band_part(half, -1, 0) + tf.linalg.diag(tf.linalg.diag_part(L) ** 2)
+        lmbd, U = tf.linalg.eigh(u)
+        f = f_matrix(lmbd)
         
-        R = L @ adj(G * (egrad @ L))
-        R = 2 * (R + adj(R))
+        E = adj(U) @ ((egrad + adj(egrad)) / 2) @ U
         
-        alpha = - tf.linalg.trace(R) / (tf.linalg.trace(G * u + adj(G * u)))
+        R_temp = U @ (E * f * f) @ adj(U)
+        alpha = - tf.linalg.trace(R_temp) / tf.linalg.trace(f * f)
         
-        R_corrected = R + alpha * (G * u + adj(G * u))
-        
-        return R_corrected
+        return R_temp + alpha * (U @ (f * f) @ adj(U))
         
         #symgrad = (egrad + adj(egrad)) / 2
         #return u @ (symgrad - tf.eye(n, dtype=u.dtype) *\
@@ -165,22 +122,17 @@ class DensM(base_manifold.Manifold):
             direction
         Returns tf.Tensor of shape (..., q, p) new point"""
 
-        L = tf.linalg.cholesky(u)
-        inv_L = pinv(L)
-
-        X = pull_back_tangent(vec, L, inv_L)
-
-        #inv_diag_L = tf.linalg.diag(tf.linalg.diag_part(L) / (tf.linalg.diag_part(L) ** 2 + 1e-8))
-        inv_diag_L = tf.linalg.diag(1 / tf.linalg.diag_part(L))
-        #inv_diag_L = pinv(tf.linalg.band_part(L, 0, 0))
+        n = u.shape[-1]
+        lmbd, U = tf.linalg.eigh(u)
         
-        cholesky_retraction = lower(L) + lower(X) + tf.linalg.band_part(L, 0, 0) * tf.exp(tf.linalg.band_part(X, 0, 0) * inv_diag_L)
-        densm_retraction = cholesky_retraction @ adj(cholesky_retraction)
+        Su = U @ tf.linalg.diag(tf.math.log(lmbd)) @ adj(U)
+        Svec = pull_back(vec, U, lmbd)
         
-        #densm_retraction /= tf.linalg.trace(densm_retraction)[..., tf.newaxis, tf.newaxis]
-        #densm_retraction += 1e-10 * tf.eye(densm_retraction.shape[-1], dtype = densm_retraction.dtype)
+        Sresult = Su - Svec
         
-        return densm_retraction / tf.linalg.trace(densm_retraction)[..., tf.newaxis, tf.newaxis]
+        result = tf.linalg.expm(Sresult)
+        
+        return result / tf.linalg.trace(result)[..., tf.newaxis, tf.newaxis]
         
         
     def vector_transport(self, u, vec1, vec2):
@@ -205,23 +157,25 @@ class DensM(base_manifold.Manifold):
         sqrt_u_inv = (u_evec *\
                       1 / tf.math.sqrt(u_evals)[..., tf.newaxis, :]) @\
                       tf.linalg.adjoint(u_evec)'''
-        v = self.retraction(u, vec2)
-
-        L = tf.linalg.cholesky(u)
-        inv_L = pinv(L)
-        #inv_diag_L = tf.linalg.diag(tf.linalg.diag_part(L) / (tf.linalg.diag_part(L) ** 2 + 1e-8))
-        inv_diag_L = tf.linalg.diag(1 / tf.linalg.diag_part(L))
-        #inv_diag_L = pinv(tf.linalg.band_part(L, 0, 0))
+        n = u.shape[-1]
+        lmbd, U = tf.linalg.eigh(u)
         
-        X = pull_back_tangent(vec1, L, inv_L)
-
-        K = tf.linalg.cholesky(v)
+        Su = U @ tf.linalg.diag(tf.math.log(lmbd)) @ adj(U)
+        Svec2 = pull_back(vec2, U, lmbd)
         
-        L_transport = lower(X) + tf.linalg.band_part(K, 0, 0) * inv_diag_L * tf.linalg.band_part(X, 0, 0)
-
-        transport = K @ adj(L_transport) + L_transport @ adj(K)
+        Sresult = Su - Svec2
         
-        return self.proj(v, transport)
+        transport = tf.linalg.expm(Sresult)
+        
+        alpha = tf.linalg.trace(transport)[..., tf.newaxis, tf.newaxis]
+        
+        new_point = transport / alpha
+        
+        new_lmbd = lmbd - tf.math.log(alpha)
+        
+        new_vec1 = push_forward(pull_back(vec1, U, lmbd), U, new_lmbd)
+
+        return self.proj(new_vec1, new_point)
     
     
     def retraction_transport(self, u, vec1, vec2):
@@ -237,20 +191,22 @@ class DensM(base_manifold.Manifold):
             two complex valued tf.Tensor of shape (..., q, p),
             new point and transported vector."""
         
-        v = self.retraction(u, vec2)
-
-        L = tf.linalg.cholesky(u)
-        inv_L = pinv(L)
-        #inv_diag_L = tf.linalg.diag(tf.linalg.diag_part(L) / (tf.linalg.diag_part(L) ** 2 + 1e-8))
-        inv_diag_L = tf.linalg.diag(1 / tf.linalg.diag_part(L))
-        #inv_diag_L = pinv(tf.linalg.band_part(L, 0, 0))
-
-        X = pull_back_tangent(vec1, L, inv_L)
-
-        K = tf.linalg.cholesky(v)
+        n = u.shape[-1]
+        lmbd, U = tf.linalg.eigh(u)
         
-        L_transport = lower(X) + tf.linalg.band_part(K, 0, 0) * inv_diag_L * tf.linalg.band_part(X, 0, 0)
-
-        transport = K @ adj(L_transport) + L_transport @ adj(K)
+        Su = U @ tf.linalg.diag(tf.math.log(lmbd)) @ adj(U)
+        Svec2 = pull_back(vec2, U, lmbd)
         
-        return v, self.proj(v, transport)
+        Sresult = Su - Svec2
+        
+        transport = tf.linalg.expm(Sresult)
+        
+        alpha = tf.linalg.trace(transport)[..., tf.newaxis, tf.newaxis]
+        
+        new_point = transport / alpha
+        
+        new_lmbd = lmbd - tf.math.log(alpha)
+        
+        new_vec1 = push_forward(pull_back(vec1, U, lmbd), U, new_lmbd)
+        
+        return new_point, self.proj(new_vec1, new_point)
