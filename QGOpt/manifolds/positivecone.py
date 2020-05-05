@@ -3,7 +3,7 @@ from QGOpt.manifolds import base_manifold
 
 
 def adj(A):
-    """Returns adjoint matrix
+    """Returns hermitian adjoint matrix
     Args:
         A: tf.tensor of shape (..., n, m)
     Returns:
@@ -13,11 +13,11 @@ def adj(A):
 
 
 def _lower(X):
-    """Returns lower triangular part of matrix without diagonal part.
+    """Returns the lower triangular part of a matrix without diagonal part.
     Args:
         X: tf tensor of shape (..., m, m)
     Returns:
-        tf tensor of shape (..., m, m), matrix without diagonal and upper
+        tf tensor of shape (..., m, m), a matrix without diagonal and upper
         triangular parts"""
 
     dim = X.shape[-1]
@@ -30,11 +30,11 @@ def _lower(X):
 
 
 def _half(X):
-    """Returns lower triangular part of matrix with half of diagonal part.
+    """Returns the lower triangular part of a matrix with half of diagonal part.
     Args:
         X: tf tensor of shape (..., m, m)
     Returns:
-        tf tensor of shape (..., m, m), matrix with half of diagonal and
+        tf tensor of shape (..., m, m), a matrix with half of diagonal and
         without upper triangular parts"""
 
     dim = X.shape[-1]
@@ -130,15 +130,15 @@ def _push_forward_log(W, U, lmbd):
 
 
 class PositiveCone(base_manifold.Manifold):
-    """Class is used to work with manifold of density matrices.
+    """Class describes S++ manifold.
     It allows performing all
     necessary operations with elements of manifolds direct product and
     tangent spaces for optimization."""
 
     def __init__(self, metric='log'):
-        """Returns object of class DensM
+        """Returns object of the class PositiveCone
         Args:
-            metric: string specifies type of metric, Defaults to 'log'
+            metric: string specifies type of a metric, Defaults to 'log'
             Types of metrics are available now: 'cholesky', 'log'"""
         list_of_metrics = ['cholesky', 'log']
         if metric not in list_of_metrics:
@@ -147,17 +147,17 @@ class PositiveCone(base_manifold.Manifold):
 
     def inner(self, u, vec1, vec2):
         """Returns manifold wise inner product of vectors from
-        tangent space.
+        a tangent space.
         Args:
             u: complex valued tensor of shape (..., q, q),
-            element of manifolds direct product
+            an element of manifolds direct product
             vec1: complex valued tensor of shape (..., q, q),
-            vector from tangent space.
+            a vector from tangent space.
             vec2: complex valued tensor of shape (..., q, q),
-            vector from tangent spaces.
+            a vector from tangent spaces.
         Returns:
             complex valued tensor of shape (...,),
-            manifold wise inner product"""
+            the manifold wise inner product"""
 
         if self.metric == 'log':
             lmbd, U = tf.linalg.eigh(u)
@@ -182,27 +182,27 @@ class PositiveCone(base_manifold.Manifold):
             return diag_inner + triag_inner
 
     def proj(self, u, vec):
-        """Returns projection of vectors on tangen space
+        """Returns projection of vectors on a tangen space
         of direct product of manifolds.
         Args:
             u: complex valued tf.Tensor of shape (..., q, q),
-            point of direct product.
+            a point on a manifolds direct product.
             vec: complex valued tf.Tensor of shape (..., q, q),
-            vectors to be projected.
+            a vector to be projected.
         Returns:
             complex valued tf.Tensor of shape (..., q, q), projected vector"""
 
         return (vec + adj(vec)) / 2
 
     def egrad_to_rgrad(self, u, egrad):
-        """Returns riemannian gradient from euclidean gradient.
+        """Returns the Riemannian gradient from an Euclidean gradient.
         Args:
             u: complex valued tf.Tensor of shape (..., q, q),
-            element of direct product.
+            an element of direct product.
             egrad: complex valued tf.Tensor of shape (..., q, q),
-            euclidean gradient.
+            an Euclidean gradient.
         Returns:
-            tf.Tensor of shape (..., q, q), reimannian gradient."""
+            tf.Tensor of shape (..., q, q), the Reimannian gradient."""
 
         if self.metric == 'log':
             lmbd, U = tf.linalg.eigh(u)
@@ -228,13 +228,12 @@ class PositiveCone(base_manifold.Manifold):
             return R
 
     def retraction(self, u, vec):
-        """Transports point via retraction map.
+        """Transports a point via retraction map.
         Args:
-            u: complex valued tf.Tensor of shape (..., q, q), point
+            u: complex valued tf.Tensor of shape (..., q, q), a point
             to be transported
-            vec: complex valued tf.Tensor of shape (..., q, q), vector of
-            direction
-        Returns tf.Tensor of shape (..., q, q) new point"""
+            vec: complex valued tf.Tensor of shape (..., q, q), a direction vector
+        Returns tf.Tensor of shape (..., q, q) a new point"""
 
         if self.metric == 'log':
             lmbd, U = tf.linalg.eigh(u)
@@ -260,17 +259,17 @@ class PositiveCone(base_manifold.Manifold):
             return cholesky_retraction @ adj(cholesky_retraction)
 
     def vector_transport(self, u, vec1, vec2):
-        """Returns vector vec1 tranported from point u along vec2.
+        """Returns vector vec1 transported from a point u along a vector vec2.
         Args:
             u: complex valued tf.Tensor of shape (..., q, p),
-            initial point of direct product.
+            an initial point of a direct product.
             vec1: complex valued tf.Tensor of shape (..., q, p),
-            vector to be transported.
+            a vector to be transported.
             vec2: complex valued tf.Tensor of shape (..., q, p),
-            direction vector.
+            a direction vector.
         Returns:
             complex valued tf.Tensor of shape (..., q, p),
-            transported vector."""
+            a new vector."""
 
         if self.metric == 'log':
             lmbd, U = tf.linalg.eigh(u)
@@ -278,7 +277,7 @@ class PositiveCone(base_manifold.Manifold):
             Su = U @ tf.linalg.diag(tf.math.log(lmbd)) @ adj(U)
             Svec2 = _pull_back_log(vec2, U, lmbd)
             Sresult = Su + Svec2
-            # eig decomposition of new point from S
+            # eig decomposition of a new point from S
             log_new_lmbd, new_U = tf.linalg.eigh(Sresult)
             # new lmbd
             new_lmbd = tf.exp(log_new_lmbd)
@@ -309,14 +308,14 @@ class PositiveCone(base_manifold.Manifold):
         """Performs retraction and vector transport at the same time.
         Args:
             u: complex valued tf.Tensor of shape (..., q, p),
-            initial point from direct product.
+            an initial point from a direct product.
             vec1: complex valued tf.Tensor of shape (..., q, p),
-            vector to be transported.
+            a vector to be transported.
             vec2: complex valued tf.Tensor of shape (..., q, p),
-            direction vector.
+            a direction vector.
         Returns:
             two complex valued tf.Tensor of shape (..., q, p),
-            new point and transported vector."""
+            a new point and a new vector."""
         if self.metric == 'log':
             lmbd, U = tf.linalg.eigh(u)
             # geoidesic in S
