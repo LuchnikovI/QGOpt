@@ -3,27 +3,26 @@ import tensorflow as tf
 
 
 def adj(A):
-    """Correct adjoint
+    """Correct hermitian adjoint
     Args:
-        A: tf.tensor of shape (..., n, m)
+        A: tf tensor of shape (..., n, m)
     Returns:
-        tf tensor of shape (..., m, n), adjoint matrix"""
+        tf tensor of shape (..., m, n), hermitian adjoint matrix"""
 
     return tf.math.conj(tf.linalg.matrix_transpose(A))
 
 
 class StiefelManifold(base_manifold.Manifold):
-    """Class is used to work with Stiefel manifold. It allows performing all
+    """Class describes Stiefel manifold. It allows performing all
     necessary operations with elements of manifolds direct product and
     tangent spaces for optimization."""
-    # TODO check correctness of transport for canonical metric
 
     def __init__(self, retraction='svd',
                  metric='euclidean',
                  transport='projective'):
         """Returns object of class StiefelManifold.
         Args:
-            retruction: string specifies type of retraction. Defaults to
+            retraction: string specifies type of retraction. Defaults to
             'svd'. Types of retraction is available now: 'svd', 'cayley'.
 
             metric: string specifies type of metric, Defaults to 'euclidean'.
