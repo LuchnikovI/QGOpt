@@ -8,3 +8,8 @@ import tensorflow as tf
 
 stiefel_manifold = qgo.manifolds.StiefelManifold(retraction='cayley', metric='canonical')
 ```
+You can create a Riemannian optimizer using the Stiefel manifold above. This optimizer works almost like TF optimizer.
+```Python
+learning_rate = 0.1
+opt = qgo.optimizers.RAdam(stiefel_manifold, learning_rate)
+```
