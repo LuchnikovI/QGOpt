@@ -47,14 +47,14 @@ class StiefelManifold(base_manifold.Manifold):
 
     def inner(self, u, vec1, vec2):
         """Returns manifold wise inner product of vectors from
-        tangent space.
+        a tangent space of a direct product of manifolds.
         Args:
             u: complex valued tensor of shape (..., q, p),
-            element of manifolds direct product
+            an element of manifolds direct product
             vec1: complex valued tensor of shape (..., q, p),
-            vector from tangent space.
+            a vector from a tangent space.
             vec2: complex valued tensor of shape (..., q, p),
-            vector from tangent spaces.
+            a vector from a tangent spaces.
         Returns:
             complex valued tensor of shape (...,),
             manifold wise inner product"""
@@ -71,29 +71,29 @@ class StiefelManifold(base_manifold.Manifold):
         return tf.math.sqrt(s_sq)
 
     def proj(self, u, vec):
-        """Returns projection of vector on tangen space
-        of direct product of Stiefel manifolds.
+        """Returns projection of a vector on a tangen space
+        of a direct product of Stiefel manifolds.
         Args:
             u: complex valued tf.Tensor of shape (..., q, p),
-            point of direct product.
+            a point of a direct product.
             vec: complex valued tf.Tensor of shape (..., q, p),
             vectors to be projected.
         Returns:
-            complex valued tf.Tensor of shape (..., q, p), projected vector"""
+            complex valued tf.Tensor of shape (..., q, p), a projected vector"""
 
         return 0.5 * u @ (adj(u) @ vec - adj(vec) @ u) +\
                          (tf.eye(u.shape[-2], dtype=u.dtype) -\
                           u @ adj(u)) @ vec
 
     def egrad_to_rgrad(self, u, egrad):
-        """Returns riemannian gradient from euclidean gradient.
+        """Returns the Riemannian gradient from an Euclidean gradient.
         Args:
             u: complex valued tf.Tensor of shape (..., q, p),
-            element of direct product.
+            an element of a direct product.
             egrad: complex valued tf.Tensor of shape (..., q, p),
-            euclidean gradient.
+            an Euclidean gradient.
         Returns:
-            tf.Tensor of shape (..., q, p), reimannian gradient."""
+            tf.Tensor of shape (..., q, p), the Reimannian gradient."""
 
         if self._metric == 'euclidean':
             return 0.5 * u @ (adj(u) @ egrad - adj(egrad) @ u) +\
@@ -104,13 +104,13 @@ class StiefelManifold(base_manifold.Manifold):
             return egrad - u @ adj(egrad) @ u
 
     def retraction(self, u, vec):
-        """Transports point via retraction map.
+        """Transports a point via a retraction map.
         Args:
-            u: complex valued tf.Tensor of shape (..., q, p), point
+            u: complex valued tf.Tensor of shape (..., q, p), a point
             to be transported
-            vec: complex valued tf.Tensor of shape (..., q, p), vector of
-            direction
-        Returns tf.Tensor of shape (..., q, p) new point"""
+            vec: complex valued tf.Tensor of shape (..., q, p), a vector of
+            a direction
+        Returns tf.Tensor of shape (..., q, p), a new point"""
 
         if self._retraction == 'svd':
             new_u = u + vec
@@ -124,33 +124,33 @@ class StiefelManifold(base_manifold.Manifold):
             return tf.linalg.inv(Id - W / 2) @ (Id + W / 2) @ u
 
     def vector_transport(self, u, vec1, vec2):
-        """Returns vector vec1 tranported from point u along vec2.
+        """Returns vector vec1 tranported from a point u along vec2.
         Args:
             u: complex valued tf.Tensor of shape (..., q, p),
-            initial point of direct product.
+            an initial point of a direct product.
             vec1: complex valued tf.Tensor of shape (..., q, p),
-            vector to be transported.
+            a vector to be transported.
             vec2: complex valued tf.Tensor of shape (..., q, p),
-            direction vector.
+            a direction vector.
         Returns:
             complex valued tf.Tensor of shape (..., q, p),
-            transported vector."""
+            a transported vector."""
         if self._transport == 'projective':
             new_u = self.retraction(u, vec2)
             return self.proj(new_u, vec1)
 
     def retraction_transport(self, u, vec1, vec2):
-        """Performs retraction and vector transport at the same time.
+        """Performs a retraction and a vector transport at the same time.
         Args:
             u: complex valued tf.Tensor of shape (..., q, p),
-            initial point from direct product.
+            an initial point from direct product.
             vec1: complex valued tf.Tensor of shape (..., q, p),
-            vector to be transported.
+            a vector to be transported.
             vec2: complex valued tf.Tensor of shape (..., q, p),
-            direction vector.
+            a direction vector.
         Returns:
             two complex valued tf.Tensor of shape (..., q, p),
-            new point and transported vector."""
+            a new point and a new vector."""
         if self._transport == 'projective':
             new_u = self.retraction(u, vec2)
             return new_u, self.proj(new_u, vec1)
