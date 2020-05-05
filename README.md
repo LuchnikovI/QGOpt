@@ -11,7 +11,7 @@ stiefel_manifold = qgo.manifolds.StiefelManifold(retraction='cayley', metric='ca
 You can create a Riemannian optimizer using the Stiefel manifold above. This optimizer works almost like TF optimizer.
 ```Python
 learning_rate = 0.1
-opt = qgo.optimizers.RAdam(stiefel_manifold, learning_rate)
+opt = qgo.optimizers.RAdam(stiefel_manifold, learning_rate)  # Riemannian Adam
 ```
 One can create tf.Variable describing point on the Stiefel manifold. tf.Variable must have float dtype, and shape (..., n, m, 2), where (...) enumerates a manifold, n>=m for the Stiefel manifold, last index enumerates the real part [0] and the imag part [1]. You can also use ```real_to_complex``` and ```complex_to_real``` functions to switch between the float representation of a point from a manifold and the complex representation of a point from a manifold.
 ```Python
