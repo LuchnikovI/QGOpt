@@ -12,7 +12,7 @@ import six
 
 
 class RAdam(opt.OptimizerV2):
-    # TODO proper description
+    """Riemannain Adam and AMSGrad optimizers"""
 
     def __init__(self,
                  manifold,
@@ -22,25 +22,25 @@ class RAdam(opt.OptimizerV2):
                  eps=1e-8,
                  ams=False,
                  name="RAdam"):
-        """Constructs a new Adam optimizer.
+        """Returns a new optimizer.
         Comment:
-            The Adam works only with real valued tf.Variable of shape
+            The optimizer works only with real valued tf.Variable of shape
             (..., q, p, 2), where ... -- enumerates manifolds
             (can be either empty or any shaped),
-            q and p size of a matrix, the last index marks
+            q and p the size of a matrix, the last index marks
             real and imag parts of a matrix
             (0 -- real part, 1 -- imag part)
         Args:
-            manifold: object marks particular manifold.
-            learning_rate: floating point number. The learning rate.
+            manifold: object of the class Manifold, marks a particular manifold.
+            learning_rate: floating point number. A learning rate.
             Defaults to 0.05.
-            beta1: floating point number. exp decay rate for first moment.
+            beta1: floating point number. exp decay rate for the first moment.
             Defaults to 0.9.
-            beta2: floating point number. exp decay rate for second moment.
+            beta2: floating point number. exp decay rate for the second moment.
             Defaults to 0.999.
             eps: floating point number. Regularization coeff.
             Defaults to 1e-8.
-            ams: boolean number. Use ams or not.
+            ams: boolean number. Use ams (RMSGrad) or not.
             name: Optional name prefix for the operations created when applying
             gradients.  Defaults to 'RAdam'."""
 
