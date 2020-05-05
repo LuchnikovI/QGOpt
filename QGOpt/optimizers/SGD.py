@@ -4,25 +4,24 @@ import tensorflow as tf
 
 
 class RSGD(opt.OptimizerV2):
-    # TODO proper description
+    """Riemannian gradient descent and gradient descent with momentum optimizers."""
 
     def __init__(self,
                  manifold,
                  learning_rate=0.01,
                  momentum=0.0,
                  name="RSGD"):
-        """Constructs a new Riemannian Stochastic Gradient Descent optimizer
-        on a manifold.
+        """Returns a new Riemannian optimizer.
         Comment:
-            The RSGD works only with real valued tf.Variable of shape
+            The optimizer works only with real valued tf.Variable of shape
             (..., q, p, 2), where ... -- enumerates manifolds
             (can be either empty or any shaped),
             q and p size of a matrix, the last index marks
             real and imag parts of a matrix
             (0 -- real part, 1 -- imag part)
         Args:
-            manifold: object marks particular manifold.
-            learning_rate: floating point number. The learning rate.
+            manifold: object of the class Manifold, marks a particular manifold.
+            learning_rate: floating point number. A learning rate.
             Defaults to 0.01.
             name: Optional name prefix for the operations created when applying
             gradients.  Defaults to 'RSGD'."""
