@@ -1,4 +1,4 @@
-import qriemannopt.manifold as m
+import QGOpt.manifolds as m
 from tensorflow.python.keras.optimizer_v2 import optimizer_v2 as opt
 import tensorflow as tf
 

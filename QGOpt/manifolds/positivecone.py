@@ -1,5 +1,5 @@
 import tensorflow as tf
-from qriemannopt.manifold import base_manifold
+from QGOpt.manifolds import base_manifold
 
 
 def adj(A):
@@ -129,7 +129,7 @@ def _push_forward_log(W, U, lmbd):
     return U @ (f * (adj(U) @ W @ U)) @ adj(U)
 
 
-class DensM(base_manifold.Manifold):
+class PositiveCone(base_manifold.Manifold):
     """Class is used to work with manifold of density matrices.
     It allows performing all
     necessary operations with elements of manifolds direct product and

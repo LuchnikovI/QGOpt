@@ -1,4 +1,4 @@
-from qriemannopt.manifold import base_manifold
+from QGOpt.manifolds import base_manifold
 import tensorflow as tf
 
 
