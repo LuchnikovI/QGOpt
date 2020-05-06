@@ -12,17 +12,7 @@ import six
 
 
 class RAdam(opt.OptimizerV2):
-    """Riemannain Adam and AMSGrad optimizers"""
-
-    def __init__(self,
-                 manifold,
-                 learning_rate=0.05,
-                 beta1=0.9,
-                 beta2=0.999,
-                 eps=1e-8,
-                 ams=False,
-                 name="RAdam"):
-        """Returns a new optimizer.
+    """Riemannain Adam and AMSGrad optimizers. Returns a new optimizer.
         Comment:
             The optimizer works only with real valued tf.Variable of shape
             (..., q, p, 2), where ... -- enumerates manifolds
@@ -43,6 +33,15 @@ class RAdam(opt.OptimizerV2):
             ams: boolean number. Use ams (RMSGrad) or not.
             name: Optional name prefix for the operations created when applying
             gradients.  Defaults to 'RAdam'."""
+
+    def __init__(self,
+                 manifold,
+                 learning_rate=0.05,
+                 beta1=0.9,
+                 beta2=0.999,
+                 eps=1e-8,
+                 ams=False,
+                 name="RAdam"):
 
         super(RAdam, self).__init__(name)
         self.manifold = manifold
