@@ -7,20 +7,19 @@ class Manifold(ABC):
     is described by a complex tf.Tensor with the shape (..., a, b),
     where (...) enumerates manifolds from a direct product (can be either
     empty or not), (a, b) is the shape of a matrix from a particular manifold.
+    Args:
+        retraction: string specifies type of a retraction.
+
+        metric: string specifies type of a metric.
+
+        transport: string specifies type of a vector transport
+    Returns:
+        object of the class Manifold
     """
 
     def __init__(self, retraction,
                  metric,
                  transport):
-        """Returns object of class Manifold.
-        Args:
-            retruction: string specifies type of a retraction.
-
-            metric: string specifies type of a metric.
-
-            transport: string specifies type of a vector transport
-        Returns:
-            object of class Manifold"""
 
         self._retraction = retraction
         self._metric = metric
