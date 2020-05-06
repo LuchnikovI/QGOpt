@@ -1,5 +1,5 @@
 Extension of TensorFlow optimizers on Riemannian manifolds that often arise in quantum mechanics (Complex Stiefel manifold, positive-definite cone).
-# Basic Example
+## Basic Example
 
 Here we create an example of the Stiefel manifold with canonical metric and Cayley retraction.
 ```Python
@@ -31,5 +31,5 @@ opt.apply_gradients(zip([grad], [U]))  # optimization step
 ```
 For more examples, see ipython notebooks.
 
-# Installation
+## Installation
 ```pip install QGOpt```
