@@ -4,14 +4,8 @@ import tensorflow as tf
 
 
 class RSGD(opt.OptimizerV2):
-    """Riemannian gradient descent and gradient descent with momentum optimizers."""
-
-    def __init__(self,
-                 manifold,
-                 learning_rate=0.01,
-                 momentum=0.0,
-                 name="RSGD"):
-        """Returns a new Riemannian optimizer.
+    """Riemannian gradient descent and gradient descent with momentum optimizers.
+    Returns a new Riemannian optimizer.
         Comment:
             The optimizer works only with real valued tf.Variable of shape
             (..., q, p, 2), where ... -- enumerates manifolds
@@ -25,6 +19,13 @@ class RSGD(opt.OptimizerV2):
             Defaults to 0.01.
             name: Optional name prefix for the operations created when applying
             gradients.  Defaults to 'RSGD'."""
+
+    def __init__(self,
+                 manifold,
+                 learning_rate=0.01,
+                 momentum=0.0,
+                 name="RSGD"):
+
 
         super(RSGD, self).__init__(name)
         self._set_hyper("learning_rate", learning_rate)
