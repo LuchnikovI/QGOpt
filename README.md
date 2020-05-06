@@ -30,3 +30,6 @@ grad = tape.gradient(target, [U])  # gradient
 opt.apply_gradients(zip([grad], [U]))  # optimization step
 ```
 For more examples, see ipython notebooks.
+
+# Installation
+```pip install QGOpt```
