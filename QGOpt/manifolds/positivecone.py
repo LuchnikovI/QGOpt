@@ -130,16 +130,15 @@ def _push_forward_log(W, U, lmbd):
 
 
 class PositiveCone(base_manifold.Manifold):
-    """Class describes S++ manifold.
-    It allows performing all
+    """Class describes S++ manifold. It allows performing all
     necessary operations with elements of manifolds direct product and
-    tangent spaces for optimization."""
+    tangent spaces for optimization. Returns object of the class PositiveCone
+    Args:
+        metric: string specifies type of a metric, Defaults to 'log'
+        Types of metrics are available now: 'cholesky', 'log'"""
 
     def __init__(self, metric='log'):
-        """Returns object of the class PositiveCone
-        Args:
-            metric: string specifies type of a metric, Defaults to 'log'
-            Types of metrics are available now: 'cholesky', 'log'"""
+
         list_of_metrics = ['cholesky', 'log']
         if metric not in list_of_metrics:
             raise ValueError("Incorrect metric")
