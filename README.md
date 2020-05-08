@@ -31,5 +31,34 @@ opt.apply_gradients(zip([grad], [U]))  # optimization step
 ```
 For more examples, see ipython notebooks.
 
+## Types of manifolds
+
+The current version of the package includes two types of manifolds: the complex Stiefel manifold, and the manifold of positive-definite matrices (positive-definite cone). You can create manifolds with different types of metrics and retraction
+```Python
+# Stiefel manifold
+stiefel_cayley_canonical = qgo.manifolds.StiefelManifold(retraction='cayley', metric='canonical')
+stiefel_cayley_euclidean = qgo.manifolds.StiefelManifold(retraction='cayley', metric='euclidean')
+stiefel_svd_canoncical = qgo.manifolds.StiefelManifold(retraction='svd', metric='canonical')
+stiefel_svd_euclidean = qgo.manifolds.StiefelManifold(retraction='svd', metric='euclidean')
+
+# Positive-Definite cone
+positive_cone_log_euclidean = qgo.manifolds.PositiveCone('log_euclidean')
+positiv_cone_log_cholesky = qgo.manifolds.PositiveCone('log_cholesky')
+```
+
+## Types of optimizers
+
+The current version of the package includes four first-order optimizers: gradient descent, gradient descent with momentum, Adam, and AMSGrad
+```Python
+lr = 0.01  # learning rate
+m = qgo.manifolds.StiefelManifold()  # example of a manifold
+momentum = 0.9
+
+gd_optimizer = qgo.optimizers.RSGD(m, lr)
+gd_with_momentum_optimizer = qgo.optimizers.RSGD(m, lr, momentum)
+adam_optimizer = qgo.optimizers.RAdam(m, lr)
+amsgrad_optimizer = qgo.optimizers.RAdam(m, lr, ams=True)
+```
+
 ## Installation
 ```pip install QGOpt```
