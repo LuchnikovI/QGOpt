@@ -134,12 +134,12 @@ class PositiveCone(base_manifold.Manifold):
     necessary operations with elements of manifolds direct product and
     tangent spaces for optimization. Returns object of the class PositiveCone
     Args:
-        metric: string specifies type of a metric, Defaults to 'log'
-        Types of metrics are available now: 'cholesky', 'log'"""
+        metric: string specifies type of a metric, Defaults to 'log_cholesky'
+        Types of metrics are available now: 'log_cholesky', 'log_euclidean'"""
 
-    def __init__(self, metric='log'):
+    def __init__(self, metric='log_cholesky'):
 
-        list_of_metrics = ['cholesky', 'log']
+        list_of_metrics = ['log_cholesky', 'log_euclidean']
         if metric not in list_of_metrics:
             raise ValueError("Incorrect metric")
         self.metric = metric
@@ -158,14 +158,14 @@ class PositiveCone(base_manifold.Manifold):
             complex valued tensor of shape (...,),
             the manifold wise inner product"""
 
-        if self.metric == 'log':
+        if self.metric == 'log_euclidean':
             lmbd, U = tf.linalg.eigh(u)
             W = _pull_back_log(vec1, U, lmbd)
             V = _pull_back_log(vec2, U, lmbd)
 
             return tf.linalg.trace(adj(W) @ V)
 
-        elif self.metric == 'cholesky':
+        elif self.metric == 'log_cholesky':
             L = tf.linalg.cholesky(u)
             inv_L = tf.linalg.inv(L)
 
@@ -203,7 +203,7 @@ class PositiveCone(base_manifold.Manifold):
         Returns:
             tf.Tensor of shape (..., q, q), the Reimannian gradient."""
 
-        if self.metric == 'log':
+        if self.metric == 'log_euclidean':
             lmbd, U = tf.linalg.eigh(u)
             f = _f_matrix(lmbd)
             # Riemannian gradient
@@ -211,7 +211,7 @@ class PositiveCone(base_manifold.Manifold):
             R = U @ (E * f * f) @ adj(U)
             return R
 
-        elif self.metric == 'cholesky':
+        elif self.metric == 'log_cholesky':
             n = u.shape[-1]
             dtype = u.dtype
             L = tf.linalg.cholesky(u)
@@ -234,7 +234,7 @@ class PositiveCone(base_manifold.Manifold):
             vec: complex valued tf.Tensor of shape (..., q, q), a direction vector
         Returns tf.Tensor of shape (..., q, q) a new point"""
 
-        if self.metric == 'log':
+        if self.metric == 'log_euclidean':
             lmbd, U = tf.linalg.eigh(u)
             # geodesic in S
             Su = U @ tf.linalg.diag(tf.math.log(lmbd)) @ adj(U)
@@ -243,7 +243,7 @@ class PositiveCone(base_manifold.Manifold):
 
             return tf.linalg.expm(Sresult)
 
-        elif self.metric == 'cholesky':
+        elif self.metric == 'log_cholesky':
             L = tf.linalg.cholesky(u)
             inv_L = tf.linalg.inv(L)
 
@@ -270,7 +270,7 @@ class PositiveCone(base_manifold.Manifold):
             complex valued tf.Tensor of shape (..., q, p),
             a new vector."""
 
-        if self.metric == 'log':
+        if self.metric == 'log_euclidean':
             lmbd, U = tf.linalg.eigh(u)
             # geoidesic in S
             Su = U @ tf.linalg.diag(tf.math.log(lmbd)) @ adj(U)
@@ -286,7 +286,7 @@ class PositiveCone(base_manifold.Manifold):
 
             return new_vec1
 
-        elif self.metric == 'cholesky':
+        elif self.metric == 'log_cholesky':
             v = self.retraction(u, vec2)
 
             L = tf.linalg.cholesky(u)
@@ -315,7 +315,7 @@ class PositiveCone(base_manifold.Manifold):
         Returns:
             two complex valued tf.Tensor of shape (..., q, p),
             a new point and a new vector."""
-        if self.metric == 'log':
+        if self.metric == 'log_euclidean':
             lmbd, U = tf.linalg.eigh(u)
             # geoidesic in S
             Su = U @ tf.linalg.diag(tf.math.log(lmbd)) @ adj(U)
@@ -334,7 +334,7 @@ class PositiveCone(base_manifold.Manifold):
 
             return new_point, new_vec1
 
-        elif self.metric == 'cholesky':
+        elif self.metric == 'log_cholesky':
             v = self.retraction(u, vec2)
 
             L = tf.linalg.cholesky(u)

@@ -21,28 +21,20 @@ class StiefelManifold(base_manifold.Manifold):
         'svd'. Types of retraction is available now: 'svd', 'cayley'.
 
         metric: string specifies type of metric, Defaults to 'euclidean'.
-        Types of metrics is available now: 'euclidean', 'canonical'.
-
-        transport: string specifies type of vector transport,
-        Defaults to 'projective'. Types of vector transport
-        is available now: 'projective'."""
+        Types of metrics is available now: 'euclidean', 'canonical'."""
 
     def __init__(self, retraction='svd',
-                 metric='euclidean',
-                 transport='projective'):
+                 metric='euclidean'):
 
         list_of_metrics = ['euclidean', 'canonical']
         list_of_retractions = ['svd', 'cayley']
-        list_of_transports = ['projective']
 
         if metric not in list_of_metrics:
             raise ValueError("Incorrect metric")
         if retraction not in list_of_retractions:
             raise ValueError("Incorrect retraction")
-        if transport not in list_of_transports:
-            raise ValueError("Incorrect transport")
 
-        super(StiefelManifold, self).__init__(retraction, metric, transport)
+        super(StiefelManifold, self).__init__(retraction, metric)
 
     def inner(self, u, vec1, vec2):
         """Returns manifold wise inner product of vectors from
@@ -134,9 +126,8 @@ class StiefelManifold(base_manifold.Manifold):
         Returns:
             complex valued tf.Tensor of shape (..., q, p),
             a transported vector."""
-        if self._transport == 'projective':
-            new_u = self.retraction(u, vec2)
-            return self.proj(new_u, vec1)
+        new_u = self.retraction(u, vec2)
+        return self.proj(new_u, vec1)
 
     def retraction_transport(self, u, vec1, vec2):
         """Performs a retraction and a vector transport at the same time.
@@ -150,6 +141,5 @@ class StiefelManifold(base_manifold.Manifold):
         Returns:
             two complex valued tf.Tensor of shape (..., q, p),
             a new point and a new vector."""
-        if self._transport == 'projective':
-            new_u = self.retraction(u, vec2)
-            return new_u, self.proj(new_u, vec1)
+        new_u = self.retraction(u, vec2)
+        return new_u, self.proj(new_u, vec1)
