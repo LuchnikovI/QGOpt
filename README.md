@@ -42,8 +42,8 @@ stiefel_svd_canoncical = qgo.manifolds.StiefelManifold(retraction='svd', metric=
 stiefel_svd_euclidean = qgo.manifolds.StiefelManifold(retraction='svd', metric='euclidean')
 
 # Positive-Definite cone
-positive_cone_log_euclidean = qgo.manifolds.PositiveCone('log_euclidean')
-positiv_cone_log_cholesky = qgo.manifolds.PositiveCone('log_cholesky')
+positive_cone_log_euclidean = qgo.manifolds.PositiveCone(metric='log_euclidean')
+positiv_cone_log_cholesky = qgo.manifolds.PositiveCone(metric='log_cholesky')
 ```
 
 ## Types of optimizers
