@@ -18,12 +18,10 @@ class Manifold(ABC):
     """
 
     def __init__(self, retraction,
-                 metric,
-                 transport):
+                 metric):
 
         self._retraction = retraction
         self._metric = metric
-        self._transport = transport
 
     @abstractmethod
     def inner(self, u, vec1, vec2):
