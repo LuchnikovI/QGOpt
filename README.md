@@ -48,7 +48,7 @@ positiv_cone_log_cholesky = qgo.manifolds.PositiveCone(metric='log_cholesky')
 
 ## Types of optimizers
 
-The current version of the package includes four first-order optimizers: gradient descent, gradient descent with momentum, Adam, and AMSGrad
+The current version of the package includes five first-order optimizers: gradient descent, gradient descent with momentum, Nesterov gradient descent with momentum, Adam, and AMSGrad
 ```Python
 lr = 0.01  # learning rate
 m = qgo.manifolds.StiefelManifold()  # example of a manifold
@@ -56,6 +56,7 @@ momentum = 0.9
 
 gd_optimizer = qgo.optimizers.RSGD(m, lr)
 gd_with_momentum_optimizer = qgo.optimizers.RSGD(m, lr, momentum)
+nesterov_gd_with_momentum_optimizer = qgo.optimizers.RSGD(m, lr, momentum, use_nesterov=True)
 adam_optimizer = qgo.optimizers.RAdam(m, lr)
 amsgrad_optimizer = qgo.optimizers.RAdam(m, lr, ams=True)
 ```
