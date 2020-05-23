@@ -62,4 +62,5 @@ amsgrad_optimizer = qgo.optimizers.RAdam(m, lr, ams=True)
 ```
 
 ## Installation
+Make sure you have TensorFlow >= 2.0
 ```pip install QGOpt```
