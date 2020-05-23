@@ -17,6 +17,10 @@ class RSGD(opt.OptimizerV2):
         manifold: object of the class Manifold, marks a particular manifold.
         learning_rate: floating point number. A learning rate.
         Defaults to 0.01.
+        momentum: floating point value, the momentum. Defaults to 0
+        (Standard GD).
+        use_nesterov: Boolean value, if True, use Nesterov Momentum. Defaults
+        to False.
         name: Optional name prefix for the operations created when applying
         gradients.  Defaults to 'RSGD'."""
 
@@ -24,13 +28,14 @@ class RSGD(opt.OptimizerV2):
                  manifold,
                  learning_rate=0.01,
                  momentum=0.0,
+                 use_nesterov=False,
                  name="RSGD"):
-
 
         super(RSGD, self).__init__(name)
         self._set_hyper("learning_rate", learning_rate)
         self.manifold = manifold
         self._momentum = False
+        self._use_nesterov = use_nesterov
 
         if isinstance(momentum, tf.Tensor) or callable(momentum) or momentum > 0:
             self._momentum = True
@@ -63,21 +68,44 @@ class RSGD(opt.OptimizerV2):
         # Upadte of vars (step and retruction)
         if self._momentum:
 
-            # Update momentum
-            momentum_var = self.get_slot(var, "momentum")
-            momentum_complex = m.real_to_complex(momentum_var)
-            momentum = tf.cast(self._get_hyper("momentum"),
-                               dtype=momentum_complex.dtype)
-            momentum_complex = momentum * momentum_complex +\
-                (1 - momentum) * grad_proj
+            if self._use_nesterov:
 
-            # Transport and retruction
-            new_var, momentum_complex =\
-                self.manifold.retraction_transport(complex_var,
-                                                   momentum_complex,
-                                                   -lr * momentum_complex)
+                # Update momentum
+                momentum_var = self.get_slot(var, "momentum")
+                momentum_complex_old = m.real_to_complex(momentum_var)
+                momentum = tf.cast(self._get_hyper("momentum"),
+                                   dtype=momentum_complex_old.dtype)
+                momentum_complex_new = momentum * momentum_complex_old +\
+                    (1 - momentum) * grad_proj
 
-            momentum_var.assign(m.complex_to_real(momentum_complex))
+                # Transport and retruction
+                new_var, momentum_complex =\
+                    self.manifold.retraction_transport(complex_var,
+                                                       momentum_complex_new,
+                                                       -lr * momentum_complex_new -\
+                                                       lr * momentum *\
+                                                       (momentum_complex_new -\
+                                                        momentum_complex_old))
+
+                momentum_var.assign(m.complex_to_real(momentum_complex))
+
+            else:
+
+                # Update momentum
+                momentum_var = self.get_slot(var, "momentum")
+                momentum_complex = m.real_to_complex(momentum_var)
+                momentum = tf.cast(self._get_hyper("momentum"),
+                                   dtype=momentum_complex.dtype)
+                momentum_complex = momentum * momentum_complex +\
+                    (1 - momentum) * grad_proj
+
+                # Transport and retruction
+                new_var, momentum_complex =\
+                    self.manifold.retraction_transport(complex_var,
+                                                       momentum_complex,
+                                                       -lr * momentum_complex)
+
+                momentum_var.assign(m.complex_to_real(momentum_complex))
         else:
 
             # New value of var
