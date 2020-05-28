@@ -47,7 +47,7 @@ class StiefelManifold(base_manifold.Manifold):
             vec2: complex valued tensor of shape (..., q, p),
             a vector from a tangent spaces.
         Returns:
-            complex valued tensor of shape (...,),
+            complex valued tensor of shape (..., 1, 1),
             manifold wise inner product"""
 
         if self._metric == 'euclidean':
@@ -59,7 +59,7 @@ class StiefelManifold(base_manifold.Manifold):
             s_sq = tf.linalg.trace(adj(vec1) @ G @ vec2)[...,
                                                          tf.newaxis,
                                                          tf.newaxis]
-        return tf.math.sqrt(s_sq)
+        return s_sq
 
     def proj(self, u, vec):
         """Returns projection of a vector on a tangen space
@@ -70,7 +70,8 @@ class StiefelManifold(base_manifold.Manifold):
             vec: complex valued tf.Tensor of shape (..., q, p),
             vectors to be projected.
         Returns:
-            complex valued tf.Tensor of shape (..., q, p), a projected vector"""
+            complex valued tf.Tensor of shape (..., q, p),
+            a projected vector"""
 
         return 0.5 * u @ (adj(u) @ vec - adj(vec) @ u) +\
                          (tf.eye(u.shape[-2], dtype=u.dtype) -\
