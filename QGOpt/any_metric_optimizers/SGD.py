@@ -30,9 +30,16 @@ class RSGD():
     def apply_gradients(self, metric_grads_and_vars):
         """Makes optimization step.
         Args:
-            metric_grads_and_vars: zip(metric, grads, vars)"""
+            metric_grads_and_vars: zip(metric, grads, vars), metric is
+            a list of complex valued tensors of shape (..., q, p, q, p),
+            grad is a list of real valued tensors of shape (..., q, p, 2),
+            vars is a list of real valued tf Variables of shape
+            (..., q, p, 2)"""
 
         for mgv in metric_grads_and_vars:
             metric, grad, var = mgv
-            rgrad = self.manifold.egrad_to_rgrad(metric, var, grad)
+            var_c = m.real_to_complex(var)
+            grad_c = m.real_to_complex(grad)
+            rgrad_c = self.manifold.egrad_to_rgrad(metric, var_c, grad_c)
+            rgrad = m.complex_to_real(rgrad_c)
             var.assign(var - self._hyper["learning_rate"] * rgrad)
