@@ -35,7 +35,8 @@ class RSGD():
             grad is a list of real valued tensors of shape (..., q, p, 2),
             vars is a list of real valued tf Variables of shape
             (..., q, p, 2)"""
-        lr = self._hyper["learning_rate"]
+
+        lr = tf.complex(self._hyper["learning_rate"], 0)
         for mgv in metric_grads_and_vars:
             metric, grad, var = mgv
             var_c = m.real_to_complex(var)
