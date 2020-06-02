@@ -30,7 +30,8 @@ def _lower(X):
 
 
 def _half(X):
-    """Returns the lower triangular part of a matrix with half of diagonal part.
+    """Returns the lower triangular part of
+    a matrix with half of diagonal part.
     Args:
         X: tf tensor of shape (..., m, m)
     Returns:
@@ -74,6 +75,7 @@ def _push_forward_chol(X, L):
     Returns:
         tf tensor of shape (..., m, m), tangent vector to corresponding
         point in S++"""
+
     return L @ adj(X) + X @ adj(L)
 
 
@@ -107,7 +109,6 @@ def _pull_back_log(W, U, lmbd):
         point in S"""
 
     f = _f_matrix(lmbd)
-
     return U @ ((1 / f) * (adj(U) @ W @ U)) @ adj(U)
 
 
@@ -124,8 +125,8 @@ def _push_forward_log(W, U, lmbd):
     Returns:
         tf tensor of shape (..., m, m), tangent vector to corresponding
         point in S++"""
-    f = _f_matrix(lmbd)
 
+    f = _f_matrix(lmbd)
     return U @ (f * (adj(U) @ W @ U)) @ adj(U)
 
 
@@ -231,7 +232,8 @@ class PositiveCone(base_manifold.Manifold):
         Args:
             u: complex valued tf.Tensor of shape (..., q, q), a point
             to be transported
-            vec: complex valued tf.Tensor of shape (..., q, q), a direction vector
+            vec: complex valued tf.Tensor of shape (..., q, q),
+            a direction vector
         Returns tf.Tensor of shape (..., q, q) a new point"""
 
         if self.metric == 'log_euclidean':
@@ -315,6 +317,7 @@ class PositiveCone(base_manifold.Manifold):
         Returns:
             two complex valued tf.Tensor of shape (..., q, p),
             a new point and a new vector."""
+
         if self.metric == 'log_euclidean':
             lmbd, U = tf.linalg.eigh(u)
             # geoidesic in S

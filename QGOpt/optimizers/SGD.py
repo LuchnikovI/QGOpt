@@ -63,7 +63,7 @@ class RSGD(opt.OptimizerV2):
                      dtype=complex_grad.dtype)
 
         # Riemannian gradient
-        grad_proj = self.manifold.egrad_to_rgrad(complex_var, complex_grad)
+        rgrad = self.manifold.egrad_to_rgrad(complex_var, complex_grad)
 
         # Upadte of vars (step and retruction)
         if self._momentum:
@@ -76,7 +76,7 @@ class RSGD(opt.OptimizerV2):
                 momentum = tf.cast(self._get_hyper("momentum"),
                                    dtype=momentum_complex_old.dtype)
                 momentum_complex_new = momentum * momentum_complex_old +\
-                    (1 - momentum) * grad_proj
+                    (1 - momentum) * rgrad
 
                 # Transport and retruction
                 new_var, momentum_complex =\
@@ -97,7 +97,7 @@ class RSGD(opt.OptimizerV2):
                 momentum = tf.cast(self._get_hyper("momentum"),
                                    dtype=momentum_complex.dtype)
                 momentum_complex = momentum * momentum_complex +\
-                    (1 - momentum) * grad_proj
+                    (1 - momentum) * rgrad
 
                 # Transport and retruction
                 new_var, momentum_complex =\
@@ -109,7 +109,7 @@ class RSGD(opt.OptimizerV2):
         else:
 
             # New value of var
-            new_var = self.manifold.retraction(complex_var, -lr * grad_proj)
+            new_var = self.manifold.retraction(complex_var, -lr * rgrad)
 
         # Update of var
         var.assign(m.complex_to_real(new_var))

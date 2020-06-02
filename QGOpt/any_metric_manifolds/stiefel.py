@@ -1,65 +1,49 @@
-from QGOpt.manifolds import base_manifold
 import tensorflow as tf
-
-
-def adj(A):
-    """Correct hermitian adjoint
-    Args:
-        A: tf tensor of shape (..., n, m)
-    Returns:
-        tf tensor of shape (..., m, n), hermitian adjoint matrix"""
-
-    return tf.math.conj(tf.linalg.matrix_transpose(A))
+from QGOpt.any_metric_manifolds.utils import _to_real_matrix
+from QGOpt.any_metric_manifolds.utils import _to_complex_matrix
+from QGOpt.any_metric_manifolds.utils import _real_metric
+from QGOpt.any_metric_manifolds.utils import _adj
+from QGOpt.any_metric_manifolds import base_manifold
 
 
 class StiefelManifold(base_manifold.Manifold):
-    """Class describes Stiefel manifold. It allows performing all
-    necessary operations with elements of manifolds direct product and
+    """Class describes Stiefel manifold with arbitrary metric.
+    It allows performing all necessary operations with
+    elements of manifolds direct product and
     tangent spaces for optimization. Returns object of class StiefelManifold.
     Args:
         retraction: string specifies type of retraction. Defaults to
-        'svd'. Types of retraction is available now: 'svd', 'cayley'.
+        'svd'. Types of retraction is available now: 'svd', 'cayley'."""
 
-        metric: string specifies type of metric, Defaults to 'euclidean'.
-        Types of metrics is available now: 'euclidean', 'canonical'."""
+    def __init__(self, retraction='svd'):
 
-    def __init__(self, retraction='svd',
-                 metric='euclidean'):
-
-        list_of_metrics = ['euclidean', 'canonical']
         list_of_retractions = ['svd', 'cayley']
 
-        if metric not in list_of_metrics:
-            raise ValueError("Incorrect metric")
         if retraction not in list_of_retractions:
             raise ValueError("Incorrect retraction")
 
-        super(StiefelManifold, self).__init__(retraction, metric)
+        super(StiefelManifold, self).__init__(retraction)
 
-    def inner(self, u, vec1, vec2):
+    def inner(self, metric, vec1, vec2):
         """Returns manifold wise inner product of vectors from
         a tangent space of a direct product of manifolds.
         Args:
-            u: complex valued tensor of shape (..., q, p),
-            an element of manifolds direct product
+            metric: complex valued tensor of shape (..., q, p, q, p),
+            the metric in a current point
             vec1: complex valued tensor of shape (..., q, p),
             a vector from a tangent space.
             vec2: complex valued tensor of shape (..., q, p),
             a vector from a tangent spaces.
         Returns:
-            complex valued tensor of shape (..., 1, 1),
+            complex valued tensor of shape (...,),
             manifold wise inner product"""
 
-        if self._metric == 'euclidean':
-            s_sq = tf.linalg.trace(adj(vec1) @ vec2)[...,
-                                                     tf.newaxis,
-                                                     tf.newaxis]
-        elif self._metric == 'canonical':
-            G = tf.eye(u.shape[-2], dtype=u.dtype) - u @ adj(u) / 2
-            s_sq = tf.linalg.trace(adj(vec1) @ G @ vec2)[...,
-                                                         tf.newaxis,
-                                                         tf.newaxis]
-        return tf.math.real(s_sq)
+        dim1, dim2 = vec1.shape[-2:]
+        shape = vec1.shape[:-2]
+        vec1_resh = tf.reshape(vec1, shape + (dim1 * dim2,))
+        vec2_resh = tf.reshape(vec2, shape + (dim1 * dim2,))
+        metric_resh = tf.reshape(metric, shape + (dim1 * dim2, dim1 * dim2))
+        return tf.math.real(_adj(vec1_resh) @ metric_resh @ vec2_resh)
 
     def proj(self, u, vec):
         """Returns projection of a vector on a tangen space
@@ -73,13 +57,15 @@ class StiefelManifold(base_manifold.Manifold):
             complex valued tf.Tensor of shape (..., q, p),
             a projected vector"""
 
-        return 0.5 * u @ (adj(u) @ vec - adj(vec) @ u) +\
+        return 0.5 * u @ (_adj(u) @ vec - _adj(vec) @ u) +\
                          (tf.eye(u.shape[-2], dtype=u.dtype) -\
-                          u @ adj(u)) @ vec
+                          u @ _adj(u)) @ vec
 
-    def egrad_to_rgrad(self, u, egrad):
+    def egrad_to_rgrad(self, metric, u, egrad):
         """Returns the Riemannian gradient from an Euclidean gradient.
         Args:
+            metric: complex valued tf tensor of shape (..., q, p, q, p),
+            the metric in a current point.
             u: complex valued tf.Tensor of shape (..., q, p),
             an element of a direct product.
             egrad: complex valued tf.Tensor of shape (..., q, p),
@@ -87,13 +73,47 @@ class StiefelManifold(base_manifold.Manifold):
         Returns:
             tf.Tensor of shape (..., q, p), the Reimannian gradient."""
 
-        if self._metric == 'euclidean':
-            return 0.5 * u @ (adj(u) @ egrad - adj(egrad) @ u) +\
-                             (tf.eye(u.shape[-2], dtype=u.dtype) -\
-                              u @ adj(u)) @ egrad
+        dim1, dim2 = u.shape[-2:]
+        shape = u.shape[:-2]
+        length = len(shape)
 
-        elif self._metric == 'canonical':
-            return egrad - u @ adj(egrad) @ u
+        real_egrad = _to_real_matrix(egrad)
+        real_egrad = tf.reshape(real_egrad, shape + (4 * dim1 * dim2))
+        real_u = _to_real_matrix(u)
+        rdtype = real_u.dtype
+
+        T = tf.tensordot(tf.eye(2 * dim1, dtype=rdtype),
+                         tf.eye(2 * dim2, dtype=rdtype), axes=0)
+        T = tf.transpose(T, (2, 0, 1, 3))
+        T = tf.reshape(T, (4 * dim1 * dim2, 4 * dim1 * dim2))
+
+        U1 = (real_u @ tf.linalg.matrix_transpose(real_u))[...,
+             tf.newaxis,
+             tf.newaxis] * tf.eye(2 * dim2, dtype=rdtype)[tf.newaxis,
+                       tf.newaxis]
+        U2 = real_u[..., tf.newaxis, tf.newaxis] *\
+            tf.linalg.matrix_transpose(real_u[...,
+                                              tf.newaxis,
+                                              tf.newaxis,
+                                              :,
+                                              :])
+        U1 = tf.transpose(U1, tuple(range(length)) + (length, length + 2,
+                          length + 1, length + 3))
+        U2 = tf.transpose(U2, tuple(range(length)) + (length, length + 2,
+                          length + 1, length + 3))
+        U1 = tf.reshape(U1, shape + (4 * dim1 * dim2, 4 * dim1 * dim2))
+        U2 = tf.reshape(U2, shape + (4 * dim1 * dim2, 4 * dim1 * dim2))
+
+        pi = tf.eye(4 * dim1 * dim2, dtype=rdtype) -\
+            0.5 * (U1 + U2 @ T)
+
+        real_metric = _real_metric(metric)
+        rgrad = tf.linalg.pinv(pi @ real_metric @ pi) @ real_egrad[...,
+                              tf.newaxis]
+        rgrad = tf.reshape(rgrad, shape + (2 * dim1, 2 * dim2))
+        rgrad = _to_complex_matrix(rgrad)
+
+        return rgrad
 
     def retraction(self, u, vec):
         """Transports a point via a retraction map.
@@ -107,11 +127,11 @@ class StiefelManifold(base_manifold.Manifold):
         if self._retraction == 'svd':
             new_u = u + vec
             _, v, w = tf.linalg.svd(new_u)
-            return v @ adj(w)
+            return v @ _adj(w)
 
         elif self._retraction == 'cayley':
-            W = vec @ adj(u) - 0.5 * u @ (adj(u) @ vec @ adj(u))
-            W = W - adj(W)
+            W = vec @ _adj(u) - 0.5 * u @ (_adj(u) @ vec @ _adj(u))
+            W = W - _adj(W)
             Id = tf.eye(W.shape[-1], dtype=W.dtype)
             return tf.linalg.inv(Id - W / 2) @ (Id + W / 2) @ u
 

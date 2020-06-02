@@ -123,7 +123,7 @@ class RAdam(opt.OptimizerV2):
         lr = tf.cast(self._get_hyper("learning_rate"), complex_grad.dtype)
 
         # Riemannian gradient
-        grad_proj = self.manifold.egrad_to_rgrad(complex_var, complex_grad)
+        rgrad = self.manifold.egrad_to_rgrad(complex_var, complex_grad)
 
         # Complex versions of m and v
         momentum = self.get_slot(var, "momentum")
@@ -138,11 +138,11 @@ class RAdam(opt.OptimizerV2):
         beta1 = tf.cast(self._get_hyper("beta1"), dtype=momentum_complex.dtype)
         beta2 = tf.cast(self._get_hyper("beta2"), dtype=momentum_complex.dtype)
         momentum_complex = beta1 * momentum_complex +\
-            (1 - beta1) * grad_proj
+            (1 - beta1) * rgrad
         v_complex = beta2 * v_complex +\
             (1 - beta2) * self.manifold.inner(complex_var,
-                                              grad_proj,
-                                              grad_proj)
+                                              rgrad,
+                                              rgrad)
         if self.ams:
             v_hat_complex = tf.maximum(tf.math.real(v_complex),
                                        tf.math.real(v_hat_complex))
