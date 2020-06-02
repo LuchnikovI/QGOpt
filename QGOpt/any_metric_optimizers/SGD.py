@@ -35,11 +35,12 @@ class RSGD():
             grad is a list of real valued tensors of shape (..., q, p, 2),
             vars is a list of real valued tf Variables of shape
             (..., q, p, 2)"""
-
+        lr = self._hyper["learning_rate"]
         for mgv in metric_grads_and_vars:
             metric, grad, var = mgv
             var_c = m.real_to_complex(var)
             grad_c = m.real_to_complex(grad)
             rgrad_c = self.manifold.egrad_to_rgrad(metric, var_c, grad_c)
             rgrad = m.complex_to_real(rgrad_c)
-            var.assign(var - self._hyper["learning_rate"] * rgrad)
+            new_var = self.manifold.retraction(var_c, -lr * rgrad)
+            var.assign(new_var)
