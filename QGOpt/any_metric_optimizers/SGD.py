@@ -1,5 +1,4 @@
 import QGOpt.manifolds as m
-from tensorflow.python.keras.optimizer_v2 import optimizer_v2 as opt
 import tensorflow as tf
 
 
@@ -36,12 +35,12 @@ class RSGD():
             vars is a list of real valued tf Variables of shape
             (..., q, p, 2)"""
 
-        lr = tf.complex(self._hyper["learning_rate"], 0)
         for mgv in metric_grads_and_vars:
             metric, grad, var = mgv
             var_c = m.real_to_complex(var)
             grad_c = m.real_to_complex(grad)
             rgrad_c = self.manifold.egrad_to_rgrad(metric, var_c, grad_c)
             rgrad = m.complex_to_real(rgrad_c)
+            lr = tf.cast(self._hyper["learning_rate"], dtype=var_c.dtype)
             new_var = self.manifold.retraction(var_c, -lr * rgrad)
             var.assign(new_var)
