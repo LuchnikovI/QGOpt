@@ -59,7 +59,7 @@ class StiefelManifold(base_manifold.Manifold):
             s_sq = tf.linalg.trace(adj(vec1) @ G @ vec2)[...,
                                                          tf.newaxis,
                                                          tf.newaxis]
-        return tf.math.real(s_sq)
+        return tf.cast(tf.math.real(s_sq), dtype=u.dtype)
 
     def proj(self, u, vec):
         """Returns projection of a vector on a tangen space
