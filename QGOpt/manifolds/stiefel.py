@@ -118,7 +118,7 @@ class StiefelManifold(base_manifold.Manifold):
         elif self._retraction == 'qr':
             new_u = u + vec
             q, r = tf.linalg.qr(new_u)
-            diag = tf.linalg.diag(r)
+            diag = tf.linalg.diag_part(r)
             sign = tf.math.sign(diag)[..., tf.newaxis, :]
             return q * sign
 
