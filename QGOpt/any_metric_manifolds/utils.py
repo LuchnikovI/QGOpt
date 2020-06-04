@@ -34,36 +34,44 @@ def _to_complex_matrix(A):
     return A_imag
 
 
-def _real_metric(metric):
-    """Returns the real representation of a metric on complex manifold.
+def _transform_metric(metric):
+    """Returns the alternative representation of a metric.
     Args:
-        metric: complex valued tf tensor of shape (..., q, p, q, p), metric
+        metric: real valued tf tensor of shape (..., q, p, 2, q, p, 2),
+        metric
     Return:
         real valued tf tensor of shape (..., 4 * q * p, 4 * q * p),
         the real square matrix representing a metric."""
 
-    dim1, dim2 = metric.shape[-4:-2]
-    shape = metric.shape[:-4]
+    dim1, dim2 = metric.shape[-6:-4]
+    shape = metric.shape[:-6]
     length = len(shape)
 
-    real_metric = metric[..., tf.newaxis, tf.newaxis]
-    real_metric = tf.concat([tf.concat([tf.math.real(real_metric),
-                                        tf.math.imag(real_metric)], axis=-1),
-                             tf.concat([-tf.math.imag(real_metric),
-                                        tf.math.real(real_metric)], axis=-1)],
-                                        axis=-2)
-    real_metric = tf.tensordot(real_metric, tf.eye(2, dtype=real_metric.dtype),
-                               axes=0)
-    real_metric = tf.transpose(real_metric, tuple(range(length)) +\
-                               (length + 4,
-                                length + 0,
-                                length + 6,
+    flip_matrix = tf.constant([[0, 1], [-1, 0]], dtype=metric.dtype)
+    metric_flip = tf.tensordot(metric, flip_matrix, axes=1)
+    metric_flip = tf.tensordot(metric_flip,
+                               flip_matrix, axes=[[length + 2], [0]])
+    metric_flip = tf.transpose(metric_flip, tuple(range(length)) +\
+                               (length + 0,
                                 length + 1,
                                 length + 5,
                                 length + 2,
-                                length + 7,
-                                length + 3))
-    return tf.reshape(real_metric, shape + (4 * dim1 * dim2, 4 * dim1 * dim2))
+                                length + 3,
+                                length + 4))
+    z = tf.zeros(metric_flip.shape + (1, 1), dtype=metric.dtype)
+    ametric = tf.concat([tf.concat([metric[..., tf.newaxis, tf.newaxis], z], axis=-1),
+                         tf.concat([z, metric_flip[..., tf.newaxis, tf.newaxis]],
+                                   axis=-1)], axis=-2)
+    ametric = tf.transpose(ametric, tuple(range(length)) +\
+                           (length + 6,
+                            length + 0,
+                            length + 2,
+                            length + 1,
+                            length + 7,
+                            length + 3,
+                            length + 5,
+                            length + 4))
+    return tf.reshape(ametric, shape + (4 * dim1 * dim2, 4 * dim1 * dim2))
 
 
 def _adj(A):

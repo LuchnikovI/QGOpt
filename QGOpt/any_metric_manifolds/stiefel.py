@@ -1,9 +1,10 @@
 import tensorflow as tf
 from QGOpt.any_metric_manifolds.utils import _to_real_matrix
 from QGOpt.any_metric_manifolds.utils import _to_complex_matrix
-from QGOpt.any_metric_manifolds.utils import _real_metric
+from QGOpt.any_metric_manifolds.utils import _transform_metric
 from QGOpt.any_metric_manifolds.utils import _adj
 from QGOpt.any_metric_manifolds import base_manifold
+import QGOpt.manifolds as m
 
 
 class StiefelManifold(base_manifold.Manifold):
@@ -28,7 +29,7 @@ class StiefelManifold(base_manifold.Manifold):
         """Returns manifold wise inner product of vectors from
         a tangent space of a direct product of manifolds.
         Args:
-            metric: complex valued tensor of shape (..., q, p, q, p),
+            metric: real valued tensor of shape (..., q, p, 2, q, p, 2),
             the metric in a current point
             vec1: complex valued tensor of shape (..., q, p),
             a vector from a tangent space.
@@ -40,10 +41,14 @@ class StiefelManifold(base_manifold.Manifold):
 
         dim1, dim2 = vec1.shape[-2:]
         shape = vec1.shape[:-2]
-        vec1_resh = tf.reshape(vec1, shape + (dim1 * dim2,))
-        vec2_resh = tf.reshape(vec2, shape + (dim1 * dim2,))
-        metric_resh = tf.reshape(metric, shape + (dim1 * dim2, dim1 * dim2))
-        return tf.math.real(_adj(vec1_resh) @ metric_resh @ vec2_resh)
+        vec1_real = m.complex_to_real(vec1)
+        vec2_real = m.complex_to_real(vec2)
+        vec1_resh = tf.reshape(vec1_real, shape + (2 * dim1 * dim2))
+        vec2_resh = tf.reshape(vec2_real, shape + (2 * dim1 * dim2))
+        metric_resh = tf.reshape(metric, shape + (2 * dim1 * dim2,
+                                                  2 * dim1 * dim2))
+        return tf.linalg.matvec(vec1_resh,
+                                tf.linalg.matvec(metric_resh, vec2_resh))
 
     def proj(self, u, vec):
         """Returns projection of a vector on a tangen space
@@ -64,7 +69,7 @@ class StiefelManifold(base_manifold.Manifold):
     def egrad_to_rgrad(self, metric, u, egrad):
         """Returns the Riemannian gradient from an Euclidean gradient.
         Args:
-            metric: complex valued tf tensor of shape (..., q, p, q, p),
+            metric: real valued tf tensor of shape (..., q, p, 2, q, p, 2),
             the metric in a current point.
             u: complex valued tf.Tensor of shape (..., q, p),
             an element of a direct product.
@@ -107,9 +112,8 @@ class StiefelManifold(base_manifold.Manifold):
         pi = tf.eye(4 * dim1 * dim2, dtype=rdtype) -\
             0.5 * (U1 + U2 @ T)
 
-        real_metric = _real_metric(metric)
-        rgrad = tf.linalg.pinv(pi @ real_metric @ pi) @ real_egrad[...,
-                              tf.newaxis]
+        ametric = _transform_metric(metric)
+        rgrad = tf.linalg.pinv(pi @ ametric @ pi) @ real_egrad[..., tf.newaxis]
         rgrad = tf.reshape(rgrad, shape + (2 * dim1, 2 * dim2))
         rgrad = _to_complex_matrix(rgrad)
 
