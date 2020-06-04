@@ -18,7 +18,7 @@ class StiefelManifold(base_manifold.Manifold):
     tangent spaces for optimization. Returns object of class StiefelManifold.
     Args:
         retraction: string specifies type of retraction. Defaults to
-        'svd'. Types of retraction is available now: 'svd', 'cayley'.
+        'svd'. Types of retraction are available now: 'svd', 'cayley', 'qr'.
 
         metric: string specifies type of metric, Defaults to 'euclidean'.
         Types of metrics is available now: 'euclidean', 'canonical'."""
@@ -27,7 +27,7 @@ class StiefelManifold(base_manifold.Manifold):
                  metric='euclidean'):
 
         list_of_metrics = ['euclidean', 'canonical']
-        list_of_retractions = ['svd', 'cayley']
+        list_of_retractions = ['svd', 'cayley', 'qr']
 
         if metric not in list_of_metrics:
             raise ValueError("Incorrect metric")
@@ -114,6 +114,13 @@ class StiefelManifold(base_manifold.Manifold):
             W = W - adj(W)
             Id = tf.eye(W.shape[-1], dtype=W.dtype)
             return tf.linalg.inv(Id - W / 2) @ (Id + W / 2) @ u
+
+        elif self._retraction == 'qr':
+            new_u = u + vec
+            q, r = tf.linalg.qr(new_u)
+            diag = tf.linalg.diag(r)
+            sign = tf.math.sign(diag)[..., tf.newaxis, :]
+            return q * sign
 
     def vector_transport(self, u, vec1, vec2):
         """Returns vector vec1 tranported from a point u along vec2.
