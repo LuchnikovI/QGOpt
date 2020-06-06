@@ -127,3 +127,18 @@ def _push_forward_log(W, U, lmbd):
 
     f = _f_matrix(lmbd)
     return U @ (f * (adj(U) @ W @ U)) @ adj(U)
+
+
+def lyap_symmetric(A, C, eps=1e-10):
+    """Solves AX + XA = C when A = A^dagger.
+    Args:
+        A: complex valued tf tensor of shape (..., m, m)
+        C: complex valued tf tensor of shape (..., m, m)
+        eps: small float number guarantees safe inverse
+    Return:
+        complex valued tf tensor, solution of the equation"""
+
+    lmbd, u = tf.linalg.eigh(A)
+    uCu = adj(u) @ C @ u
+    L = lmbd[..., tf.newaxis, :] + lmbd[..., tf.newaxis]
+    return u @ (uCu * L / (L ** 2 + eps)) @ adj(u)
