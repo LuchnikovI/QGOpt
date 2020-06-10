@@ -7,4 +7,5 @@ from QGOpt.manifolds.base_manifold import Manifold
 from QGOpt.manifolds.stiefel import StiefelManifold
 from QGOpt.manifolds.positivecone import PositiveCone
 from QGOpt.manifolds.densitymatrix import DensityMatrix
+from QGOpt.manifolds.choimatrix import ChoiMatrix
 import QGOpt.manifolds.utils
