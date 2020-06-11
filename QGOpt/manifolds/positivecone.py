@@ -231,3 +231,19 @@ class PositiveCone(base_manifold.Manifold):
                 inv_diag_L * tf.linalg.band_part(X, 0, 0)
 
             return v, K @ adj(L_transport) + L_transport @ adj(K)
+
+    def random(self, shape):
+        """Returns vector vec from PositiveConeManifold.
+        Usage:
+            shape = (4,5,3,3)
+            m = manifolds.PositiveCone()
+            vec = m.random(shape)
+        Args:
+            shape: integer values list (..., q, q),
+        Returns:
+            complex valued tf.Tensor of shape"""
+        vec = tf.complex(tf.random.normal(shape, dtype=tf.float64),
+                        tf.random.normal(shape, dtype=tf.float64))
+        vec = tf.linalg.adjoint(vec) @ vec
+        vec = vec / tf.linalg.trace(vec)
+        return vec

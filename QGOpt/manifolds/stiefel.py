@@ -144,3 +144,18 @@ class StiefelManifold(base_manifold.Manifold):
 
         new_u = self.retraction(u, vec2)
         return new_u, self.proj(new_u, vec1)
+
+    def random(self, shape):
+        """Returns vector vec from StiefelManifold.
+        Usage:
+            shape = (4,5,3,2)
+            m = manifolds.StiefelManifold()
+            vec = m.random(shape)
+        Args:
+            shape: integer values list (..., q, p),
+        Returns:
+            complex valued tf.Tensor of shape"""
+        vec = tf.complex(tf.random.normal(shape, dtype=tf.float64),
+                        tf.random.normal(shape, dtype=tf.float64))
+        vec, _ = tf.linalg.qr(vec)
+        return vec
