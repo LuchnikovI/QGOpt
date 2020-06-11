@@ -4,15 +4,29 @@ from QGOpt.manifolds.utils import adj
 
 
 class StiefelManifold(base_manifold.Manifold):
-    """Class describes Stiefel manifold. It allows performing all
-    necessary operations with elements of manifolds direct product and
-    tangent spaces for optimization. Returns object of class StiefelManifold.
+    """The class provides tools for moving points and vectors along the
+    complex Stiefel manifold (St(n, p) -- the manifold of complex valued
+    isometric matrices of size nxp) and along a direct product of several
+    Stiefel manifolds. The geometry of the complex Stiefel manifold is taken
+    from
+    -----------------------------------------------------------------------
+    Sato, H., & Iwai, T. (2013, December). A complex singular value 
+    decomposition algorithm based on the Riemannian Newton method.
+    In 52nd IEEE Conference on Decision and Control (pp. 2972-2978). IEEE.
+    -----------------------------------------------------------------------
+    Another paper, which was used as a guide for implementation of this
+    class is
+    -----------------------------------------------------------------------
+    Edelman, A., Arias, T. A., & Smith, S. T. (1998). The geometry of
+    algorithms with orthogonality constraints. SIAM journal on Matrix
+    Analysis and Applications, 20(2), 303-353.
+    -----------------------------------------------------------------------
     Args:
         retraction: string specifies type of retraction. Defaults to
-        'svd'. Types of retraction are available now: 'svd', 'cayley', 'qr'.
+        'svd'. Types of retraction are available: 'svd', 'cayley', 'qr'.
 
         metric: string specifies type of metric, Defaults to 'euclidean'.
-        Types of metrics is available now: 'euclidean', 'canonical'."""
+        Types of metrics are available: 'euclidean', 'canonical'."""
 
     def __init__(self, retraction='svd',
                  metric='euclidean'):
