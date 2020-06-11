@@ -1,15 +1,6 @@
-from QGOpt.manifolds import base_manifold
 import tensorflow as tf
-
-
-def adj(A):
-    """Correct hermitian adjoint
-    Args:
-        A: tf tensor of shape (..., n, m)
-    Returns:
-        tf tensor of shape (..., m, n), hermitian adjoint matrix"""
-
-    return tf.math.conj(tf.linalg.matrix_transpose(A))
+from QGOpt.manifolds import base_manifold
+from QGOpt.manifolds.utils import adj
 
 
 class HermitianManifold(base_manifold.Manifold):
