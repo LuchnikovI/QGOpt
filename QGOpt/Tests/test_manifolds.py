@@ -19,19 +19,19 @@ def test_stiefel(n=10, k=5, tol=1.e-12):
     list_of_metrics = ['euclidean', 'canonical']
     list_of_retractions = ['svd', 'cayley']
 
-    u = tf.complex(tf.random.normal((n, k), dtype=tf.float64),
-                      tf.random.normal((n, k), dtype=tf.float64))
-    u, _ = tf.linalg.qr(u)
-    v = tf.complex(tf.random.normal((n, k), dtype=tf.float64),
-                      tf.random.normal((n, k), dtype=tf.float64))
-    zero = tf.complex(tf.zeros((n, k), dtype=tf.float64),
-                      tf.zeros((n, k), dtype=tf.float64))
+    shape = (n, k)
+    
+    v = tf.complex(tf.random.normal(shape, dtype=tf.float64),
+                      tf.random.normal(shape, dtype=tf.float64))
+    zero = tf.complex(tf.zeros(shape, dtype=tf.float64),
+                      tf.zeros(shape, dtype=tf.float64))
 
     for metric in list_of_metrics:
         for retraction in list_of_retractions:
             m = manifolds.StiefelManifold(metric=metric, retraction=retraction)
+            u = m.random(shape)
 
-            '''' testing projetcion
+            ''' testing projetcion
             Algorithm:
             1) choose an arbitraty vector and arbitrary orthogonal manifold
             2) calculate projection of the vector to the manifolds
@@ -81,17 +81,15 @@ def test_positivecone(q=10, tol = 1.e-12):
     '''list of metrics'''
     list_of_metrics = ['log_cholesky', 'log_euclidean']
 
-    u = tf.random.normal((q, q, 2), dtype=tf.float64)
-    u = manifolds.real_to_complex(u)
-    u = tf.linalg.adjoint(u) @ u
-    u = u / tf.linalg.trace(u)
+    shape = (q, q)
 
-    v = tf.complex(tf.random.normal((q, q), dtype=tf.float64),
-                   tf.random.normal((q, q), dtype=tf.float64))
-    zero = tf.complex(tf.zeros((q, q), dtype=tf.float64),
-                      tf.zeros((q, q), dtype=tf.float64))
+    v = tf.complex(tf.random.normal(shape, dtype=tf.float64),
+                   tf.random.normal(shape, dtype=tf.float64))
+    zero = tf.complex(tf.zeros(shape, dtype=tf.float64),
+                      tf.zeros(shape, dtype=tf.float64))
     for metric in list_of_metrics:
-        m = manifolds.PositiveCone(metric),
+        m = manifolds.PositiveCone(metric)
+        u = m.random(shape)
         '''' testing projetcion
         Algorithm:
         1) choose an arbitraty vector and arbitrary orthogonal manifold
