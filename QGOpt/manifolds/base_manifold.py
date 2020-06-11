@@ -89,3 +89,12 @@ class Manifold(ABC):
             two complex valued tf.Tensor,
             a new point and a transported vector"""
         pass
+
+    @abstractmethod
+    def random(self, shape):
+        """Returns vector vec from manifolds.
+        Args:
+            shape: integer values list,
+        Returns:
+            complex valued tf.Tensor of shape"""
+        pass
