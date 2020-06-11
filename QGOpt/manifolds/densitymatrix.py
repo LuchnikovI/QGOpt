@@ -117,3 +117,18 @@ class DensityMatrix(base_manifold.Manifold):
         u_new = (u + vec2)
         u_new = u_new / tf.linalg.norm(u_new)
         return u_new, self.proj(u_new, vec1)
+
+    def random(self, shape):
+        """Returns vector vec from DensityMatrix.
+        Usage:
+            shape = (4,5,3,3)
+            m = manifolds.DensityMatrix()
+            vec = m.random(shape)
+        Args:
+            shape: integer values list (..., q, q),
+        Returns:
+            complex valued tf.Tensor of shape"""
+        vec = tf.complex(tf.random.normal(shape, dtype=tf.float64),
+                        tf.random.normal(shape, dtype=tf.float64))
+        vec = vec / tf.linalg.norm(vec)
+        return vec

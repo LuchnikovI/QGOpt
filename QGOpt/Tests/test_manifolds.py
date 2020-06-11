@@ -20,7 +20,7 @@ def test_stiefel(n=10, k=5, tol=1.e-12):
     list_of_retractions = ['svd', 'cayley']
 
     shape = (n, k)
-    
+
     v = tf.complex(tf.random.normal(shape, dtype=tf.float64),
                       tf.random.normal(shape, dtype=tf.float64))
     zero = tf.complex(tf.zeros(shape, dtype=tf.float64),
@@ -122,3 +122,51 @@ def test_positivecone(q=10, tol = 1.e-12):
         out = tf.reduce_sum(tf.cast(proj-proj_next, dtype=tf.float64))
         assert out < tol, "vector_transport failed for PositiveCone: metric-{}.\
         Tol obtained {:1.1e} > tol desired {}".format(metric, out, tol)
+
+def test_densitymatrix(q=10, tol = 1.e-12):
+    '''
+    Unit tests for positivecone manifolds
+    - projection
+    - retraction
+    '''
+    shape = (q, q)
+
+    v = tf.complex(tf.random.normal(shape, dtype=tf.float64),
+                   tf.random.normal(shape, dtype=tf.float64))
+    zero = tf.complex(tf.zeros(shape, dtype=tf.float64),
+                      tf.zeros(shape, dtype=tf.float64))
+
+    m = manifolds.DensityMatrix()
+    u = m.random(shape)
+    '''' testing projetcion
+    Algorithm:
+    1) choose an arbitraty vector and arbitrary orthogonal manifold
+    2) calculate projection of the vector to the manifolds
+    3) calculate normal vector and project to the manifold
+    '''
+    proj = m.proj(u, v)
+    projnorm = m.proj(u, v - proj)
+    out = tf.reduce_sum(tf.cast(projnorm, dtype=tf.float64))
+    assert out < tol, "projection failed for DensityMatrix.\
+    Tol obtained {:1.1e} > tol desired {}".format(out, tol)
+
+    '''testing retraction
+    ----------------------------------------------------------------
+    http://web.math.princeton.edu/~nboumal/book/IntroOptimManifolds_
+    Boumal_2020.pdf, chapter 8.7
+    ----------------------------------------------------------------
+    Let Rx: TxM → M is the restriction of R at x, so that Rx(v) = R(x,v).
+    1) Rx(0)=x
+    2) DRx(0): TxM→TxM is the identity map: DRx(0)[v] = v.
+    (To be clear, here, 0 denotes the zero tangent vector at x,
+    that is, the equivalence class of smooth curves on M that pass
+    through x at t = 0 with zero velocity.)
+    '''
+    u_next = m.retraction(u, zero)
+    out = tf.reduce_sum(tf.cast(u-u_next, dtype=tf.float64))
+    assert out < tol, "retraction failed for DensityMatrix.\
+    Tol obtained {:1.1e} > tol desired {}".format(out, tol)
+    proj_next = m.vector_transport(u, proj, zero)
+    out = tf.reduce_sum(tf.cast(proj-proj_next, dtype=tf.float64))
+    assert out < tol, "vector_transport failed for DensityMatrix.\
+    Tol obtained {:1.1e} > tol desired {}".format(out, tol)
