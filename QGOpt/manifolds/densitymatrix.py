@@ -66,6 +66,7 @@ class DensityMatrix(base_manifold.Manifold):
                 a set of points from the manifold.
             vec: complex valued tensor of shape (..., n, n),
                 a set of vectors to be projected.
+
         Returns:
             complex valued tensor of shape (..., n, n),
             a set of projected vectors"""
