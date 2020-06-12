@@ -196,6 +196,7 @@ class StiefelManifold(base_manifold.Manifold):
                 shape of a generated matrix.
             dtype: type of an output tensor, can be
                 either tf.complex64 or tf.complex128.
+
         Returns:
             complex valued tensor of shape (..., n, p),
             a generated matrix."""
