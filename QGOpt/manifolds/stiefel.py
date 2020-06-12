@@ -204,7 +204,7 @@ class StiefelManifold(base_manifold.Manifold):
 
         if dtype not in list_of_dtypes:
             raise ValueError("Incorrect dtype")
-        real_dtype = tf.float64 if dtype == tf.complex128 esle tf.float32
+        real_dtype = tf.float64 if dtype == tf.complex128 else tf.float32
 
         u = tf.complex(tf.random.normal(shape, dtype=tf.real_dtype),
                        tf.random.normal(shape, dtype=tf.real_dtype))
