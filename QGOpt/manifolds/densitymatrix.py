@@ -175,5 +175,5 @@ class DensityMatrix(base_manifold.Manifold):
 
         u = tf.complex(tf.random.normal(shape, dtype=real_dtype),
                        tf.random.normal(shape, dtype=real_dtype))
-        u = u / tf.linalg.norm(u)
+        u = u / tf.linalg.norm(u, axis=(-2, -1))
         return u
