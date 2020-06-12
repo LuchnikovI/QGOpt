@@ -5,9 +5,20 @@ from QGOpt.manifolds.utils import lyap_symmetric
 
 
 class DensityMatrix(base_manifold.Manifold):
-    """Class describes manifold of density matrices. The geometry implemented
-    here is taken from https://arxiv.org/abs/1303.1029.
+    """The manifold of density matrices (rho(n) the positive hermitian matrices
+    of size nxn with unit trace). An element of the manifold is represented by
+    a matrix A that parametrizes density matrix rho = A @ adj(A) 
+    (positive by construction). Notice that for any unitary matrix Q of
+    size nxn the transformation A --> AQ leaves resulting matrix the same.
+    This fact is taken into account by consideration of quotient manifold
+    from
+
+    Yatawatta, S. (2013, May). Radio interferometric calibration using a
+    Riemannian manifold. In 2013 IEEE International Conference on Acoustics,
+    Speech and Signal Processing (pp. 3866-3870). IEEE.
+
     It is also inspired by the Manopt package (www.manopt.org).
+
     Args:
         metric: string specifies type of metric, Defaults to 'euclidean'.
         Types of metrics is available now: 'euclidean'."""
