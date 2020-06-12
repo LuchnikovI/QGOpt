@@ -187,7 +187,7 @@ class StiefelManifold(base_manifold.Manifold):
         new_u = self.retraction(u, vec2)
         return new_u, self.proj(new_u, vec1)
 
-    def random(self, shape, dtype):
+    def random(self, shape, dtype=tf.complex64):
         """Returns a set of points from the complex Stiefel
         manifold generated randomly.
 
@@ -206,7 +206,7 @@ class StiefelManifold(base_manifold.Manifold):
             raise ValueError("Incorrect dtype")
         real_dtype = tf.float64 if dtype == tf.complex128 else tf.float32
 
-        u = tf.complex(tf.random.normal(shape, dtype=tf.real_dtype),
-                       tf.random.normal(shape, dtype=tf.real_dtype))
+        u = tf.complex(tf.random.normal(shape, dtype=real_dtype),
+                       tf.random.normal(shape, dtype=real_dtype))
         u, _ = tf.linalg.qr(u)
         return u
