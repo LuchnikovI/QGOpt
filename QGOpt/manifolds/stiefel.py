@@ -24,7 +24,13 @@ class StiefelManifold(base_manifold.Manifold):
         retraction: string specifies type of retraction. Defaults to
             'svd'. Types of retraction are available: 'svd', 'cayley', 'qr'.
         metric: string specifies type of metric, Defaults to 'euclidean'.
-            Types of metrics are available: 'euclidean', 'canonical'."""
+            Types of metrics are available: 'euclidean', 'canonical'.
+
+    Notes:
+        All methods of this class operates with tensors of shape (..., n, p),
+        where (...) enumerates manifold (can be any shaped), (n, p)
+        is the shape of a particular matrix (e.g. an element of the complex
+        Stiefel manifold or its tangent vector)."""
 
     def __init__(self, retraction='svd',
                  metric='euclidean'):
@@ -41,17 +47,22 @@ class StiefelManifold(base_manifold.Manifold):
 
     def inner(self, u, vec1, vec2):
         """Returns manifold wise inner product of vectors from
-        a tangent space of a direct product of manifolds.
+        a tangent space.
+
         Args:
-            u: complex valued tensor of shape (..., q, p),
-            an element of manifolds direct product
-            vec1: complex valued tensor of shape (..., q, p),
-            a vector from a tangent space.
-            vec2: complex valued tensor of shape (..., q, p),
-            a vector from a tangent spaces.
+            u: complex valued tensor of shape (..., n, p),
+                a set of points from the complex Stiefel
+                manifold.
+            vec1: complex valued tensor of shape (..., n, p),
+                a set of tangent vectors from the complex
+                Stiefel manifold.
+            vec2: complex valued tensor of shape (..., n, p),
+                a set of tangent vectors from the complex
+                Stiefel manifold.
+
         Returns:
             complex valued tensor of shape (..., 1, 1),
-            manifold wise inner product"""
+                manifold wise inner product"""
 
         if self._metric == 'euclidean':
             s_sq = tf.linalg.trace(adj(vec1) @ vec2)[...,
@@ -65,16 +76,19 @@ class StiefelManifold(base_manifold.Manifold):
         return tf.cast(tf.math.real(s_sq), dtype=u.dtype)
 
     def proj(self, u, vec):
-        """Returns projection of a vector on a tangen space
-        of a direct product of Stiefel manifolds.
+        """Returns projection of vectors on a tangen space
+        of the complex Stiefel manifold.
+
         Args:
-            u: complex valued tf.Tensor of shape (..., q, p),
-            a point of a direct product.
-            vec: complex valued tf.Tensor of shape (..., q, p),
-            vectors to be projected.
+            u: complex valued tensor of shape (..., n, p),
+                a set of points from the complex Stiefel
+                manifold.
+            vec: complex valued tensor of shape (..., n, p),
+                a set of vectors to be projected.
+
         Returns:
-            complex valued tf.Tensor of shape (..., q, p),
-            a projected vector"""
+            complex valued tensor of shape (..., n, p),
+            a set of projected vectors"""
 
         return 0.5 * u @ (adj(u) @ vec - adj(vec) @ u) +\
                          (tf.eye(u.shape[-2], dtype=u.dtype) -\
@@ -82,13 +96,17 @@ class StiefelManifold(base_manifold.Manifold):
 
     def egrad_to_rgrad(self, u, egrad):
         """Returns the Riemannian gradient from an Euclidean gradient.
+
         Args:
-            u: complex valued tf.Tensor of shape (..., q, p),
-            an element of a direct product.
-            egrad: complex valued tf.Tensor of shape (..., q, p),
-            an Euclidean gradient.
+            u: complex valued tensor of shape (..., n, p),
+                a set of points from the complex Stiefel
+                manifold.
+            egrad: complex valued tensor of shape (..., n, p),
+                a set of Euclidean gradients.
+
         Returns:
-            tf.Tensor of shape (..., q, p), the Reimannian gradient."""
+            complex valued tensor of shape (..., n, p),
+            the set of Reimannian gradients."""
 
         if self._metric == 'euclidean':
             return 0.5 * u @ (adj(u) @ egrad - adj(egrad) @ u) +\
@@ -99,13 +117,18 @@ class StiefelManifold(base_manifold.Manifold):
             return egrad - u @ adj(egrad) @ u
 
     def retraction(self, u, vec):
-        """Transports a point via a retraction map.
+        """Transports a set of points from the complex Stiefel
+        manifold via a retraction map.
+
         Args:
-            u: complex valued tf.Tensor of shape (..., q, p), a point
-            to be transported
-            vec: complex valued tf.Tensor of shape (..., q, p), a vector of
-            a direction
-        Returns tf.Tensor of shape (..., q, p), a new point"""
+            u: complex valued tensor of shape (..., n, p), a set
+                of points to be transported.
+            vec: complex valued tensor of shape (..., n, p),
+                a set of direction vectors.
+
+        Returns:
+            complex valued tensor of shape (..., n, p),
+            a set of transported points."""
 
         if self._retraction == 'svd':
             new_u = u + vec
@@ -126,48 +149,64 @@ class StiefelManifold(base_manifold.Manifold):
             return q * sign
 
     def vector_transport(self, u, vec1, vec2):
-        """Returns vector vec1 tranported from a point u along vec2.
+        """Returns a vector tranported along an another vector
+        via vector transport.
+
         Args:
-            u: complex valued tf.Tensor of shape (..., q, p),
-            an initial point of a direct product.
-            vec1: complex valued tf.Tensor of shape (..., q, p),
-            a vector to be transported.
-            vec2: complex valued tf.Tensor of shape (..., q, p),
-            a direction vector.
+            u: complex valued tensor of shape (..., n, p),
+                a set of points from the complex Stiefel
+                manifold, starting points.
+            vec1: complex valued tensor of shape (..., n, p),
+                a set of vectors to be transported.
+            vec2: complex valued tensor of shape (..., n, p),
+                a set of direction vectors.
+
         Returns:
-            complex valued tf.Tensor of shape (..., q, p),
-            a transported vector."""
+            complex valued tensor of shape (..., n, p),
+            a set of transported vectors."""
 
         new_u = self.retraction(u, vec2)
         return self.proj(new_u, vec1)
 
     def retraction_transport(self, u, vec1, vec2):
-        """Performs a retraction and a vector transport at the same time.
+        """Performs a retraction and a vector transport simultaneously.
+
         Args:
-            u: complex valued tf.Tensor of shape (..., q, p),
-            an initial point from direct product.
-            vec1: complex valued tf.Tensor of shape (..., q, p),
-            a vector to be transported.
-            vec2: complex valued tf.Tensor of shape (..., q, p),
-            a direction vector.
+            u: complex valued tensor of shape (..., n, p),
+                a set of points from the complex Stiefel
+                manifold, starting points.
+            vec1: complex valued tensor of shape (..., n, p),
+                a set of vectors to be transported.
+            vec2: complex valued tensor of shape (..., n, p),
+                a set of direction vectors.
+
         Returns:
-            two complex valued tf.Tensor of shape (..., q, p),
-            a new point and a new vector."""
+            two complex valued tensors of shape (..., n, p),
+            a set of transported points and vectors."""
 
         new_u = self.retraction(u, vec2)
         return new_u, self.proj(new_u, vec1)
 
-    def random(self, shape):
-        """Returns vector vec from StiefelManifold.
-        Usage:
-            shape = (4,5,3,2)
-            m = manifolds.StiefelManifold()
-            vec = m.random(shape)
+    def random(self, shape, dtype):
+        """Returns a set of points from the complex Stiefel
+        manifold generated randomly.
+
         Args:
-            shape: integer values list (..., q, p),
+            shape: tuple of integer numbers (..., n, p),
+                shape of a generated matrix.
+            dtype: type of an output tensor, can be
+                either tf.complex64 or tf.complex128.
         Returns:
-            complex valued tf.Tensor of shape"""
-        vec = tf.complex(tf.random.normal(shape, dtype=tf.float64),
-                        tf.random.normal(shape, dtype=tf.float64))
-        vec, _ = tf.linalg.qr(vec)
-        return vec
+            complex valued tensor of shape (..., n, p),
+            a generated matrix."""
+
+        list_of_dtypes = [tf.complex64, tf.complex128]
+
+        if dtype not in list_of_dtypes:
+            raise ValueError("Incorrect dtype")
+        real_dtype = tf.float64 if dtype == tf.complex128 esle tf.float32
+
+        u = tf.complex(tf.random.normal(shape, dtype=tf.real_dtype),
+                       tf.random.normal(shape, dtype=tf.real_dtype))
+        u, _ = tf.linalg.qr(u)
+        return u
