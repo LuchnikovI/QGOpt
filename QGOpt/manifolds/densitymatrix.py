@@ -153,7 +153,7 @@ class DensityMatrix(base_manifold.Manifold):
         u_new = u_new / tf.linalg.norm(u_new)
         return u_new, self.proj(u_new, vec1)
 
-    def random(self, shape):
+    def random(self, shape, dtype=tf.complex64):
         """Returns a set of points from the manifold generated
         randomly.
 
