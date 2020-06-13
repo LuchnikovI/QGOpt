@@ -6,11 +6,34 @@ import math
 
 
 class ChoiMatrix(base_manifold.Manifold):
-    """Class describes manifold of choi matrices. The quotient geometry taken
-    from https://arxiv.org/abs/1303.1029.
+    """The manifold of Choi matrices of fixed rank (Kraus rank).
+    Choi matrices of fixed Kraus rank are the set of matrices Choi(n, k)
+    of size n^2xn^2 (n is the dimension of a quantum system) and rank k
+    that are positive definite (the corresponding quantum channel is
+    completely positive) and with additional constraint Tr_2(choi) = Id,
+    where Tr_2 is the partial trace over the second subsystem, Id is
+    the identity matrix (ensures the trace-preserving property of the
+    corresponding quantum channel). In the general case Kraus rank of
+    a Choi matrix is equal to n^2. Choi matrices are parametr. An element
+    of this manifold is represented by a complex matrix A of size n^2xk that
+    parametrizes a Choi matrix choi = A @ adj(A) (positive by construction).
+    Notice that for any unitary matrix Q of size kxk the transformation
+    A --> AQ leaves resulting matrix the same. This fact is taken into
+    account by consideration of quotient manifold from
+
+    Yatawatta, S. (2013, May). Radio interferometric calibration using a
+    Riemannian manifold. In 2013 IEEE International Conference on Acoustics,
+    Speech and Signal Processing (pp. 3866-3870). IEEE.
+
     Args:
         metric: string specifies type of metric, Defaults to 'euclidean'.
-        Types of metrics is available now: 'euclidean'."""
+            Types of metrics are available: 'euclidean'.
+
+    Notes:
+        All methods of this class operates with tensors of shape (..., n ** 2, k),
+        where (...) enumerates manifold (can be any shaped), (n ** 2, k)
+        is the shape of a particular matrix (e.g. an element of the manifold
+        or its tangent vector)."""
 
     def __init__(self, metric='euclidean'):
 
