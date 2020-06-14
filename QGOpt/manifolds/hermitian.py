@@ -3,113 +3,148 @@ from QGOpt.manifolds import base_manifold
 from QGOpt.manifolds.utils import adj
 
 
-class HermitianManifold(base_manifold.Manifold):
-    """Class describes  manifold: X from C[q,q]: X = X*' .
-    It allows performing all necessary operations with elements of manifolds
-    direct product and tangent spaces for optimization.
-    Returns object of class HermitianManifold.
+class HermitianMatrix(base_manifold.Manifold):
+    """The manifold of Hermitian matrices (the set of complex matrices
+    of size nxn for which A = adj(A)).
+
+    Args:
+        metric: string specifies type of metric, Defaults to 'euclidean'.
+            Types of metrics are available: 'euclidean'.
     """
 
-    def __init__(self):
-        """ Not implemented yet
-        """
+    def __init__(self, metric='euclidean'):
+
+        list_of_metrics = ['euclidean']
+
+        if metric not in list_of_metrics:
+            raise ValueError("Incorrect metric")
 
     def inner(self, u, vec1, vec2):
         """Returns manifold wise inner product of vectors from
-        a tangent space of a direct product of manifolds.
+        a tangent space.
+
         Args:
-            u: complex valued tensor of shape (..., q, q),
-            an element of manifolds direct product
-            vec1: complex valued tensor of shape (..., q, q),
-            a vector from a tangent space.
-            vec2: complex valued tensor of shape (..., q, q),
-            a vector from a tangent spaces.
+            u: complex valued tensor of shape (..., n, n),
+                a set of points from the manifold.
+            vec1: complex valued tensor of shape (..., n, n),
+                a set of tangent vectors from the manifold.
+            vec2: complex valued tensor of shape (..., n, n),
+                a set of tangent vectors from the manifold.
+
         Returns:
             complex valued tensor of shape (..., 1, 1),
-            manifold wise inner product"""
+                manifold wise inner product"""
 
-        return tf.linalg.trace(adj(vec1) @ vec2)[...,
-                                                 tf.newaxis,
-                                                 tf.newaxis]
+        prod = tf.reduce_sum(tf.math.conj(vec1) * vec2, axis=(-2, -1),
+                             keepdims=True)
+        prod = tf.cast(tf.math.real(prod), dtype=u.datype)
+        return prod
 
     def proj(self, u, vec):
-        """Returns projection of a vector to Hermitian space.
+        """Returns projection of vectors on a tangen space
+        of the manifold.
+
         Args:
-            u: complex valued tf.Tensor of shape (..., q, q),
-            a point of a direct product.
-            vec: complex valued tf.Tensor of shape (..., q, q),
-            vectors to be projected.
+            u: complex valued tensor of shape (..., n, n),
+                a set of points from the manifold.
+            vec: complex valued tensor of shape (..., n, n),
+                a set of vectors to be projected.
+
         Returns:
-            complex valued tf.Tensor of shape (..., q, q),
-            a projected vector"""
-        return 0.5*(vec + adj(vec))
+            complex valued tensor of shape (..., n, n),
+            a set of projected vectors"""
+
+        return 0.5 * (vec + adj(vec))
 
     def egrad_to_rgrad(self, u, egrad):
         """Returns the Riemannian gradient from an Euclidean gradient.
+
         Args:
-            u: complex valued tf.Tensor of shape (..., q, q),
-            an element of a direct product.
-            egrad: complex valued tf.Tensor of shape (..., q, q),
-            an Euclidean gradient.
+            u: complex valued tensor of shape (..., n, n),
+                a set of points from the manifold.
+            egrad: complex valued tensor of shape (..., n, n),
+                a set of Euclidean gradients.
+
         Returns:
-            tf.Tensor of shape (..., q, q), the Reimannian gradient."""
+            complex valued tensor of shape (..., n, n),
+            the set of Reimannian gradients."""
 
         return self.proj(u, egrad)
 
     def retraction(self, u, vec):
-        """Transports a point via a retraction map.
+        """Transports a set of points from the manifold via a
+        retraction map.
+
         Args:
-            u: complex valued tf.Tensor of shape (..., q, q), a point
-            to be transported
-            vec: complex valued tf.Tensor of shape (..., q, q), a vector of
-            a direction
-        Returns tf.Tensor of shape (..., q, q), a new point"""
+            u: complex valued tensor of shape (..., n, n), a set
+                of points to be transported.
+            vec: complex valued tensor of shape (..., n, n),
+                a set of direction vectors.
+
+        Returns:
+            complex valued tensor of shape (..., n, n),
+            a set of transported points."""
+
         return u + vec
 
     def vector_transport(self, u, vec1, vec2):
-        """Returns vector vec1 tranported from a point u along vec2.
+        """Returns a vector tranported along an another vector
+        via vector transport.
+
         Args:
-            u: complex valued tf.Tensor of shape (..., q, q),
-            an initial point of a direct product.
-            vec1: complex valued tf.Tensor of shape (..., q, q),
-            a vector to be transported.
-            vec2: complex valued tf.Tensor of shape (..., q, q),
-            a direction vector.
+            u: complex valued tensor of shape (..., n, n),
+                a set of points from the manifold, starting points.
+            vec1: complex valued tensor of shape (..., n, n),
+                a set of vectors to be transported.
+            vec2: complex valued tensor of shape (..., n, n),
+                a set of direction vectors.
+
         Returns:
-            complex valued tf.Tensor of shape (..., q, q),
-            a transported vector."""
-        new_u = self.retraction(u, vec2)
-        return self.proj(new_u, vec1)
+            complex valued tensor of shape (..., n, n),
+            a set of transported vectors."""
+
+        return vec1
 
     def retraction_transport(self, u, vec1, vec2):
-        """Performs a retraction and a vector transport at the same time.
+        """Performs a retraction and a vector transport simultaneously.
+
         Args:
-            u: complex valued tf.Tensor of shape (..., q, q),
-            an initial point from direct product.
-            vec1: complex valued tf.Tensor of shape (..., q, q),
-            a vector to be transported.
-            vec2: complex valued tf.Tensor of shape (..., q, q),
-            a direction vector.
+            u: complex valued tensor of shape (..., n, n),
+                a set of points from the manifold, starting points.
+            vec1: complex valued tensor of shape (..., n, n),
+                a set of vectors to be transported.
+            vec2: complex valued tensor of shape (..., n, n),
+                a set of direction vectors.
+
         Returns:
-            two complex valued tf.Tensor of shape (..., q, q),
-            a new point and a new vector."""
+            two complex valued tensors of shape (..., n, n),
+            a set of transported points and vectors."""
+
         new_u = self.retraction(u, vec2)
-        return new_u, self.proj(new_u, vec1)
+        return new_u, vec1
 
     def random(self, shape):
-        """Returns vector vec from HermitianManifold.
-        Usage:
-            shape = (4,5,3,3)
-            m = manifolds.HermitianManifold()
-            vec = m.random(shape)
+        """Returns a set of points from the manifold generated
+        randomly.
+
         Args:
-            shape: integer values list (..., q, q),
+            shape: tuple of integer numbers (..., n, n),
+                shape of a generated matrix.
+            dtype: type of an output tensor, can be
+                either tf.complex64 or tf.complex128.
+
         Returns:
-            complex valued tf.Tensor of shape"""
-        vec = tf.complex(tf.random.normal(shape, dtype=tf.float64),
-            tf.random.normal(shape, dtype=tf.float64))
-        vec = vec + adj(vec)
-        vec = vec/tf.norm(vec, ord='fro',axis=[-1,-2])[...,
-                                                    tf.newaxis,
-                                                    tf.newaxis]
-        return vec
+            complex valued tensor of shape (..., n, n),
+            a generated matrix."""
+
+        list_of_dtypes = [tf.complex64, tf.complex128]
+
+        if dtype not in list_of_dtypes:
+            raise ValueError("Incorrect dtype")
+        real_dtype = tf.float64 if dtype == tf.complex128 else tf.float32
+
+        u = tf.complex(tf.random.normal(shape, dtype=real_dtype),
+                       tf.random.normal(shape, dtype=real_dtype))
+
+        u = 0.5 * (u + adj(u))
+        return u
