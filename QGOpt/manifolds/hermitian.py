@@ -123,7 +123,7 @@ class HermitianMatrix(base_manifold.Manifold):
         new_u = self.retraction(u, vec2)
         return new_u, vec1
 
-    def random(self, shape):
+    def random(self, shape, dtype=tf.complex64):
         """Returns a set of points from the manifold generated
         randomly.
 
