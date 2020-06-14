@@ -2,22 +2,28 @@ import tensorflow as tf
 
 
 def adj(A):
-    """Correct hermitian adjoint
+    """Batch conjugate transpose.
+
     Args:
-        A: tf tensor of shape (..., n, m)
+        A: complex valued tensor of shape (..., n, m).
+
     Returns:
-        tf tensor of shape (..., m, n), hermitian adjoint matrix"""
+        complex valued tensor of shape (..., m, n),
+        conjugate transpose matrix."""
 
     return tf.math.conj(tf.linalg.matrix_transpose(A))
 
 
 def _lower(X):
-    """Returns the lower triangular part of a matrix without diagonal part.
+    """Returns the lower triangular part of a matrix without the
+    diagonal part.
+
     Args:
-        X: tf tensor of shape (..., m, m)
+        X: tensor of shape (..., m, m).
     Returns:
-        tf tensor of shape (..., m, m), a matrix without diagonal and upper
-        triangular parts"""
+
+        tensor of shape (..., m, m), a set of matrices without
+        diagonal and upper triangular parts."""
 
     dim = X.shape[-1]
     dtype = X.dtype
@@ -31,11 +37,13 @@ def _lower(X):
 def _half(X):
     """Returns the lower triangular part of
     a matrix with half of diagonal part.
+
     Args:
-        X: tf tensor of shape (..., m, m)
+        X: tensor of shape (..., m, m).
+
     Returns:
-        tf tensor of shape (..., m, m), a matrix with half of diagonal and
-        without upper triangular parts"""
+        tensor of shape (..., m, m), a set of matrices with half
+        of diagonal and without upper triangular parts."""
 
     dim = X.shape[-1]
     dtype = X.dtype
@@ -49,14 +57,17 @@ def _half(X):
 def _pull_back_chol(W, L, inv_L):
     """Takes a tangent vector to a point from S++ and
     computes the corresponding tangent vector to the
-    corresponding point from L+
+    corresponding point from L+.
+
     Args:
-        W: tf tensor of shape (..., m, m), tangent vector
-        L: tf tensor of shape (..., m, m), triangular matrix from L+
-        inv_L: tf tensor of shape (..., m, m), inverse L
+        W: complex valued tensor of shape (..., m, m), tangent vector.
+        L: complex valued tensor of shape (..., m, m), 
+            triangular matrix from L+.
+        inv_L: complex valued tensor of shape (..., m, m), inverse L.
+
     Returns:
-        tf tensor of shape (..., m, m), tangent vector to corresponding
-        point in L+"""
+        complex valued tensor of shape (..., m, m), tangent vector
+        to corresponding point in L+."""
 
     X = inv_L @ W @ adj(inv_L)
     X = L @ (_half(X))
@@ -67,24 +78,30 @@ def _pull_back_chol(W, L, inv_L):
 def _push_forward_chol(X, L):
     """Takes a tangent vector to a point from L+ and
     computes the corresponding tangent vector to the
-    corresponding point from S++
+    corresponding point from S++.
+
     Args:
-        X: tf tensor of shape (..., m, m), tangent vector
-        L: tf tensor of shape (..., m, m), triangular matrix from L+
+        X: complex valued tensor of shape (..., m, m), tangent vector.
+        L: complex valued tensor of shape (..., m, m),
+            triangular matrix from L+.
+
     Returns:
-        tf tensor of shape (..., m, m), tangent vector to corresponding
-        point in S++"""
+        complex valued tensor of shape (..., m, m), tangent vector
+        to corresponding point in S++."""
 
     return L @ adj(X) + X @ adj(L)
 
 
 def _f_matrix(lmbd):
-    """Returns f matrix (part of pull back and push forward)
+    """Returns f matrix (an auxiliary matrix for _pull_back_log
+    and _push_forward_log).
+
     Args:
-        lmbd: tf tensor of shape (..., m), eigenvalues of matrix
-        from S
+        lmbd: tensor of shape (..., m), eigenvalues of matrix
+        from S.
+
     Returns:
-        tf tensor of shape (..., m, m), f matrix"""
+        tensor of shape (..., m, m), f matrix."""
 
     n = lmbd.shape[-1]
     l_i = lmbd[..., tf.newaxis]
@@ -96,16 +113,20 @@ def _f_matrix(lmbd):
 def _pull_back_log(W, U, lmbd):
     """Takes a tangent vector to a point from S++ and
     computes the corresponding tangent vector to the
-    corresponding point from S
+    corresponding point from S.
+
     Args:
-        W: tf tensor of shape (..., m, m), tangent vector
-        U: tf tensor of shape (..., m, m), unitary matrix
-        from eigen decomposition of a point from S++
-        lmbd: tf tensor of shape (..., m), eigenvalues of
-        a point from S++
+        W: complex valued tensor of shape (..., m, m),
+            tangent vector.
+        U: complex valued tensor of shape (..., m, m),
+            unitary matrix from eigen decomposition of 
+            a point from S++.
+        lmbd: tensor of shape (..., m), eigenvalues of
+            a point from S++.
+
     Returns:
-        tf tensor of shape (..., m, m), tangent vector to corresponding
-        point in S"""
+        complex valued tensor of shape (..., m, m),
+        tangent vector to the corresponding point in S"""
 
     f = _f_matrix(lmbd)
     return U @ ((1 / f) * (adj(U) @ W @ U)) @ adj(U)
@@ -114,29 +135,36 @@ def _pull_back_log(W, U, lmbd):
 def _push_forward_log(W, U, lmbd):
     """Takes a tangent vector to a point from S and
     computes the corresponding tangent vector to the
-    corresponding point from S++
+    corresponding point from S++.
+
     Args:
-        W: tf tensor of shape (..., m, m), tangent vector
-        U: tf tensor of shape (..., m, m), unitary matrix
-        from eigen decomposition of a point from S
-        lmbd: tf tensor of shape (..., m), eigenvalues of
-        a point from S
+        W: complex valued tensor of shape (..., m, m),
+            tangent vector.
+        U: complex valued tensor of shape (..., m, m),
+            unitary matrix from eigen decomposition of
+            a point from S.
+        lmbd: tensor of shape (..., m), eigenvalues of
+            a point from S.
+
     Returns:
-        tf tensor of shape (..., m, m), tangent vector to corresponding
-        point in S++"""
+        complex valued tensor of shape (..., m, m), tangent
+        vector to corresponding point in S++."""
 
     f = _f_matrix(lmbd)
     return U @ (f * (adj(U) @ W @ U)) @ adj(U)
 
 
 def lyap_symmetric(A, C, eps=1e-10):
-    """Solves AX + XA = C when A = A^dagger.
+    """Solves AX + XA = C when A = adj(A).
+
     Args:
-        A: complex valued tf tensor of shape (..., m, m)
-        C: complex valued tf tensor of shape (..., m, m)
-        eps: small float number guarantees safe inverse
+        A: complex valued tensor of shape (..., m, m).
+        C: complex valued tensor of shape (..., m, m).
+        eps: small float number guarantees safe inverse.
+
     Return:
-        complex valued tf tensor, solution of the equation"""
+        complex valued tensor of shape (..., m, m),
+        solution of the equation."""
 
     lmbd, u = tf.linalg.eigh(A)
     uCu = adj(u) @ C @ u
