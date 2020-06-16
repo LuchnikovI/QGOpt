@@ -2,19 +2,14 @@ from abc import ABC, abstractmethod
 
 
 class Manifold(ABC):
-    """Base class is used to work with a direct product
-    of Riemannian manifolds. An element from a direct product of manifolds
-    is described by a complex tf.Tensor with the shape (..., a, b),
-    where (...) enumerates manifolds from a direct product (can be either
-    empty or not), (a, b) is the shape of a matrix from a particular manifold.
+    """Base class is used to walk across manifolds.
+
     Args:
         retraction: string specifies type of a retraction.
-
         metric: string specifies type of a metric.
 
-        transport: string specifies type of a vector transport
     Returns:
-        object of the class Manifold
+        object of the class Manifold.
     """
 
     def __init__(self, retraction,
@@ -25,78 +20,111 @@ class Manifold(ABC):
 
     @abstractmethod
     def inner(self, u, vec1, vec2):
-        """Returns scalar product of vectors in tangent space at point u of
-        manifolds direct product.
+        """Returns manifold wise inner product of vectors from
+        a tangent space.
+
         Args:
-            u: point where a tangent space is considered.
-            vec1: complex valued tensor, the first vector from tangent space.
-            vec2: complex valued tensor, the second vector from tangent space.
+            u: complex valued tensor, a set of points from a manifold.
+            vec1: complex valued tensor, a set of tangent vectors
+                from a manifold.
+            vec2: complex valued tensor, a set of tangent vectors
+                from a manifold.
+
         Returns:
             complex valued tensor, manifold wise inner product"""
         pass
 
     @abstractmethod
     def proj(self, u, vec):
-        """Returns projection of a vector on a tangen spaces
-        of manifolds direct product.
+        """Returns projection of vectors on a tangen space
+        of a manifold.
+
         Args:
-            u: complex valued tf.Tensor, point of a direct product of manifolds
-            vec: complex valued tf.Tensor, vector to be projected
+            u: complex valued tensor, a set of points from
+                a manifold.
+            vec: complex valued tensor, a set of vectors
+                to be projected.
+
         Returns:
-            complex valued tf.Tensor, projected vector"""
+            complex valued tensor, a set of projected
+                vectors."""
         pass
 
     @abstractmethod
     def egrad_to_rgrad(self, u, egrad):
         """Returns the Riemannian gradient from an Euclidean gradient.
+
         Args:
-            u: complex valued tf.Tensor, point from manifolds direct product.
-            egrad: complex valued tf.Tensor, Eucledian gradient
+            u: complex valued tensor, a set of points from a manifold.
+            egrad: complex valued tensor, a set of Euclidean gradients.
+
         Returns:
-            tf.Tensor, Riemannian gradient."""
+            complex valued tensor, the set of Reimannian gradients."""
         pass
 
     @abstractmethod
     def retraction(self, u, vec):
-        """Transports point according a retraction map.
+        """Transports a set of points from a manifold via a
+        retraction map.
+
         Args:
-            u: complex valued tf.Tensor, a point to be transported.
-            vec: complex valued tf.Tensor, a direction vector.
-        Returns complex valued tf.Tensor, a new point"""
+            u: complex valued tensor, a set of points to be
+                transported.
+            vec: complex valued tensor, a set of direction
+                vectors.
+
+        Returns:
+            complex valued tensor, a set of transported
+            points."""
         pass
 
     @abstractmethod
     def vector_transport(self, u, vec1, vec2):
-        """Returns vector vec1 tranported from point u along vector vec2.
+        """Returns a vector tranported along an another vector
+        via vector transport.
+
         Args:
-            u: complex valued tf.Tensor, an initial point of a manifolds
-            direct product
-            vec1: complex valued tf.Tensor, a vector to be transported
-            vec2: complex valued tf.Tensor, a direction vector.
+            u: complex valued tensor, a set of points from
+                a manifold, starting points.
+            vec1: complex valued tensor, a set of vectors
+                to be transported.
+            vec2: complex valued tensor, a set of direction
+                vectors.
+
         Returns:
-            complex valued tf.Tensor, a new vector"""
+            complex valued tensor, a set of transported vectors."""
         pass
 
     @abstractmethod
     def retraction_transport(self, u, vec1, vec2):
         """Performs a retraction and a vector transport simultaneously.
+
         Args:
-            u: complex valued tf.Tensor, an initial point of a manifolds direct
-            product
-            vec1: complex valued tf.Tensor, a vector to be transported
-            vec2: complex valued tf.Tensor, a direction vector.
+            u: complex valued tensor, a set of points from a
+                manifold, starting points.
+            vec1: complex valued tensor, a set of vectors
+                to be transported.
+            vec2: complex valued tensor, a set of direction
+                vectors.
+
         Returns:
-            two complex valued tf.Tensor,
-            a new point and a transported vector"""
+            two complex valued tensors, a set of transported
+            points and vectors."""
         pass
 
     @abstractmethod
     def random(self, shape):
-        """Returns vector vec from manifolds.
+        """Returns a set of points from the manifold generated
+        randomly.
+
         Args:
-            shape: integer values list,
+            shape: tuple of integer numbers, shape of a
+                generated matrix.
+            dtype: type of an output tensor, can be either
+                tf.complex64 or tf.complex128.
+
         Returns:
-            complex valued tf.Tensor of shape"""
+            complex valued tensor, a generated matrix."""
         pass
 
     @abstractmethod
