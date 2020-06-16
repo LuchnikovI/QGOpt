@@ -10,7 +10,7 @@ class StiefelManifold(base_manifold.Manifold):
 
     The geometry of the complex Stiefel manifold is taken from
 
-    Sato, H., & Iwai, T. (2013, December). A complex singular value 
+    Sato, H., & Iwai, T. (2013, December). A complex singular value
     decomposition algorithm based on the Riemannian Newton method.
     In 52nd IEEE Conference on Decision and Control (pp. 2972-2978). IEEE.
 
@@ -211,3 +211,39 @@ class StiefelManifold(base_manifold.Manifold):
                        tf.random.normal(shape, dtype=real_dtype))
         u, _ = tf.linalg.qr(u)
         return u
+
+    def random_tangent(self, u):
+        """Returns a set of random tangent vectors to points from
+        the complex Stiefel manifold.
+
+        Args:
+            u: complex valued tensor of shape (..., n, p), points
+                from the complex Stiefel manifold.
+
+        Returns:
+            complex valued tensor, set of tangent vectors to u."""
+
+        vec = tf.complex(tf.random.normal(u.shape), tf.random.normal(u.shape))
+        vec = tf.cast(vec, dtype=u.dtype)
+        vec = self.proj(u, vec)
+        return vec
+
+    def is_in_manifold(self, u, tol=1e-5):
+        """Checks if a point is in the Stiefel manifold or not.
+
+        Args:
+            u: complex valued tensor of shape (..., n, p),
+                a point to be checked.
+            tol: small real value showing tolerance.
+
+        Returns:
+            bolean tensor of shape (...)."""
+
+        Id = tf.eye(u.shape[-1], dtype=u.dtype)
+        udagu = adj(u) @ u
+        diff = Id - udagu
+        diff_norm = tf.linalg.norm(diff, axis=(-2, -1))
+        udagu_norm = tf.linalg.norm(udagu, axis=(-2, -1))
+        Id_norm = tf.linalg.norm(Id, axis=(-2, -1))
+        rel_diff = tf.abs(diff_norm / tf.math.sqrt(Id_norm * udagu_norm))
+        return tol > rel_diff

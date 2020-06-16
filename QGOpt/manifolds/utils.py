@@ -154,7 +154,7 @@ def _push_forward_log(W, U, lmbd):
     return U @ (f * (adj(U) @ W @ U)) @ adj(U)
 
 
-def lyap_symmetric(A, C, eps=1e-10):
+def lyap_symmetric(A, C, eps=1e-9):
     """Solves AX + XA = C when A = adj(A).
 
     Args:
@@ -169,4 +169,4 @@ def lyap_symmetric(A, C, eps=1e-10):
     lmbd, u = tf.linalg.eigh(A)
     uCu = adj(u) @ C @ u
     L = lmbd[..., tf.newaxis, :] + lmbd[..., tf.newaxis]
-    return u @ (uCu * L / (L ** 2 + eps)) @ adj(u)
+    return u @ (uCu * L / (L ** 2 + eps ** 2)) @ adj(u)

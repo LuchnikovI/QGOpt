@@ -14,7 +14,7 @@ class ChoiMatrix(base_manifold.Manifold):
     where Tr_2 is the partial trace over the second subsystem, Id is
     the identity matrix (ensures the trace-preserving property of the
     corresponding quantum channel). In the general case Kraus rank of
-    a Choi matrix is equal to n^2. An element of this manifold is 
+    a Choi matrix is equal to n^2. An element of this manifold is
     represented by a complex matrix A of size (n^2)xk that parametrizes
     a Choi matrix choi = A @ adj(A) (positive by construction).
     Notice that for any unitary matrix Q of size kxk the transformation
@@ -35,7 +35,7 @@ class ChoiMatrix(base_manifold.Manifold):
         is the shape of a particular matrix (e.g. an element of the manifold
         or its tangent vector).
         In order to take a partial trace of a choi matrix over the second
-        subsystem one can at first reshape a choi matrix 
+        subsystem one can at first reshape a choi matrix
         (n ** 2, n ** 2) --> (n, n, n, n) and then take a trace over
         1st and 3rd indices (the numeration starts from 0)."""
 
@@ -227,3 +227,42 @@ class ChoiMatrix(base_manifold.Manifold):
         u = tf.reshape(u, shape[:-2] + (n ** 2, k))
 
         return u
+
+    def random_tangent(self, u):
+        """Returns a set of random tangent vectors to points from
+        the manifold.
+
+        Args:
+            u: complex valued tensor of shape (..., n ** 2, k), points
+                from the manifold.
+
+        Returns:
+            complex valued tensor, set of tangent vectors to u."""
+
+        vec = tf.complex(tf.random.normal(u.shape), tf.random.normal(u.shape))
+        vec = tf.cast(vec, dtype=u.dtype)
+        vec = self.proj(u, vec)
+        return vec
+
+    def is_in_manifold(self, u, tol=1e-5):
+        """Checks if a point is in the manifold or not.
+
+        Args:
+            u: complex valued tensor of shape (..., n ** 2, k),
+                a point to be checked.
+            tol: small real value showing tolerance.
+
+        Returns:
+            bolean tensor of shape (...)."""
+
+        shape = u.shape[:-2]
+        n_sq, k = u.shape[-2], u.shape[-1]
+        n = int(tf.math.sqrt(tf.cast(n_sq, dtype=tf.float32)))
+        u_resh = tf.reshape(u, shape + (n, n * k))
+        uudag = u_resh @ adj(u_resh)
+        Id = tf.eye(uudag.shape[-1], dtype=u.dtype)
+        diff = tf.linalg.norm(uudag - Id, axis=(-2, -1))
+        uudag_norm = tf.linalg.norm(uudag, axis=(-2, -1))
+        Id_norm = tf.linalg.norm(Id, axis=(-2, -1))
+        rel_diff = tf.abs(diff / tf.math.sqrt(Id_norm * uudag_norm))
+        return tol > rel_diff

@@ -296,3 +296,39 @@ class PositiveCone(base_manifold.Manifold):
                        tf.random.normal(shape, dtype=real_dtype))
         u = tf.linalg.adjoint(u) @ u
         return u
+
+    def random_tangent(self, u):
+        """Returns a set of random tangent vectors to points from
+        the manifold.
+
+        Args:
+            u: complex valued tensor of shape (..., n, n), points
+                from the manifold.
+
+        Returns:
+            complex valued tensor, set of tangent vectors to u."""
+
+        vec = tf.complex(tf.random.normal(u.shape), tf.random.normal(u.shape))
+        vec = tf.cast(vec, dtype=u.dtype)
+        vec = self.proj(u, vec)
+        return vec
+
+    def is_in_manifold(self, u, tol=1e-5):
+        """Checks if a point is in the manifold or not.
+
+        Args:
+            u: complex valued tensor of shape (..., n, n),
+                a point to be checked.
+            tol: small real value showing tolerance.
+
+        Returns:
+            bolean tensor of shape (...)."""
+
+        diff_norm = tf.linalg.norm(u - adj(u), axis=(-2, -1))
+        u_norm = tf.linalg.norm(u, axis=(-2, -1))
+        rel_diff = tf.abs(diff_norm / u_norm)
+        herm_mask = tol > rel_diff
+        lmbd = tf.math.real(tf.linalg.eigvalsh(u))
+        num_of_neg = tf.reduce_sum(tf.cast(lmbd < 0, dtype=tf.int32), axis=-1)
+        positivity_mask = num_of_neg == 0
+        return tf.math.logical_and(positivity_mask, herm_mask)

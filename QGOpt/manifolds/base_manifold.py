@@ -98,3 +98,29 @@ class Manifold(ABC):
         Returns:
             complex valued tf.Tensor of shape"""
         pass
+
+    @abstractmethod
+    def random_tangent(self, u):
+        """Returns a set of random tangent vectors to points from
+        a manifold.
+
+        Args:
+            u: complex valued tensor of shape (..., n, p), points
+                from a manifold.
+
+        Returns:
+            complex valued tensor, set of tangent vectors to u."""
+
+        pass
+
+    @abstractmethod
+    def is_in_manifold(self, u):
+        """Checks if a point is in a manifold or not.
+
+        Args:
+            u: complex valued tensor of shape (..., n, p),
+                a point to be checked.
+
+        Returns:
+            bolean tensor of shape (...)."""
+        pass

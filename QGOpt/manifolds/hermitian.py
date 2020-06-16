@@ -148,3 +148,35 @@ class HermitianMatrix(base_manifold.Manifold):
 
         u = 0.5 * (u + adj(u))
         return u
+
+    def random_tangent(self, u):
+        """Returns a set of random tangent vectors to points from
+        the manifold.
+
+        Args:
+            u: complex valued tensor of shape (..., n, n), points
+                from the manifold.
+
+        Returns:
+            complex valued tensor, set of tangent vectors to u."""
+
+        vec = tf.complex(tf.random.normal(u.shape), tf.random.normal(u.shape))
+        vec = tf.cast(vec, dtype=u.dtype)
+        vec = self.proj(u, vec)
+        return vec
+
+    def is_in_manifold(self, u, tol=1e-5):
+        """Checks if a point is in the manifold or not.
+
+        Args:
+            u: complex valued tensor of shape (..., n, n),
+                a point to be checked.
+            tol: small real value showing tolerance.
+
+        Returns:
+            bolean tensor of shape (...)."""
+
+        diff_norm = tf.linalg.norm(u - adj(u), axis=(-2, -1))
+        u_norm = tf.linalg.norm(u, axis=(-2, -1))
+        rel_diff = tf.abs(diff_norm / u_norm)
+        return tol > rel_diff
