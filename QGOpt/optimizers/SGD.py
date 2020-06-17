@@ -4,25 +4,27 @@ import tensorflow as tf
 
 
 class RSGD(opt.OptimizerV2):
-    """Riemannian gradient descent and gradient descent with momentum optimizers.
-    Returns a new Riemannian optimizer.
-    Comment:
-        The optimizer works only with real valued tf.Variable of shape
-        (..., q, p, 2), where ... -- enumerates manifolds
-        (can be either empty or any shaped),
-        q and p size of a matrix, the last index marks
-        real and imag parts of a matrix
-        (0 -- real part, 1 -- imag part)
+    """Riemannian gradient descent and gradient descent with momentum
+    optimizers. Returns a new Riemannian optimizer.
+
     Args:
         manifold: object of the class Manifold, marks a particular manifold.
         learning_rate: floating point number. A learning rate.
-        Defaults to 0.01.
+            Defaults to 0.01.
         momentum: floating point value, the momentum. Defaults to 0
-        (Standard GD).
+            (Standard GD).
         use_nesterov: Boolean value, if True, use Nesterov Momentum. Defaults
-        to False.
+            to False.
         name: Optional name prefix for the operations created when applying
-        gradients.  Defaults to 'RSGD'."""
+            gradients.  Defaults to 'RSGD'.
+
+    Notes:
+        The optimizer works only with real valued tf.Variable of shape
+        (..., q, p, 2), where (...) -- enumerates manifolds
+        (can be either empty or any shaped),
+        q and p size of a matrix, the last index marks
+        real and imag parts of a matrix
+        (0 -- real part, 1 -- imag part)"""
 
     def __init__(self,
                  manifold,
@@ -63,7 +65,7 @@ class RSGD(opt.OptimizerV2):
                      dtype=complex_grad.dtype)
 
         # Riemannian gradient
-        grad_proj = self.manifold.egrad_to_rgrad(complex_var, complex_grad)
+        rgrad = self.manifold.egrad_to_rgrad(complex_var, complex_grad)
 
         # Upadte of vars (step and retruction)
         if self._momentum:
@@ -76,7 +78,7 @@ class RSGD(opt.OptimizerV2):
                 momentum = tf.cast(self._get_hyper("momentum"),
                                    dtype=momentum_complex_old.dtype)
                 momentum_complex_new = momentum * momentum_complex_old +\
-                    (1 - momentum) * grad_proj
+                    (1 - momentum) * rgrad
 
                 # Transport and retruction
                 new_var, momentum_complex =\
@@ -97,7 +99,7 @@ class RSGD(opt.OptimizerV2):
                 momentum = tf.cast(self._get_hyper("momentum"),
                                    dtype=momentum_complex.dtype)
                 momentum_complex = momentum * momentum_complex +\
-                    (1 - momentum) * grad_proj
+                    (1 - momentum) * rgrad
 
                 # Transport and retruction
                 new_var, momentum_complex =\
@@ -109,7 +111,7 @@ class RSGD(opt.OptimizerV2):
         else:
 
             # New value of var
-            new_var = self.manifold.retraction(complex_var, -lr * grad_proj)
+            new_var = self.manifold.retraction(complex_var, -lr * rgrad)
 
         # Update of var
         var.assign(m.complex_to_real(new_var))

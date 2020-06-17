@@ -1,141 +1,34 @@
 import tensorflow as tf
 from QGOpt.manifolds import base_manifold
-
-
-def adj(A):
-    """Returns hermitian adjoint matrix
-    Args:
-        A: tf.tensor of shape (..., n, m)
-    Returns:
-        tf tensor of shape (..., m, n), adjoint matrix"""
-
-    return tf.math.conj(tf.linalg.matrix_transpose(A))
-
-
-def _lower(X):
-    """Returns the lower triangular part of a matrix without diagonal part.
-    Args:
-        X: tf tensor of shape (..., m, m)
-    Returns:
-        tf tensor of shape (..., m, m), a matrix without diagonal and upper
-        triangular parts"""
-
-    dim = X.shape[-1]
-    dtype = X.dtype
-    lower = tf.ones((dim, dim), dtype=dtype) - tf.linalg.diag(tf.ones((dim,),
-                                                              dtype))
-    lower = tf.linalg.band_part(lower, -1, 0)
-
-    return lower * X
-
-
-def _half(X):
-    """Returns the lower triangular part of a matrix with half of diagonal part.
-    Args:
-        X: tf tensor of shape (..., m, m)
-    Returns:
-        tf tensor of shape (..., m, m), a matrix with half of diagonal and
-        without upper triangular parts"""
-
-    dim = X.shape[-1]
-    dtype = X.dtype
-    half = tf.ones((dim, dim),
-                   dtype=dtype) - 0.5 * tf.linalg.diag(tf.ones((dim,), dtype))
-    half = tf.linalg.band_part(half, -1, 0)
-
-    return half * X
-
-
-def _pull_back_chol(W, L, inv_L):
-    """Takes a tangent vector to a point from S++ and
-    computes the corresponding tangent vector to the
-    corresponding point from L+
-    Args:
-        W: tf tensor of shape (..., m, m), tangent vector
-        L: tf tensor of shape (..., m, m), triangular matrix from L+
-        inv_L: tf tensor of shape (..., m, m), inverse L
-    Returns:
-        tf tensor of shape (..., m, m), tangent vector to corresponding
-        point in L+"""
-
-    X = inv_L @ W @ adj(inv_L)
-    X = L @ (_half(X))
-
-    return X
-
-
-def _push_forward_chol(X, L):
-    """Takes a tangent vector to a point from L+ and
-    computes the corresponding tangent vector to the
-    corresponding point from S++
-    Args:
-        X: tf tensor of shape (..., m, m), tangent vector
-        L: tf tensor of shape (..., m, m), triangular matrix from L+
-    Returns:
-        tf tensor of shape (..., m, m), tangent vector to corresponding
-        point in S++"""
-    return L @ adj(X) + X @ adj(L)
-
-
-def _f_matrix(lmbd):
-    """Returns f matrix (part of pull back and push forward)
-    Args:
-        lmbd: tf tensor of shape (..., m), eigenvalues of matrix
-        from S
-    Returns:
-        tf tensor of shape (..., m, m), f matrix"""
-
-    n = lmbd.shape[-1]
-    l_i = lmbd[..., tf.newaxis]
-    l_j = lmbd[..., tf.newaxis, :]
-    denom = tf.math.log(l_i / l_j) + tf.eye(n, dtype=lmbd.dtype)
-    return (l_i - l_j) / denom + tf.linalg.diag(lmbd)
-
-
-def _pull_back_log(W, U, lmbd):
-    """Takes a tangent vector to a point from S++ and
-    computes the corresponding tangent vector to the
-    corresponding point from S
-    Args:
-        W: tf tensor of shape (..., m, m), tangent vector
-        U: tf tensor of shape (..., m, m), unitary matrix
-        from eigen decomposition of a point from S++
-        lmbd: tf tensor of shape (..., m), eigenvalues of
-        a point from S++
-    Returns:
-        tf tensor of shape (..., m, m), tangent vector to corresponding
-        point in S"""
-
-    f = _f_matrix(lmbd)
-
-    return U @ ((1 / f) * (adj(U) @ W @ U)) @ adj(U)
-
-
-def _push_forward_log(W, U, lmbd):
-    """Takes a tangent vector to a point from S and
-    computes the corresponding tangent vector to the
-    corresponding point from S++
-    Args:
-        W: tf tensor of shape (..., m, m), tangent vector
-        U: tf tensor of shape (..., m, m), unitary matrix
-        from eigen decomposition of a point from S
-        lmbd: tf tensor of shape (..., m), eigenvalues of
-        a point from S
-    Returns:
-        tf tensor of shape (..., m, m), tangent vector to corresponding
-        point in S++"""
-    f = _f_matrix(lmbd)
-
-    return U @ (f * (adj(U) @ W @ U)) @ adj(U)
+from QGOpt.manifolds.utils import adj
+from QGOpt.manifolds.utils import _lower
+from QGOpt.manifolds.utils import _pull_back_chol
+from QGOpt.manifolds.utils import _pull_back_log
+from QGOpt.manifolds.utils import _push_forward_log
+from QGOpt.manifolds.utils import _f_matrix
 
 
 class PositiveCone(base_manifold.Manifold):
-    """Class describes S++ manifold. It allows performing all
-    necessary operations with elements of manifolds direct product and
-    tangent spaces for optimization. Returns object of the class PositiveCone
+    """The manifold of Hermitian positive definite matrices of size nxn.
+    The manifold is equipped with two types of metric: Log-Cholesky metric
+    and Log-Euclidean metric. The geometry of the manifold with Log-Cholesky
+    metric is taken from
+
+    Lin, Z. (2019). Riemannian Geometry of Symmetric Positive Definite Matrices
+    via Cholesky Decomposition. SIAM Journal on Matrix Analysis and Applications,
+    40(4), 1353-1370.
+
+    The geometry of the manifold with Log-Euclidean metric is described for
+    instance in
+
+    Huang, Z., Wang, R., Shan, S., Li, X., & Chen, X. (2015, June).
+    Log-euclidean metric learning on symmetric positive definite manifold
+    with application to image set classification. In International
+    conference on machine learning (pp. 720-729).
+
     Args:
         metric: string specifies type of a metric, Defaults to 'log_cholesky'
-        Types of metrics are available now: 'log_cholesky', 'log_euclidean'"""
+            Types of metrics are available: 'log_cholesky', 'log_euclidean.'"""
 
     def __init__(self, metric='log_cholesky'):
 
@@ -147,23 +40,29 @@ class PositiveCone(base_manifold.Manifold):
     def inner(self, u, vec1, vec2):
         """Returns manifold wise inner product of vectors from
         a tangent space.
+
         Args:
-            u: complex valued tensor of shape (..., q, q),
-            an element of manifolds direct product
-            vec1: complex valued tensor of shape (..., q, q),
-            a vector from tangent space.
-            vec2: complex valued tensor of shape (..., q, q),
-            a vector from tangent spaces.
+            u: complex valued tensor of shape (..., n, n),
+                a set of points from the manifold.
+            vec1: complex valued tensor of shape (..., n, n),
+                a set of tangent vectors from the manifold.
+            vec2: complex valued tensor of shape (..., n, n),
+                a set of tangent vectors from the manifold.
+
         Returns:
-            complex valued tensor of shape (...,),
-            the manifold wise inner product"""
+            complex valued tensor of shape (..., 1, 1),
+                manifold wise inner product."""
 
         if self.metric == 'log_euclidean':
             lmbd, U = tf.linalg.eigh(u)
             W = _pull_back_log(vec1, U, lmbd)
             V = _pull_back_log(vec2, U, lmbd)
 
-            return tf.linalg.trace(adj(W) @ V)
+            prod = tf.math.real(tf.linalg.trace(adj(W) @ V))
+            prod = prod[..., tf.newaxis, tf.newaxis]
+            prod = tf.cast(prod, dtype=u.dtype)
+
+            return prod
 
         elif self.metric == 'log_cholesky':
             L = tf.linalg.cholesky(u)
@@ -178,30 +77,40 @@ class PositiveCone(base_manifold.Manifold):
             triag_inner = tf.reduce_sum(tf.math.conj(_lower(X)) * _lower(Y),
                                         axis=(-2, -1))
 
-            return diag_inner + triag_inner
+            prod = tf.math.real(diag_inner + triag_inner)
+            prod = prod[..., tf.newaxis, tf.newaxis]
+            prod = tf.cast(prod, dtype=u.dtype)
+
+            return prod
 
     def proj(self, u, vec):
         """Returns projection of vectors on a tangen space
-        of direct product of manifolds.
+        of the manifold.
+
         Args:
-            u: complex valued tf.Tensor of shape (..., q, q),
-            a point on a manifolds direct product.
-            vec: complex valued tf.Tensor of shape (..., q, q),
-            a vector to be projected.
+            u: complex valued tensor of shape (..., n, n),
+                a set of points from the manifold.
+            vec: complex valued tensor of shape (..., n, n),
+                a set of vectors to be projected.
+
         Returns:
-            complex valued tf.Tensor of shape (..., q, q), projected vector"""
+            complex valued tensor of shape (..., n, n),
+            a set of projected vectors."""
 
         return (vec + adj(vec)) / 2
 
     def egrad_to_rgrad(self, u, egrad):
         """Returns the Riemannian gradient from an Euclidean gradient.
+
         Args:
-            u: complex valued tf.Tensor of shape (..., q, q),
-            an element of direct product.
-            egrad: complex valued tf.Tensor of shape (..., q, q),
-            an Euclidean gradient.
+            u: complex valued tensor of shape (..., n, n),
+                a set of points from the manifold.
+            egrad: complex valued tensor of shape (..., n, n),
+                a set of Euclidean gradients.
+
         Returns:
-            tf.Tensor of shape (..., q, q), the Reimannian gradient."""
+            complex valued tensor of shape (..., n, n),
+            the set of Reimannian gradients."""
 
         if self.metric == 'log_euclidean':
             lmbd, U = tf.linalg.eigh(u)
@@ -227,12 +136,18 @@ class PositiveCone(base_manifold.Manifold):
             return R
 
     def retraction(self, u, vec):
-        """Transports a point via retraction map.
+        """Transports a set of points from the manifold via a
+        retraction map.
+
         Args:
-            u: complex valued tf.Tensor of shape (..., q, q), a point
-            to be transported
-            vec: complex valued tf.Tensor of shape (..., q, q), a direction vector
-        Returns tf.Tensor of shape (..., q, q) a new point"""
+            u: complex valued tensor of shape (..., n, n), a set
+                of points to be transported.
+            vec: complex valued tensor of shape (..., n, n),
+                a set of direction vectors.
+
+        Returns:
+            complex valued tensor of shape (..., n, n),
+            a set of transported points."""
 
         if self.metric == 'log_euclidean':
             lmbd, U = tf.linalg.eigh(u)
@@ -258,17 +173,20 @@ class PositiveCone(base_manifold.Manifold):
             return cholesky_retraction @ adj(cholesky_retraction)
 
     def vector_transport(self, u, vec1, vec2):
-        """Returns vector vec1 transported from a point u along a vector vec2.
+        """Returns a vector tranported along an another vector
+        via vector transport.
+
         Args:
-            u: complex valued tf.Tensor of shape (..., q, p),
-            an initial point of a direct product.
-            vec1: complex valued tf.Tensor of shape (..., q, p),
-            a vector to be transported.
-            vec2: complex valued tf.Tensor of shape (..., q, p),
-            a direction vector.
+            u: complex valued tensor of shape (..., n, n),
+                a set of points from the manifold, starting points.
+            vec1: complex valued tensor of shape (..., n, n),
+                a set of vectors to be transported.
+            vec2: complex valued tensor of shape (..., n, n),
+                a set of direction vectors.
+
         Returns:
-            complex valued tf.Tensor of shape (..., q, p),
-            a new vector."""
+            complex valued tensor of shape (..., n, n),
+            a set of transported vectors."""
 
         if self.metric == 'log_euclidean':
             lmbd, U = tf.linalg.eigh(u)
@@ -304,17 +222,20 @@ class PositiveCone(base_manifold.Manifold):
             return K @ adj(L_transport) + L_transport @ adj(K)
 
     def retraction_transport(self, u, vec1, vec2):
-        """Performs retraction and vector transport at the same time.
+        """Performs a retraction and a vector transport simultaneously.
+
         Args:
-            u: complex valued tf.Tensor of shape (..., q, p),
-            an initial point from a direct product.
-            vec1: complex valued tf.Tensor of shape (..., q, p),
-            a vector to be transported.
-            vec2: complex valued tf.Tensor of shape (..., q, p),
-            a direction vector.
+            u: complex valued tensor of shape (..., n, n),
+                a set of points from the manifold, starting points.
+            vec1: complex valued tensor of shape (..., n, n),
+                a set of vectors to be transported.
+            vec2: complex valued tensor of shape (..., n, n),
+                a set of direction vectors.
+
         Returns:
-            two complex valued tf.Tensor of shape (..., q, p),
-            a new point and a new vector."""
+            two complex valued tensors of shape (..., n, n),
+            a set of transported points and vectors."""
+
         if self.metric == 'log_euclidean':
             lmbd, U = tf.linalg.eigh(u)
             # geoidesic in S
@@ -350,3 +271,64 @@ class PositiveCone(base_manifold.Manifold):
                 inv_diag_L * tf.linalg.band_part(X, 0, 0)
 
             return v, K @ adj(L_transport) + L_transport @ adj(K)
+
+    def random(self, shape, dtype=tf.complex64):
+        """Returns a set of points from the manifold generated
+        randomly.
+
+        Args:
+            shape: tuple of integer numbers (..., n, n),
+                shape of a generated matrix.
+            dtype: type of an output tensor, can be
+                either tf.complex64 or tf.complex128.
+
+        Returns:
+            complex valued tensor of shape (..., n, n),
+            a generated matrix."""
+
+        list_of_dtypes = [tf.complex64, tf.complex128]
+
+        if dtype not in list_of_dtypes:
+            raise ValueError("Incorrect dtype")
+        real_dtype = tf.float64 if dtype == tf.complex128 else tf.float32
+
+        u = tf.complex(tf.random.normal(shape, dtype=real_dtype),
+                       tf.random.normal(shape, dtype=real_dtype))
+        u = tf.linalg.adjoint(u) @ u
+        return u
+
+    def random_tangent(self, u):
+        """Returns a set of random tangent vectors to points from
+        the manifold.
+
+        Args:
+            u: complex valued tensor of shape (..., n, n), points
+                from the manifold.
+
+        Returns:
+            complex valued tensor, set of tangent vectors to u."""
+
+        vec = tf.complex(tf.random.normal(u.shape), tf.random.normal(u.shape))
+        vec = tf.cast(vec, dtype=u.dtype)
+        vec = self.proj(u, vec)
+        return vec
+
+    def is_in_manifold(self, u, tol=1e-5):
+        """Checks if a point is in the manifold or not.
+
+        Args:
+            u: complex valued tensor of shape (..., n, n),
+                a point to be checked.
+            tol: small real value showing tolerance.
+
+        Returns:
+            bolean tensor of shape (...)."""
+
+        diff_norm = tf.linalg.norm(u - adj(u), axis=(-2, -1))
+        u_norm = tf.linalg.norm(u, axis=(-2, -1))
+        rel_diff = tf.abs(diff_norm / u_norm)
+        herm_mask = tol > rel_diff
+        lmbd = tf.math.real(tf.linalg.eigvalsh(u))
+        num_of_neg = tf.reduce_sum(tf.cast(lmbd < 0, dtype=tf.int32), axis=-1)
+        positivity_mask = num_of_neg == 0
+        return tf.math.logical_and(positivity_mask, herm_mask)
