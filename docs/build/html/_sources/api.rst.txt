@@ -1,7 +1,9 @@
 API
 ===
 
-.. automodule:: QGOpt.manifolds.ChoiMatrix
-    :members:
-    :undoc-members:
+.. toctree::
+    :maxdepth: 2
 
+    manifolds
+    optimizers
+    auxiliary
