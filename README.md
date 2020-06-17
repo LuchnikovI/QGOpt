@@ -1,4 +1,9 @@
-Extension of TensorFlow optimizers on Riemannian manifolds that often arise in quantum mechanics (Complex Stiefel manifold, positive-definite cone).
+Extension of TensorFlow optimizers on Riemannian manifolds that often arise in quantum mechanics (the Complex Stiefel manifold, the manifold of density matrices, the manifold of Choi matrices, etc).
+
+## Documentation
+
+The documentation is available here https://qgopt.readthedocs.io
+
 ## Basic Example
 
 Here we create an example of the Stiefel manifold with canonical metric and Cayley retraction.
