@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Welcome to QGOpt’s documentation! &mdash; QGOpt 0.2a documentation</title>
+  <title>QGOpt’s documentation &mdash; QGOpt 0.2a documentation</title>
   
 
   
@@ -26,6 +26,8 @@
         <script src="_static/doctools.js"></script>
         <script src="_static/language_data.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -83,6 +85,7 @@
               <p class="caption"><span class="caption-text">Getting started:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
 </ul>
 
@@ -129,7 +132,7 @@
     
       <li><a href="#">Docs</a> &raquo;</li>
         
-      <li>Welcome to QGOpt’s documentation!</li>
+      <li>QGOpt’s documentation</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -172,19 +175,24 @@
     text-align: unset;
 }
 </style>
-<div class="section" id="welcome-to-qgopt-s-documentation">
-<h1>Welcome to QGOpt’s documentation!<a class="headerlink" href="#welcome-to-qgopt-s-documentation" title="Permalink to this headline">¶</a></h1>
-<p>QGOpt is an extension of TensorFlow optimizers on Riemannian manifolds that often arise in quantum mechanics (the Complex Stiefel manifold, the manifold of density matrices, the manifold of Choi matrices, etc).</p>
+<div class="section" id="qgopt-s-documentation">
+<h1>QGOpt’s documentation<a class="headerlink" href="#qgopt-s-documentation" title="Permalink to this headline">¶</a></h1>
+<p>QGOpt is an extension of TensorFlow optimizers on Riemannian manifolds that often arise in quantum mechanics. QGOpt allows to perform optimization on the following manifolds:</p>
+<ul class="simple">
+<li><p>Complex Stiefel manifold;</p></li>
+<li><p>Manifold of density matrices;</p></li>
+<li><p>Manifold of Choi matrices;</p></li>
+<li><p>Manifold of Hermitian matrices;</p></li>
+<li><p>Complex positive-definite cone.</p></li>
+</ul>
+<p>QGOpt includes Riemannian versions of popular first-order optimization algorithms that are used in deep learning.</p>
+<p>One can use this library to perform quantum tomography of states and channels, to solve quantum control problems and optimize quantum unitary circuits, to perform entanglement renormalization, to solve different model identification problems, to optimize tensor networks with natural “quantum” constraints, etc.</p>
 <div class="toctree-wrapper compound">
 <p class="caption"><span class="caption-text">Getting started:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api.html">API</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="manifolds.html">Manifolds</a></li>
-<li class="toctree-l2"><a class="reference internal" href="optimizers.html">Optimizers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="auxiliary.html">Auxiliary functions</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
 </ul>
 </div>
 </div>
