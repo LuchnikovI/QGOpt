@@ -40,7 +40,6 @@ For more examples, see ipython notebooks and documentation.
 
 The current version of the package includes five types of manifolds: the complex Stiefel manifold, the manifold of density matrices, the manifold of Choi matrices, the manifold of Hermitian matrices and the manifold of positive-definite matrices (positive-definite cone).
 ```Python
-# Stiefel manifold
 stiefel = qgo.manifolds.StiefelManifold()
 density_matrix = qgo.manifolds.DensityMatrix()
 choi_matrix = qgo.manifolds.ChoiMatrix()
