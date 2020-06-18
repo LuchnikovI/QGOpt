@@ -7,14 +7,13 @@ class CheckManifolds():
         self.m = m
         self.descr = descr
         self.shape = shape
-        self.u = m.random(shape)
+        self.u = m.random(shape, dtype=tf.complex128)
         self.v1 = m.random_tangent(self.u)
         self.v2 = m.random_tangent(self.u)
-        self.zero = self.u*0.
+        self.zero = self.u * 0.
         self.tol = tol
 
-
-    def _double_proj(self):
+    def _proj_of_tangent(self):
         """
         Checking m.proj: Projection of a vector from a tangent space
         does't shange the vector
@@ -25,7 +24,7 @@ class CheckManifolds():
         """
         return tf.reduce_mean(tf.abs(self.v1 - self.m.proj(self.u, self.v1)))
 
-    def _inner_projection(self):
+    def _inner_proj_matching(self):
         """
         Checking m.inner and m.proj
         arXiv:1906.10436v1: proj_ksi = argmin(-inner(z,ksi)+0.5inner(ksi,ksi))
@@ -35,36 +34,20 @@ class CheckManifolds():
         Returns:
             error, number of False counts, dtype int
         """
-        z = tf.complex(tf.random.normal(self.shape),
-                            tf.random.normal(self.shape))
-        z = tf.cast(z, dtype=self.u.dtype)
+        xi = tf.complex(tf.random.normal(self.shape),
+                        tf.random.normal(self.shape))
+        xi = tf.cast(xi, dtype=self.u.dtype)
 
-        ksi_exact = self.m.proj(self.u, z)
-        loss_min = -self.m.inner(self.u, z, ksi_exact) + 0.5*self.m.inner(
-                                        self.u, ksi_exact, ksi_exact)
-        err = 0
-        for _ in range(10):
-            ksi= self.m.random_tangent(self.u)
-            loss = -self.m.inner(self.u, z, ksi)+0.5*self.m.inner(self.u,
-                                                    ksi, ksi)
-            if tf.math.real(loss) < tf.math.real(loss_min):
-                err = err+1
-        '''
-        # solution of argmin problem
-        ksi_real = tf.Variable(manifolds.complex_to_real(self.v1))
-        opt = tf.optimizers.Adam(learning_rate=0.001)
-        for _ in range(3000):
-            with tf.GradientTape() as tape:
-                ksi = manifolds.real_to_complex(ksi_real)
-                loss = -self.m.inner(self.u, z, ksi)+0.5*self.m.inner(self.u,
-                                                        ksi, ksi)
-                loss = loss*tf.math.conj(loss)
-            grad = tape.gradient(loss, ksi_real)
-            opt.apply_gradients(zip([grad], [ksi_real]))  # optimization step
-        ksi = manifolds.real_to_complex(ksi_real)
-        err = tf.reduce_mean(tf.abs(ksi-ksi_exact))
-        '''
-        return err
+        xi_proj = self.m.proj(self.u, xi)
+        with tf.GradientTape() as tape:
+            tape.watch(xi_proj)
+            loss_min = -self.m.inner(self.u, xi, xi_proj) + 0.5 * self.m.inner(
+                                            self.u, xi_proj, xi_proj)
+            loss_min = tf.math.real(loss_min)
+        grad = tape.gradient(loss_min, xi_proj)
+        grad_proj = self.m.proj(self.u, grad)
+        err = tf.linalg.norm(grad_proj, axis=(-2, -1))
+        return tf.math.real(err)
 
     def _retraction(self):
         """
@@ -78,20 +61,22 @@ class CheckManifolds():
         Returns:
             error 1), dtype float32
             error 2), dtype float32
+            error 3), dtype boolean
         """
+        dt = 1e-8
+
         err1 = self.u - self.m.retraction(self.u, self.zero)
-        err1 = tf.reduce_mean(tf.abs(err1))
+        err1 = tf.math.real(tf.linalg.norm(err1))
 
-        t = tf.constant(0., dtype=self.u.dtype)
-        with tf.GradientTape(persistent=True) as tape:
-            tape.watch(t)
-            retr = self.m.retraction(self.u, t*self.v1)
-        retr_dl = tf.math.conj(tape.jacobian(retr, t,
-                            experimental_use_pfor=False))
-        err2 = tf.reduce_mean(tf.abs(retr_dl - self.v1))
-        return err1, err2
+        t = tf.constant(dt, dtype=self.u.dtype)
+        retr = self.m.retraction(self.u, t * self.v1)
+        dretr = (retr - self.u) / dt
+        err2 = tf.linalg.norm(dretr - self.v1)
 
-    def _vector_transpot(self):
+        err3 = self.m.is_in_manifold(self.m.retraction(self.u, self.v1))
+        return err1, err2, err3  # err3 has boolean type
+
+    def _vector_transport(self):
         """
         Checking vector transport.
         Page 264, Nikolas Boumal, An introduction to optimization on smooth
@@ -125,20 +110,20 @@ class CheckManifolds():
         """
 
         proj = self.m.egrad_to_rgrad(self.u, self.v1)
-        err1 = proj -self.m.proj(self.u, proj)
+        err1 = proj - self.m.proj(self.u, proj)
         err1 = tf.reduce_mean(tf.abs(err1))
 
-        err2 = tf.reduce_sum(tf.math.conj(self.v1)*self.v1) -\
+        err2 = tf.reduce_sum(tf.math.conj(self.v1) * self.v1, axis=(-2, -1)) -\
                         self.m.inner(self.u, self.v1,
                         self.m.egrad_to_rgrad(self.u, self.v1))
-        err2 = tf.abs(err2)
+        err2 = tf.math.real(err2)
         return err1, err2
 
     def checks(self):
         """ TODO after checking: rewrite with asserts!!!
         Routine for pytest: checking tolerance of manifold functions
         """
-        err = self._double_proj()
+        err = self._proj_of_tangent()
         if err > self.tol:
             print("Projection error for:{}. Error {} >\
             tol {}".format(self.descr, err, self.tol))
@@ -205,7 +190,7 @@ def return_manifold(name):
             descr_list.append((name, metric))
     if name == 'StiefelManifold':
         list_of_metrics = ['euclidean', 'canonical']
-        list_of_retractions = ['svd', 'cayley']#, 'qr'
+        list_of_retractions = ['svd', 'cayley', 'qr']
         for metric in list_of_metrics:
             for retraction in list_of_retractions:
                 m_list.append(manifolds.StiefelManifold(metric=metric,
@@ -229,7 +214,8 @@ def test_manifolds(shape=(4,4), tol=0.0001):
         m_list, descr_list = return_manifold(name)
         for _, (m, descr) in enumerate(zip(m_list, descr_list)):
             Test = CheckManifolds(m, descr, shape, tol)
-            Test.checks()
+            #Test.checks()
+            print(Test.checks(), descr)
             print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
 
 test_manifolds()
