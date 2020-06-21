@@ -60,7 +60,7 @@
    "source": [
     "## Renormalization layer\n",
     "\n",
-    "Here we define a renormalization layer by using TensorNetwork library. The function mera_layer takes unitary and isometric blocks and perform renormalization as it shown on the tensor diagram below.\n",
+    "Here we define a renormalization layer by using TensorNetwork library. The function mera_layer takes unitary and isometric blocks and perform renormalization as it shown on the tensor diagram below (if the diagram is not displayed here, please open the notebook in Google Colab [![Open In Colab2](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/LuchnikovI/QGOpt/blob/Dev/docs/source/entanglement_renormalization.ipynb)).\n",
     "![renorm_layer.png](images/renorm_layer.png)\n",
     "For more information please see\n",
     "\n",

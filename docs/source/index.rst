@@ -32,4 +32,5 @@ One can use this library to perform quantum tomography of states and channels, t
    :caption: Tutorials:
 
    entanglement_renormalization
+   comparison
 

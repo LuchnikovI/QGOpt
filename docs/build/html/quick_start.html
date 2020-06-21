@@ -87,10 +87,10 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Quick Start</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#Generating-of-ill-conditioned-Hamiltonian">Generating of ill conditioned Hamiltonian</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#Manifold-and-optimizers">Manifold and optimizers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#Optimization-loop">Optimization loop</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#Plotting-value-of-error-vs-iteration-for-each-optimizer.">Plotting value of error vs iteration for each optimizer.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Kronecker-product-function.">Kronecker product function.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#A-random-two-qubit-gate-and-parameters-of-its-decomposition.">A random two qubit gate and parameters of its decomposition.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Optimization-loop.">Optimization loop.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Plotting-of-the-Frobenius-distance-between-the-target-gate-and-its-decomposition">Plotting of the Frobenius distance between the target gate and its decomposition</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
@@ -98,6 +98,7 @@
 <p class="caption"><span class="caption-text">Tutorials:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="entanglement_renormalization.html">Entanglement renormalization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="comparison.html">Comparison of optimization methods on the complex Stiefel manifold</a></li>
 </ul>
 
             
@@ -419,14 +420,12 @@ div.rendered_html tbody tr:hover {
 </style>
 <div class="section" id="Quick-Start">
 <h1>Quick Start<a class="headerlink" href="#Quick-Start" title="Permalink to this headline">¶</a></h1>
-<p>One can open it in Google Colab (is recommended)</p>
-<p><a class="reference external" href="https://colab.research.google.com/github/LuchnikovI/QGOpt/blob/Dev/docs/source/quick_start.ipynb"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a></p>
-<p>In the given short tutorial, we show the basic steps of working with QGOpt. We consider a toy example of Hamiltonian renormalization. We use isometric matrices (elements of the complex Stiefel manifold) to solve the following problem</p>
-<div class="math notranslate nohighlight">
-\[{\rm Tr}\left(V^\dagger H V\right)\rightarrow \min_{V\in \left\{V\in \mathbb{C}^{n\times m}|V^\dagger V = I\right\}}.\]</div>
-<p>In the beginning, let us import some libraries.</p>
+<p>One can open this tutorial in Google Colab (is recommended)</p>
+<p><a class="reference external" href="https://github.com/LuchnikovI/QGOpt/tree/master/docs/source/quick_start.ipynb"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a></p>
+<p>In the given short tutorial, we show the basic steps of working with QGOpt. It is known that an arbitrary two qubits unitary gate can be decomposed into a sequence of CNOT gates and one qubit gates as it is shown on the tensor diagram below (if the diagram is not displayed here, please open the notebook in Google Colab <a class="reference external" href="https://github.com/LuchnikovI/QGOpt/tree/master/docs/source/quick_start.ipynb"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a>). <img alt="renorm_layer.png" src="_images/gate_decomposition.png" /></p>
+<p>Local unitary gates are elements of the complex Stiefel manifold; thus, the decomposition can be found by minimizing Frobenius distance between a given two qubits unitary gate and its decomposition. In the beginning, let us import some libraries.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -445,195 +444,129 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-<div class="section" id="Generating-of-ill-conditioned-Hamiltonian">
-<h2>Generating of ill conditioned Hamiltonian<a class="headerlink" href="#Generating-of-ill-conditioned-Hamiltonian" title="Permalink to this headline">¶</a></h2>
-<p>In order to compare several optimizers, one needs to consider ill conditioned problem. We generate an ill conditioned Hamiltonian in the following sense: <span class="math notranslate nohighlight">\(\log(\lambda_i)\sim {\rm uniform}(-3, 3)\)</span>, where <span class="math notranslate nohighlight">\(\lambda_i\)</span> is an eigenvalue of a Hamiltonian, <span class="math notranslate nohighlight">\({\rm uniform}(-3, 3)\)</span> is the uniform probability density on the segment <span class="math notranslate nohighlight">\([-3, 3]\)</span>. Therefore, a generated Hamiltonian contains eigenvalues of different scales, which makes the standard Riemannian gradient descent
-inefficient. However, the Riemannian gradient descent with momentum and adaptive optimization methods still can solve the problem fast.</p>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1">#============================================================#</span>
-<span class="n">ham_dim</span> <span class="o">=</span> <span class="mi">100</span> <span class="c1"># dimension of a Hamiltonian</span>
-<span class="n">renorm_ham_dim</span> <span class="o">=</span> <span class="mi">30</span> <span class="c1"># dimension of a renormalized Hamiltonian</span>
-<span class="c1">#============================================================#</span>
-
-<span class="sd">&#39;&#39;&#39;One can generate ill conditioned Hamiltonian in two steps:</span>
-<span class="sd">at first one generates unitary matrix from the eigen decomposition</span>
-<span class="sd">and then one generates ill conditioned spectrum&#39;&#39;&#39;</span>
-
-<span class="c1"># First step (QR based random unitary)</span>
-<span class="sd">&#39;&#39;&#39;Here we use real_to_complex function from QGOpt. This function is usefull</span>
-<span class="sd">when we need to turn to complex representation of a tensor from</span>
-<span class="sd">its real representation&#39;&#39;&#39;</span>
-<span class="n">Q</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">real_to_complex</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">((</span><span class="n">ham_dim</span><span class="p">,</span> <span class="n">ham_dim</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
-                                                   <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">))</span>
-<span class="n">Q</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">qr</span><span class="p">(</span><span class="n">Q</span><span class="p">)</span>
-
-<span class="c1"># Second stape (ill conditioned spectrum)</span>
-<span class="n">S</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">((</span><span class="n">ham_dim</span><span class="p">,),</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
-<span class="n">S</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
-<span class="n">S</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
-
-<span class="c1"># A hamiltonian (built from its eigen decomposition)</span>
-<span class="n">H</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ik,k,jk-&gt;ij&#39;</span><span class="p">,</span> <span class="n">Q</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">Q</span><span class="p">))</span>
-
-<span class="c1"># Plotting of spectyrum</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="n">top</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">bottom</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="p">))</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">H</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
-            <span class="n">tf</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigvalsh</span><span class="p">(</span><span class="n">H</span><span class="p">),</span>
-            <span class="n">color</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;&gt;&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;number of eigval&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;eigval&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-/usr/local/lib/python3.6/dist-packages/numpy/core/_asarray.py:138: ComplexWarning: Casting complex values to real discards the imaginary part
-  return array(a, dtype, copy=False, order=order, subok=True)
-</pre></div></div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
-</pre></div>
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-Text(0, 0.5, &#39;eigval&#39;)
-</pre></div></div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="_images/quick_start_3_2.png" src="_images/quick_start_3_2.png" />
-</div>
-</div>
-</div>
-<div class="section" id="Manifold-and-optimizers">
-<h2>Manifold and optimizers<a class="headerlink" href="#Manifold-and-optimizers" title="Permalink to this headline">¶</a></h2>
-<p>Here we define the complex Stiefel manifold and different optimizers to compare them with each other.</p>
+<div class="section" id="Kronecker-product-function.">
+<h2>Kronecker product function.<a class="headerlink" href="#Kronecker-product-function." title="Permalink to this headline">¶</a></h2>
+<p>Here we define an auxiliary function that returns Kronecker product between two matrices.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="sd">&#39;&#39;&#39;At first, we define the complex Stiefel manifold with different retractions</span>
-<span class="sd">and metrics&#39;&#39;&#39;</span>
+<span></span><span class="k">def</span> <span class="nf">kron</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns Kronecker product of two square matrices.</span>
 
-<span class="c1">#======================= Different retractions and metrics ====================#</span>
-<span class="n">m_cayley</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">StiefelManifold</span><span class="p">(</span><span class="n">retraction</span><span class="o">=</span><span class="s1">&#39;cayley&#39;</span><span class="p">)</span>
-<span class="n">m_svd</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">StiefelManifold</span><span class="p">()</span>
-<span class="n">m_cayley_canonical</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">StiefelManifold</span><span class="p">(</span><span class="n">retraction</span><span class="o">=</span><span class="s1">&#39;cayley&#39;</span><span class="p">,</span>
-                                                   <span class="n">metric</span><span class="o">=</span><span class="s1">&#39;canonical&#39;</span><span class="p">)</span>
-<span class="n">m_svd_canonical</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">StiefelManifold</span><span class="p">(</span><span class="n">metric</span><span class="o">=</span><span class="s1">&#39;canonical&#39;</span><span class="p">)</span>
-<span class="c1">#==============================================================================#</span>
+<span class="sd">    Args:</span>
+<span class="sd">        A: complex valued tf tensor of shape (dim1, dim1)</span>
+<span class="sd">        B: complex valued tf tensor of shape (dim2, dim2)</span>
 
+<span class="sd">    Returns:</span>
+<span class="sd">        complex valued tf tensor of shape (dim1 * dim2, dim1 * dim2),</span>
+<span class="sd">        kronecker product of two matrices</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
-<span class="sd">&#39;&#39;&#39;Then we define initial isometric matrix by using method random of</span>
-<span class="sd">the manifold&#39;&#39;&#39;</span>
-<span class="c1"># initial random isometric matrix</span>
-<span class="n">q_in</span> <span class="o">=</span> <span class="n">m_svd</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="n">ham_dim</span><span class="p">,</span> <span class="n">renorm_ham_dim</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
-<span class="c1"># its real representation</span>
-<span class="n">q_in</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">complex_to_real</span><span class="p">(</span><span class="n">q_in</span><span class="p">)</span>
-
-<span class="sd">&#39;&#39;&#39;The exact solution of a problem is known and given</span>
-<span class="sd">by eigen decomposition.&#39;&#39;&#39;</span>
-<span class="n">min_value</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigvalsh</span><span class="p">(</span><span class="n">H</span><span class="p">)[:</span><span class="n">renorm_ham_dim</span><span class="p">]),</span>
-                    <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
-
-<span class="sd">&#39;&#39;&#39;To compare different optimization methods, retractions and metrics we</span>
-<span class="sd">define several optimizers and write them into the dict&#39;&#39;&#39;</span>
-<span class="c1">#========================== Different optimizers ==============================#</span>
-<span class="n">opts</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s1">&#39;GD_cayley&#39;</span><span class="p">:</span><span class="n">qgo</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">RSGD</span><span class="p">(</span><span class="n">m_cayley</span><span class="p">,</span> <span class="mf">0.003</span><span class="p">),</span>
-        <span class="s1">&#39;GD_svd&#39;</span><span class="p">:</span><span class="n">qgo</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">RSGD</span><span class="p">(</span><span class="n">m_svd</span><span class="p">,</span> <span class="mf">0.003</span><span class="p">),</span>
-        <span class="s1">&#39;GD_cayley_with_momentum&#39;</span><span class="p">:</span><span class="n">qgo</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">RSGD</span><span class="p">(</span><span class="n">m_cayley</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">),</span>
-        <span class="s1">&#39;GD_svd_with_momentum&#39;</span><span class="p">:</span><span class="n">qgo</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">RSGD</span><span class="p">(</span><span class="n">m_svd</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">),</span>
-        <span class="s1">&#39;Adam_cayley&#39;</span><span class="p">:</span><span class="n">qgo</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">RAdam</span><span class="p">(</span><span class="n">m_cayley</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">),</span>
-        <span class="s1">&#39;Adam_svd&#39;</span><span class="p">:</span><span class="n">qgo</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">RAdam</span><span class="p">(</span><span class="n">m_svd</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">),</span>
-        <span class="s1">&#39;Adam_cayley_with_ams&#39;</span><span class="p">:</span><span class="n">qgo</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">RAdam</span><span class="p">(</span><span class="n">m_cayley</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="n">ams</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-        <span class="s1">&#39;Adam_svd_with_ams&#39;</span><span class="p">:</span><span class="n">qgo</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">RAdam</span><span class="p">(</span><span class="n">m_svd</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="n">ams</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-        <span class="s1">&#39;GD_cayley_canonical&#39;</span><span class="p">:</span><span class="n">qgo</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">RSGD</span><span class="p">(</span><span class="n">m_cayley_canonical</span><span class="p">,</span> <span class="mf">0.003</span><span class="p">),</span>
-        <span class="s1">&#39;GD_svd__canonical&#39;</span><span class="p">:</span><span class="n">qgo</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">RSGD</span><span class="p">(</span><span class="n">m_svd_canonical</span><span class="p">,</span> <span class="mf">0.003</span><span class="p">),</span>
-        <span class="s1">&#39;GD_cayley_with_momentum_canonical&#39;</span><span class="p">:</span><span class="n">qgo</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">RSGD</span><span class="p">(</span><span class="n">m_cayley_canonical</span><span class="p">,</span>
-                                                                <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">),</span>
-        <span class="s1">&#39;GD_svd_with_momentum_canonical&#39;</span><span class="p">:</span><span class="n">qgo</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">RSGD</span><span class="p">(</span><span class="n">m_svd_canonical</span><span class="p">,</span>
-                                                             <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">),</span>
-        <span class="s1">&#39;Adam_cayley_canonical&#39;</span><span class="p">:</span><span class="n">qgo</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">RAdam</span><span class="p">(</span><span class="n">m_cayley_canonical</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">),</span>
-        <span class="s1">&#39;Adam_svd_canonical&#39;</span><span class="p">:</span><span class="n">qgo</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">RAdam</span><span class="p">(</span><span class="n">m_svd_canonical</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">),</span>
-        <span class="s1">&#39;Adam_cayley_with_ams_canonical&#39;</span><span class="p">:</span><span class="n">qgo</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">RAdam</span><span class="p">(</span><span class="n">m_cayley_canonical</span><span class="p">,</span>
-                                                              <span class="mf">0.8</span><span class="p">,</span> <span class="n">ams</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-        <span class="s1">&#39;Adam_svd_with_ams_canonical&#39;</span><span class="p">:</span><span class="n">qgo</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">RAdam</span><span class="p">(</span><span class="n">m_svd</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="n">ams</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-       <span class="p">}</span>
-<span class="c1">#==============================================================================#</span>
+    <span class="n">dim1</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">dim2</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">AB</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">tensordot</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">AB</span><span class="p">,</span> <span class="p">(</span><span class="n">dim1</span> <span class="o">*</span> <span class="n">dim2</span><span class="p">,</span> <span class="n">dim1</span> <span class="o">*</span> <span class="n">dim2</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
 </div>
-<div class="section" id="Optimization-loop">
-<h2>Optimization loop<a class="headerlink" href="#Optimization-loop" title="Permalink to this headline">¶</a></h2>
-<p>Now we can solve the optimization problem</p>
-<div class="math notranslate nohighlight">
-\[{\rm Tr}\left(V^\dagger H V\right)\rightarrow \min_{V\in \left\{V\in \mathbb{C}^{n\times m}|V^\dagger V = I\right\}},\]</div>
-<p>by using different types of Riemannian optimizers.</p>
+<div class="section" id="A-random-two-qubit-gate-and-parameters-of-its-decomposition.">
+<h2>A random two qubit gate and parameters of its decomposition.<a class="headerlink" href="#A-random-two-qubit-gate-and-parameters-of-its-decomposition." title="Permalink to this headline">¶</a></h2>
+<p>Here we define a random two qubit gate to decompose and initialize building blocks of its decomposition (CNOT gate and local unitary gates).</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1">#=============================================#</span>
-<span class="n">number_of_steps</span> <span class="o">=</span> <span class="mi">1000</span>  <span class="c1"># number of iterations</span>
-<span class="c1">#=============================================#</span>
+<span></span><span class="c1">#=======================================================================#</span>
+<span class="n">circuit_length</span> <span class="o">=</span> <span class="mi">4</span>  <span class="c1"># circuit length (number of layers with local gates)</span>
+<span class="c1">#=======================================================================#</span>
 
-<span class="n">err_dict</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># the dict will be filled by lists of errors</span>
+<span class="c1"># cnot gate</span>
+<span class="n">cnot</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+                    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
 
-<span class="c1"># loop over dict of optimizers</span>
-<span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">opt</span> <span class="ow">in</span> <span class="n">opts</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+<span class="c1"># complex Stiefel manifold</span>
+<span class="n">m</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">StiefelManifold</span><span class="p">()</span>
+<span class="c1"># random two qubit gate to decompose</span>
+<span class="n">target_U</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
 
-    <span class="n">err</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># will be filled by error vs iter</span>
-    <span class="n">q</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">q_in</span><span class="p">)</span>  <span class="c1"># turning initial isometry to variable</span>
+<span class="c1"># initial local unitary gates (will be optimized)</span>
+<span class="n">u_1</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">circuit_length</span><span class="p">)]</span>
+<span class="n">u_2</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">circuit_length</span><span class="p">)]</span>
 
-    <span class="c1"># optimization loop</span>
-    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_steps</span><span class="p">):</span>
-        <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">GradientTape</span><span class="p">()</span> <span class="k">as</span> <span class="n">tape</span><span class="p">:</span>
-            <span class="c1"># turning isometry to its complex representation</span>
-            <span class="n">Z</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">real_to_complex</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
-            <span class="c1"># result of renormalization</span>
-            <span class="n">loss</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">trace</span><span class="p">((</span><span class="n">tf</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">adjoint</span><span class="p">(</span><span class="n">Z</span><span class="p">)</span> <span class="o">@</span> <span class="n">H</span> <span class="o">@</span> <span class="n">Z</span><span class="p">)),</span>
-                        <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
-            <span class="c1"># add value of error to the list of errors</span>
-            <span class="n">err</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss</span> <span class="o">-</span> <span class="n">min_value</span><span class="p">)</span>
-        <span class="n">grad</span> <span class="o">=</span> <span class="n">tape</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">loss</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span>  <span class="c1"># gradient</span>
-
-        <span class="c1"># optimization step (the same as in pure TensorFlow)</span>
-        <span class="n">opt</span><span class="o">.</span><span class="n">apply_gradients</span><span class="p">(</span><span class="nb">zip</span><span class="p">([</span><span class="n">grad</span><span class="p">],</span> <span class="p">[</span><span class="n">q</span><span class="p">]))</span>
-
-    <span class="c1"># add list of errors to the dict</span>
-    <span class="n">err_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">err</span>
+<span class="c1"># real representation of local unitary gates</span>
+<span class="n">u_1</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">complex_to_real</span><span class="p">,</span> <span class="n">u_1</span><span class="p">))</span>
+<span class="n">u_2</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">complex_to_real</span><span class="p">,</span> <span class="n">u_2</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
 </div>
-<div class="section" id="Plotting-value-of-error-vs-iteration-for-each-optimizer.">
-<h2>Plotting value of error vs iteration for each optimizer.<a class="headerlink" href="#Plotting-value-of-error-vs-iteration-for-each-optimizer." title="Permalink to this headline">¶</a></h2>
+<div class="section" id="Optimization-loop.">
+<h2>Optimization loop.<a class="headerlink" href="#Optimization-loop." title="Permalink to this headline">¶</a></h2>
+<p>Here we minimize the Frobenius distance between the target two qubit gate and its decomposition.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1">#=================================#</span>
+<span class="n">iters</span> <span class="o">=</span> <span class="mi">500</span> <span class="c1"># number of iterations</span>
+<span class="n">lr</span> <span class="o">=</span> <span class="mf">0.2</span> <span class="c1"># learning rate</span>
+<span class="c1">#=================================#</span>
+
+
+<span class="c1"># complex Stiefel manifold</span>
+<span class="n">m</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">StiefelManifold</span><span class="p">()</span>
+<span class="c1"># Riemannian Adam optimizer</span>
+<span class="n">opt</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">RAdam</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">lr</span><span class="p">,</span> <span class="n">ams</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># transforming initial local unitary gates to tf.Variables</span>
+<span class="n">varu_1</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">,</span> <span class="n">u_1</span><span class="p">))</span>
+<span class="n">varu_2</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">,</span> <span class="n">u_2</span><span class="p">))</span>
+
+<span class="n">errs</span> <span class="o">=</span> <span class="p">[]</span> <span class="c1"># will be filled by err vs iteration number</span>
+
+<span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">iters</span><span class="p">):</span>
+    <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">GradientTape</span><span class="p">()</span> <span class="k">as</span> <span class="n">tape</span><span class="p">:</span>
+        <span class="c1"># transforming real variables to complex representation</span>
+        <span class="n">varu_1c</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">real_to_complex</span><span class="p">,</span> <span class="n">varu_1</span><span class="p">))</span>
+        <span class="n">varu_2c</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">real_to_complex</span><span class="p">,</span> <span class="n">varu_2</span><span class="p">))</span>
+
+        <span class="c1"># gate decomposition</span>
+        <span class="n">gate</span> <span class="o">=</span> <span class="n">kron</span><span class="p">(</span><span class="n">varu_1c</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">varu_2c</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">varu_1c</span><span class="p">)):</span>
+            <span class="n">gate</span> <span class="o">=</span> <span class="n">cnot</span> <span class="o">@</span> <span class="n">gate</span>
+            <span class="n">gate</span> <span class="o">=</span> <span class="n">kron</span><span class="p">(</span><span class="n">varu_1c</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">varu_2c</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">@</span> <span class="n">gate</span>
+
+        <span class="c1"># square of Frobenius distance between the target gate and its</span>
+        <span class="c1"># decomposition</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">gate</span> <span class="o">-</span> <span class="n">target_U</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+
+    <span class="n">errs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">loss</span><span class="p">))</span>
+
+    <span class="n">grad</span> <span class="o">=</span> <span class="n">tape</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">loss</span><span class="p">,</span> <span class="n">varu_1</span> <span class="o">+</span> <span class="n">varu_2</span><span class="p">)</span>  <span class="c1"># gradient</span>
+    <span class="n">opt</span><span class="o">.</span><span class="n">apply_gradients</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">grad</span><span class="p">,</span> <span class="n">varu_1</span> <span class="o">+</span> <span class="n">varu_2</span><span class="p">))</span>  <span class="c1"># optimization step</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="Plotting-of-the-Frobenius-distance-between-the-target-gate-and-its-decomposition">
+<h2>Plotting of the Frobenius distance between the target gate and its decomposition<a class="headerlink" href="#Plotting-of-the-Frobenius-distance-between-the-target-gate-and-its-decomposition" title="Permalink to this headline">¶</a></h2>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;r--&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;b--&#39;</span><span class="p">,</span> <span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="s1">&#39;k--&#39;</span><span class="p">,</span> <span class="s1">&#39;g&#39;</span><span class="p">,</span> <span class="s1">&#39;g--&#39;</span><span class="p">,</span>
-          <span class="s1">&#39;r:&#39;</span><span class="p">,</span> <span class="s1">&#39;r-.&#39;</span><span class="p">,</span> <span class="s1">&#39;b:&#39;</span><span class="p">,</span> <span class="s1">&#39;b-.&#39;</span><span class="p">,</span> <span class="s1">&#39;k:&#39;</span><span class="p">,</span> <span class="s1">&#39;k-.&#39;</span><span class="p">,</span> <span class="s1">&#39;g:&#39;</span><span class="p">,</span> <span class="s1">&#39;g-.&#39;</span><span class="p">]</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
-<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">opts</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">err_dict</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">opts</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+<span></span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;[0, 0] element of trained gate&#39;</span><span class="p">,</span> <span class="n">gate</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;[0, 0] element of target gate&#39;</span><span class="p">,</span> <span class="n">target_U</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">errs</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;iter&#39;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;err&#39;</span><span class="p">)</span>
@@ -641,7 +574,25 @@ Text(0, 0.5, &#39;eigval&#39;)
 </div>
 </div>
 <div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[0, 0] element of trained gate (-0.5406855415008305+0.14969542158487123j)
+[0, 0] element of target gate (-0.5406855414988629+0.14969542158363175j)
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/usr/local/lib/python3.6/dist-packages/numpy/core/_asarray.py:85: ComplexWarning: Casting complex values to real discards the imaginary part
+  return array(a, dtype, copy=False, order=order)
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -653,7 +604,7 @@ Text(0, 0.5, &#39;err&#39;)
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="_images/quick_start_9_1.png" src="_images/quick_start_9_1.png" />
+<img alt="_images/quick_start_9_3.png" src="_images/quick_start_9_3.png" />
 </div>
 </div>
 </div>
