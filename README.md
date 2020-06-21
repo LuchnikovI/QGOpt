@@ -1,6 +1,11 @@
 [![Documentation Status](https://readthedocs.org/projects/qgopt/badge/?version=latest)](https://qgopt.readthedocs.io/en/latest/?badge=latest)
 
 Extension of TensorFlow optimizers on Riemannian manifolds that often arise in quantum mechanics (Complex Stiefel manifold, positive-definite cone).
+
+## Documentation
+
+The documentation is available here https://qgopt.readthedocs.io
+
 ## Basic Example
 
 Here we create an example of the Stiefel manifold with canonical metric and Cayley retraction.
@@ -31,26 +36,23 @@ with tf.GradientTape() as tape:
 grad = tape.gradient(target, [U])  # gradient
 opt.apply_gradients(zip([grad], [U]))  # optimization step
 ```
-For more examples, see ipython notebooks.
+For more examples, see ipython notebooks and documentation.
 
 ## Types of manifolds
 
-The current version of the package includes two types of manifolds: the complex Stiefel manifold, and the manifold of positive-definite matrices (positive-definite cone). You can create manifolds with different types of metrics and retraction
+The current version of the package includes five types of manifolds: the complex Stiefel manifold, the manifold of density matrices, the manifold of Choi matrices, the manifold of Hermitian matrices and the manifold of positive-definite matrices (positive-definite cone).
 ```Python
-# Stiefel manifold
-stiefel_cayley_canonical = qgo.manifolds.StiefelManifold(retraction='cayley', metric='canonical')
-stiefel_cayley_euclidean = qgo.manifolds.StiefelManifold(retraction='cayley', metric='euclidean')
-stiefel_svd_canoncical = qgo.manifolds.StiefelManifold(retraction='svd', metric='canonical')
-stiefel_svd_euclidean = qgo.manifolds.StiefelManifold(retraction='svd', metric='euclidean')
-
-# Positive-Definite cone
-positive_cone_log_euclidean = qgo.manifolds.PositiveCone(metric='log_euclidean')
-positiv_cone_log_cholesky = qgo.manifolds.PositiveCone(metric='log_cholesky')
+stiefel = qgo.manifolds.StiefelManifold()
+density_matrix = qgo.manifolds.DensityMatrix()
+choi_matrix = qgo.manifolds.ChoiMatrix()
+hermitian_matrix = qgo.manifolds.HermitianMatrix()
+positive_cone = qgo.manifolds.PositiveCone()
 ```
+For some manifolds, one can also choose a type of reaction and a metric.
 
 ## Types of optimizers
 
-The current version of the package includes five first-order optimizers: gradient descent, gradient descent with momentum, Nesterov gradient descent with momentum, Adam, and AMSGrad
+The current version of the package includes Riemannian versions of popular first-order optimizers that are used in Deep Learning (for more information please read arXiv:1810.00760, arXiv:2002.01113).
 ```Python
 lr = 0.01  # learning rate
 m = qgo.manifolds.StiefelManifold()  # example of a manifold

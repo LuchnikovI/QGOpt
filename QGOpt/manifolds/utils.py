@@ -70,7 +70,7 @@ def _pull_back_chol(W, L, inv_L):
         to corresponding point in L+."""
 
     X = inv_L @ W @ adj(inv_L)
-    X = L @ (_half(X))
+    X = L @ _half(X)
 
     return X
 

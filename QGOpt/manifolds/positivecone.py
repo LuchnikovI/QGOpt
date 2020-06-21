@@ -5,6 +5,7 @@ from QGOpt.manifolds.utils import _lower
 from QGOpt.manifolds.utils import _pull_back_chol
 from QGOpt.manifolds.utils import _pull_back_log
 from QGOpt.manifolds.utils import _push_forward_log
+from QGOpt.manifolds.utils import _push_forward_chol
 from QGOpt.manifolds.utils import _f_matrix
 
 
@@ -68,16 +69,14 @@ class PositiveCone(base_manifold.Manifold):
             L = tf.linalg.cholesky(u)
             inv_L = tf.linalg.inv(L)
 
-            X = _pull_back_chol(vec1, L, inv_L)
-            Y = _pull_back_chol(vec2, L, inv_L)
+            W = _pull_back_chol(vec1, L, inv_L)
+            V = _pull_back_chol(vec2, L, inv_L)
 
-            diag_inner = tf.math.conj(tf.linalg.diag_part(X)) *\
-                tf.linalg.diag_part(Y) / (tf.linalg.diag_part(L) ** 2)
-            diag_inner = tf.reduce_sum(diag_inner, axis=-1)
-            triag_inner = tf.reduce_sum(tf.math.conj(_lower(X)) * _lower(Y),
-                                        axis=(-2, -1))
-
-            prod = tf.math.real(diag_inner + triag_inner)
+            mask = tf.ones(u.shape[-2:], dtype=u.dtype)
+            mask = _lower(mask)
+            G = mask + tf.linalg.diag(1 / (tf.linalg.diag_part(L) ** 2))
+            prod = tf.reduce_sum(tf.math.conj(W) * G * V, axis=(-2, -1))
+            prod = tf.math.real(prod)
             prod = prod[..., tf.newaxis, tf.newaxis]
             prod = tf.cast(prod, dtype=u.dtype)
 
@@ -96,7 +95,6 @@ class PositiveCone(base_manifold.Manifold):
         Returns:
             complex valued tensor of shape (..., n, n),
             a set of projected vectors."""
-
         return (vec + adj(vec)) / 2
 
     def egrad_to_rgrad(self, u, egrad):
@@ -125,15 +123,15 @@ class PositiveCone(base_manifold.Manifold):
             dtype = u.dtype
             L = tf.linalg.cholesky(u)
 
-            half = tf.ones((n, n),
-                           dtype=dtype) - tf.linalg.diag(tf.ones((n,), dtype))
-            G = tf.linalg.band_part(half, -1, 0) +\
-                tf.linalg.diag(tf.linalg.diag_part(L) ** 2)
+            mask = tf.ones((n, n), dtype=dtype)
+            mask = _lower(mask)
+            G_inv = mask + tf.linalg.diag(tf.linalg.diag_part(L) ** 2)
 
-            R = L @ adj(G * (egrad @ L))
-            R = 2 * (R + adj(R))
+            R = G_inv * ((egrad + adj(egrad)) @ L)
+            R_diag = tf.linalg.diag(tf.linalg.diag_part(R))
+            R = R - 1j * tf.cast(tf.math.imag(R_diag), dtype=u.dtype)
 
-            return R
+            return _push_forward_chol(R, L)
 
     def retraction(self, u, vec):
         """Transports a set of points from the manifold via a

@@ -37,7 +37,7 @@ class HermitianMatrix(base_manifold.Manifold):
 
         prod = tf.reduce_sum(tf.math.conj(vec1) * vec2, axis=(-2, -1),
                              keepdims=True)
-        prod = tf.cast(tf.math.real(prod), dtype=u.datype)
+        prod = tf.cast(tf.math.real(prod), dtype=u.dtype)
         return prod
 
     def proj(self, u, vec):
