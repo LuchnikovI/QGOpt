@@ -42,14 +42,9 @@ class CheckManifolds():
         xi = tf.cast(xi, dtype=self.u.dtype)
 
         xi_proj = self.m.proj(self.u, xi)
-        with tf.GradientTape() as tape:
-            tape.watch(xi_proj)
-            loss_min = -self.m.inner(self.u, xi, xi_proj) + 0.5 * self.m.inner(
-                                            self.u, xi_proj, xi_proj)
-            loss_min = tf.math.real(loss_min)
-        grad = tape.gradient(loss_min, xi_proj)
-        grad_proj = self.m.proj(self.u, grad)
-        err = tf.linalg.norm(grad_proj, axis=(-2, -1))
+        first_inner = self.m.inner(self.u, xi_proj, self.v1)
+        second_inner = self.m.inner(self.u, xi, self.v1)
+        err = tf.abs(first_inner - second_inner)
         return tf.cast(tf.math.real(err), dtype=tf.float32)
 
     def _retraction(self):
@@ -76,7 +71,8 @@ class CheckManifolds():
         dretr = (retr - self.u) / dt
         err2 = tf.math.real(tf.linalg.norm(dretr - self.v1))
 
-        err3 = self.m.is_in_manifold(self.m.retraction(self.u, self.v1))
+        err3 = self.m.is_in_manifold(self.m.retraction(self.u, self.v1), 
+                                                                tol=self.tol)
         return tf.cast(err1, dtype=tf.float32), tf.cast(err2,
                                             dtype=tf.float32), err3
 
@@ -113,14 +109,16 @@ class CheckManifolds():
             error 2), dtype float32
         """
 
-        proj = self.m.egrad_to_rgrad(self.u, self.v1)
-        err1 = proj - self.m.proj(self.u, proj)
-        err1 = tf.math.real(tf.linalg.norm(err1))
+        xi = tf.random.normal(self.u.shape + (2,))
+        xi = manifolds.real_to_complex(xi)
+        xi = tf.cast(xi, dtype=self.u.dtype)
+        rgrad = self.m.egrad_to_rgrad(self.u, xi)
+        err1 = rgrad - self.m.proj(self.u, rgrad)
+        err1 = tf.abs(tf.linalg.norm(err1))
 
-        err2 = tf.reduce_sum(tf.math.conj(self.v1) * self.v1, axis=(-2, -1)) -\
-                        self.m.inner(self.u, self.v1,
-                        self.m.egrad_to_rgrad(self.u, self.v1))
-        err2 = tf.math.real(err2)
+        err2 = tf.reduce_sum(tf.math.conj(self.v1) * xi, axis=(-2, -1)) -\
+                        self.m.inner(self.u, self.v1, rgrad)
+        err2 = tf.abs(tf.math.real(err2))
         return tf.cast(err1, dtype=tf.float32), tf.cast(err2, dtype=tf.float32)
 
     def checks(self):
@@ -131,8 +129,9 @@ class CheckManifolds():
         assert err < self.tol, "Projection error for:{}.\
                     ".format(self.descr)
 
-        err = self._inner_proj_matching()
-        assert err < self.tol, "Inner/proj error for:{}.\
+        if self.descr[1] not in ['log_cholesky']:
+            err = self._inner_proj_matching()
+            assert err < self.tol, "Inner/proj error for:{}.\
                     ".format(self.descr)
 
         err1, err2, err3 = self._retraction()
@@ -150,9 +149,11 @@ class CheckManifolds():
                     {}.".format(self.descr)
 
         err1, err2 = self._egrad_to_rgrad()
-        assert err1 < self.tol, "Rgrad (not in a TMx) error for:{}.\
+        if self.descr[0] not in ['ChoiMatrix', 'DensityMatrix']:
+            assert err1 < self.tol, "Rgrad (not in a TMx) error for:{}.\
                     ".format(self.descr)
-        assert err2 < self.tol, "Rgrad (<v1 egrad> != inner<v1 rgrad>) error \
+        if self.descr[1] not in ['log_cholesky']:
+            assert err2 < self.tol, "Rgrad (<v1 egrad> != inner<v1 rgrad>) error \
                     for:{}.".format(self.descr)
 
 
@@ -217,7 +218,7 @@ def test_HermitianMatrix(shape=(4,4), tol=1.e-6):
         Test = CheckManifolds(m, descr, shape, tol)
         Test.checks()
 
-def test_PositiveCone(shape=(4,4), tol=1.e-3):
+def test_PositiveCone(shape=(4,4), tol=1.e-5):
     name = 'PositiveCone'
     m_list, descr_list = return_manifold(name)
     for _, (m, descr) in enumerate(zip(m_list, descr_list)):
