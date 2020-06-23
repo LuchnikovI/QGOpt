@@ -1,4 +1,6 @@
-Extension of TensorFlow optimizers on Riemannian manifolds that often arise in quantum mechanics (the Complex Stiefel manifold, the manifold of density matrices, the manifold of Choi matrices, etc).
+[![Documentation Status](https://readthedocs.org/projects/qgopt/badge/?version=latest)](https://qgopt.readthedocs.io/en/latest/?badge=latest)
+
+Extension of TensorFlow optimizers on Riemannian manifolds that often arise in quantum mechanics (Complex Stiefel manifold, positive-definite cone).
 
 ## Documentation
 

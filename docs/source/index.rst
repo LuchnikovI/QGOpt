@@ -26,3 +26,12 @@ One can use this library to perform quantum tomography of states and channels, t
    quick_start
 
    api
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Tutorials:
+
+   entanglement_renormalization
+   comparison
+   channel_tomography
+   state_tomography
