@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
 setuptools.setup(
      name='QGOpt',  
      version='0.3',
-     author="I. Luchnikov, M. Krechetov",
+     author="I. Luchnikov, A. Ryzhov, M. Krechetov",
      author_email="luchnikovilya@gmail.com",
      description="Riemannian optimization for quantum mechanics",
      url="https://github.com/LuchnikovI/QGOpt",
