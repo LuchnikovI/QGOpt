@@ -9,4 +9,5 @@ from QGOpt.manifolds.hermitian import HermitianMatrix
 from QGOpt.manifolds.positivecone import PositiveCone
 from QGOpt.manifolds.densitymatrix import DensityMatrix
 from QGOpt.manifolds.choimatrix import ChoiMatrix
+from QGOpt.manifolds.povm import POVM
 import QGOpt.manifolds.utils

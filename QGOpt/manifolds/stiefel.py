@@ -35,6 +35,7 @@ class StiefelManifold(base_manifold.Manifold):
     def __init__(self, retraction='svd',
                  metric='euclidean'):
 
+        self.rank = 2
         list_of_metrics = ['euclidean', 'canonical']
         list_of_retractions = ['svd', 'cayley', 'qr']
 
