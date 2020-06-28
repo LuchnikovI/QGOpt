@@ -225,7 +225,6 @@ class POVM(base_manifold.Manifold):
         shape = u.shape[:-3]
 
         u = tf.reshape(u, shape + (n * m, n))
-        u = tf.linalg.matrix_transpose(u)
         u, _ = tf.linalg.qr(u)
         u = tf.reshape(u, shape + (m, n, n))
         u = tf.linalg.matrix_transpose(u)
