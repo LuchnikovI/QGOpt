@@ -80,16 +80,16 @@ class POVM(base_manifold.Manifold):
         idx = tuple(range(size))
 
         # projection onto the tangent space of the Stiefel manifold
-        vec_mod = tf.transpose(vec, idx + (size + 1, size + 2, size))
-        vec_mod = tf.reshape(vec_mod, shape + (n, n * m))
+        vec_mod = tf.transpose(vec, idx + (size + 2, size, size + 1))
+        vec_mod = tf.reshape(vec_mod, shape + (n * m, n))
 
-        u_mod = tf.transpose(u, idx + (size + 1, size + 2, size))
-        u_mod = tf.reshape(u_mod, shape + (n, n * m))
+        u_mod = tf.transpose(u, idx + (size + 2, size, size + 1))
+        u_mod = tf.reshape(u_mod, shape + (n * m, n))
 
         vec_mod = vec_mod - 0.5 * u_mod @ (adj(u_mod) @ vec_mod +\
                                            adj(vec_mod) @ u_mod)
-        vec_mod = tf.reshape(vec_mod, shape + (n, n, m))
-        vec_mod = tf.transpose(vec_mod, idx + (size + 2, size + 0, size + 1))
+        vec_mod = tf.reshape(vec_mod, shape + (n, m, n))
+        vec_mod = tf.transpose(vec_mod, idx + (size + 1, size + 2, size))
 
         # projection onto the horizontal space (POVM element-wise)
         uu = adj(u) @ u
@@ -116,16 +116,16 @@ class POVM(base_manifold.Manifold):
         idx = tuple(range(size))
 
         # projection onto the tangent space of the Stiefel manifold
-        vec_mod = tf.transpose(egrad, idx + (size + 1, size + 2, size))
-        vec_mod = tf.reshape(vec_mod, shape + (n, n * m))
+        vec_mod = tf.transpose(egrad, idx + (size + 2, size, size + 1))
+        vec_mod = tf.reshape(vec_mod, shape + (n * m, n))
 
-        u_mod = tf.transpose(u, idx + (size + 1, size + 2, size))
-        u_mod = tf.reshape(u_mod, shape + (n, n * m))
+        u_mod = tf.transpose(u, idx + (size + 2, size, size + 1))
+        u_mod = tf.reshape(u_mod, shape + (n * m, n))
 
         vec_mod = vec_mod - 0.5 * u_mod @ (adj(u_mod) @ vec_mod +\
                                            adj(vec_mod) @ u_mod)
-        vec_mod = tf.reshape(vec_mod, shape + (n, n, m))
-        vec_mod = tf.transpose(vec_mod, idx + (size + 2, size + 0, size + 1))
+        vec_mod = tf.reshape(vec_mod, shape + (n, m, n))
+        vec_mod = tf.transpose(vec_mod, idx + (size + 1, size + 2, size))
 
         return vec_mod
 
