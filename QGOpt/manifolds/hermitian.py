@@ -14,6 +14,7 @@ class HermitianMatrix(base_manifold.Manifold):
 
     def __init__(self, metric='euclidean'):
 
+        self.rank = 2
         list_of_metrics = ['euclidean']
 
         if metric not in list_of_metrics:

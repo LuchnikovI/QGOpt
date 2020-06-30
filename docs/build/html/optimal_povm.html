@@ -1,0 +1,640 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Optimal POVM &mdash; QGOpt 0.2a documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "document", "processClass": "math|output_area"}})</script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Quantum state tomography" href="state_tomography.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> QGOpt
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting started:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Tutorials:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="entanglement_renormalization.html">Entanglement renormalization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="comparison.html">Comparison of optimization methods on the complex Stiefel manifold</a></li>
+<li class="toctree-l1"><a class="reference internal" href="channel_tomography.html">Quantum channel tomography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="state_tomography.html">Quantum state tomography</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Optimal POVM</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#Prior-information-about-a-quantum-state">Prior information about a quantum state</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#POVM-optimization">POVM optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Validation">Validation</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">QGOpt</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Optimal POVM</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/optimal_povm.ipynb.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS for nbsphinx extension */
+
+/* remove conflicting styling from Sphinx themes */
+div.nbinput.container,
+div.nbinput.container div.prompt,
+div.nbinput.container div.input_area,
+div.nbinput.container div[class*=highlight],
+div.nbinput.container div[class*=highlight] pre,
+div.nboutput.container,
+div.nboutput.container div.prompt,
+div.nboutput.container div.output_area,
+div.nboutput.container div[class*=highlight],
+div.nboutput.container div[class*=highlight] pre {
+    background: none;
+    border: none;
+    padding: 0 0;
+    margin: 0;
+    box-shadow: none;
+}
+
+/* avoid gaps between output lines */
+div.nboutput.container div[class*=highlight] pre {
+    line-height: normal;
+}
+
+/* input/output containers */
+div.nbinput.container,
+div.nboutput.container {
+    display: -webkit-flex;
+    display: flex;
+    align-items: flex-start;
+    margin: 0;
+    width: 100%;
+}
+@media (max-width: 540px) {
+    div.nbinput.container,
+    div.nboutput.container {
+        flex-direction: column;
+    }
+}
+
+/* input container */
+div.nbinput.container {
+    padding-top: 5px;
+}
+
+/* last container */
+div.nblast.container {
+    padding-bottom: 5px;
+}
+
+/* input prompt */
+div.nbinput.container div.prompt pre {
+    color: #307FC1;
+}
+
+/* output prompt */
+div.nboutput.container div.prompt pre {
+    color: #BF5B3D;
+}
+
+/* all prompts */
+div.nbinput.container div.prompt,
+div.nboutput.container div.prompt {
+    width: 4.5ex;
+    padding-top: 5px;
+    position: relative;
+    user-select: none;
+}
+
+div.nbinput.container div.prompt > div,
+div.nboutput.container div.prompt > div {
+    position: absolute;
+    right: 0;
+    margin-right: 0.3ex;
+}
+
+@media (max-width: 540px) {
+    div.nbinput.container div.prompt,
+    div.nboutput.container div.prompt {
+        width: unset;
+        text-align: left;
+        padding: 0.4em;
+    }
+    div.nboutput.container div.prompt.empty {
+        padding: 0;
+    }
+
+    div.nbinput.container div.prompt > div,
+    div.nboutput.container div.prompt > div {
+        position: unset;
+    }
+}
+
+/* disable scrollbars on prompts */
+div.nbinput.container div.prompt pre,
+div.nboutput.container div.prompt pre {
+    overflow: hidden;
+}
+
+/* input/output area */
+div.nbinput.container div.input_area,
+div.nboutput.container div.output_area {
+    -webkit-flex: 1;
+    flex: 1;
+    overflow: auto;
+}
+@media (max-width: 540px) {
+    div.nbinput.container div.input_area,
+    div.nboutput.container div.output_area {
+        width: 100%;
+    }
+}
+
+/* input area */
+div.nbinput.container div.input_area {
+    border: 1px solid #e0e0e0;
+    border-radius: 2px;
+    background: #f5f5f5;
+}
+
+/* override MathJax center alignment in output cells */
+div.nboutput.container div[class*=MathJax] {
+    text-align: left !important;
+}
+
+/* override sphinx.ext.imgmath center alignment in output cells */
+div.nboutput.container div.math p {
+    text-align: left;
+}
+
+/* standard error */
+div.nboutput.container div.output_area.stderr {
+    background: #fdd;
+}
+
+/* ANSI colors */
+.ansi-black-fg { color: #3E424D; }
+.ansi-black-bg { background-color: #3E424D; }
+.ansi-black-intense-fg { color: #282C36; }
+.ansi-black-intense-bg { background-color: #282C36; }
+.ansi-red-fg { color: #E75C58; }
+.ansi-red-bg { background-color: #E75C58; }
+.ansi-red-intense-fg { color: #B22B31; }
+.ansi-red-intense-bg { background-color: #B22B31; }
+.ansi-green-fg { color: #00A250; }
+.ansi-green-bg { background-color: #00A250; }
+.ansi-green-intense-fg { color: #007427; }
+.ansi-green-intense-bg { background-color: #007427; }
+.ansi-yellow-fg { color: #DDB62B; }
+.ansi-yellow-bg { background-color: #DDB62B; }
+.ansi-yellow-intense-fg { color: #B27D12; }
+.ansi-yellow-intense-bg { background-color: #B27D12; }
+.ansi-blue-fg { color: #208FFB; }
+.ansi-blue-bg { background-color: #208FFB; }
+.ansi-blue-intense-fg { color: #0065CA; }
+.ansi-blue-intense-bg { background-color: #0065CA; }
+.ansi-magenta-fg { color: #D160C4; }
+.ansi-magenta-bg { background-color: #D160C4; }
+.ansi-magenta-intense-fg { color: #A03196; }
+.ansi-magenta-intense-bg { background-color: #A03196; }
+.ansi-cyan-fg { color: #60C6C8; }
+.ansi-cyan-bg { background-color: #60C6C8; }
+.ansi-cyan-intense-fg { color: #258F8F; }
+.ansi-cyan-intense-bg { background-color: #258F8F; }
+.ansi-white-fg { color: #C5C1B4; }
+.ansi-white-bg { background-color: #C5C1B4; }
+.ansi-white-intense-fg { color: #A1A6B2; }
+.ansi-white-intense-bg { background-color: #A1A6B2; }
+
+.ansi-default-inverse-fg { color: #FFFFFF; }
+.ansi-default-inverse-bg { background-color: #000000; }
+
+.ansi-bold { font-weight: bold; }
+.ansi-underline { text-decoration: underline; }
+
+
+div.nbinput.container div.input_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight].math,
+div.nboutput.container div.output_area.rendered_html,
+div.nboutput.container div.output_area > div.output_javascript,
+div.nboutput.container div.output_area:not(.rendered_html) > img{
+    padding: 5px;
+}
+
+/* fix copybtn overflow problem in chromium (needed for 'sphinx_copybutton') */
+div.nbinput.container div.input_area > div[class^='highlight'],
+div.nboutput.container div.output_area > div[class^='highlight']{
+    overflow-y: hidden;
+}
+
+/* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
+.prompt a.copybtn {
+    display: none;
+}
+
+/* Some additional styling taken form the Jupyter notebook CSS */
+div.rendered_html table {
+  border: none;
+  border-collapse: collapse;
+  border-spacing: 0;
+  color: black;
+  font-size: 12px;
+  table-layout: fixed;
+}
+div.rendered_html thead {
+  border-bottom: 1px solid black;
+  vertical-align: bottom;
+}
+div.rendered_html tr,
+div.rendered_html th,
+div.rendered_html td {
+  text-align: right;
+  vertical-align: middle;
+  padding: 0.5em 0.5em;
+  line-height: normal;
+  white-space: normal;
+  max-width: none;
+  border: none;
+}
+div.rendered_html th {
+  font-weight: bold;
+}
+div.rendered_html tbody tr:nth-child(odd) {
+  background: #f5f5f5;
+}
+div.rendered_html tbody tr:hover {
+  background: rgba(66, 165, 245, 0.2);
+}
+
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="Optimal-POVM">
+<h1>Optimal POVM<a class="headerlink" href="#Optimal-POVM" title="Permalink to this headline">¶</a></h1>
+<p>One can open this tutorial in Google Colab (is recommended)</p>
+<p><a class="reference external" href="https://colab.research.google.com/github/LuchnikovI/QGOpt/blob/master/docs/source/optimal_povm.ipynb"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a></p>
+<p>In the following tutorial, we show how to perform optimization over the manifold of different POVMs by using QGOpt library. It is known that measurements of a qubit induced by tetrahedral POVM allow reconstructing unknown qubit state with a minimal variance if there is no prior knowledge about qubit state. Let us show it using numerical optimization over the manifold of different POVMs. In the beginning, let us import some libraries.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-none notranslate"><div class="highlight"><pre>
+<span></span>import tensorflow as tf  # tf 2.x
+import matplotlib.pyplot as plt
+import math
+
+try:
+    import QGOpt as qgo
+except ImportError:
+    !pip install git+https://github.com/LuchnikovI/QGOpt@Dev
+    import QGOpt as qgo
+
+# Fix random seed to make results reproducable.
+tf.random.set_seed(42)
+</pre></div>
+</div>
+</div>
+<div class="section" id="Prior-information-about-a-quantum-state">
+<h2>Prior information about a quantum state<a class="headerlink" href="#Prior-information-about-a-quantum-state" title="Permalink to this headline">¶</a></h2>
+<p>Here we generate prior information about a quantum state we want to measure. We represent a prior probability distribution over quantum state approximately, by using a set of samples from a distribution. Since tetrahedral POVM is optimal when there is no prior information about a state, we consider uniform distribution across Bloch ball.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-none notranslate"><div class="highlight"><pre>
+<span></span>#=======================================================================#
+num_of_samples = 10000  # number of samples representing prior knowledge
+#=======================================================================#
+
+# Pauli matrices
+sigma_x = tf.constant([[0, 1], [1, 0]], dtype=tf.complex128)
+sigma_y = tf.constant([[0 + 0j, -1j], [1j, 0 + 0j]], dtype=tf.complex128)
+sigma_z = tf.constant([[1, 0], [0, -1]], dtype=tf.complex128)
+
+# All Pauli matrices in one tensor of shape (3, 2, 2)
+sigma = tf.concat([sigma_x[tf.newaxis],
+                   sigma_y[tf.newaxis],
+                   sigma_z[tf.newaxis]], axis=0)
+
+# Set of points distributed uniformly across Bloch ball
+x = tf.random.normal((num_of_samples, 3), dtype=tf.float64)
+x = x / tf.linalg.norm(x, axis=-1, keepdims=True)
+x = tf.cast(x, dtype=tf.complex128)
+u = tf.random.uniform((num_of_samples, 1), maxval=1, dtype=tf.float64)
+u = u ** (1 / 3)
+u = tf.cast(u, dtype=tf.complex128)
+x = x * u
+
+# Set of density matrices distributed uniformly across Bloch ball
+# (prior information)
+rho = 0.5 * (tf.eye(2, dtype=tf.complex128) + tf.tensordot(x, sigma, axes=1))
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="POVM-optimization">
+<h2>POVM optimization<a class="headerlink" href="#POVM-optimization" title="Permalink to this headline">¶</a></h2>
+<p>Here we search optimal POVM via minimizing the variance of a posterior distribution over density matrices.</p>
+<p>The POVMs manifold is imlemented differently in comparison with other manifolds. Any POVM <span class="math notranslate nohighlight">\(\{M_\alpha\}_{\alpha=1}^N\)</span> is represented by a set of matrices <span class="math notranslate nohighlight">\(\{A_\alpha\}_{\alpha=1}^N\)</span>, where <span class="math notranslate nohighlight">\(M_\alpha = A_\alpha A^\dagger_\alpha\)</span>. Since there is an equivalence relation <span class="math notranslate nohighlight">\(A_\alpha \sim A_\alpha Q_\alpha\)</span>, where <span class="math notranslate nohighlight">\(\{Q_\alpha\}_{\alpha=1}^N\)</span> is a set of arbitrary unitary matrices, optimization is performed on the quotient manifold eliminating this simmetry. The
+corresponding quotient geometry is described in</p>
+<p>Yatawatta, S. (2013, May). Radio interferometric calibration using a Riemannian manifold. In 2013 IEEE International Conference on Acoustics, Speech and Signal Processing (pp. 3866-3870). IEEE.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-none notranslate"><div class="highlight"><pre>
+<span></span>#=========================#
+lr = 0.03  # learning rate
+#=========================#
+
+#  Manifold of different POVMs
+m = qgo.manifolds.POVM()
+# Initial parametrization of POVM
+A = m.random((4, 2, 2), dtype=tf.complex128)
+# Real representtion of A
+A = qgo.manifolds.complex_to_real(A)
+# tf.Variable to be tuned
+A = tf.Variable(A)
+
+# Riemannian Adam optimizer
+opt = qgo.optimizers.RAdam(m, lr)
+
+# Optimization loop
+for i in range(1000):
+    with tf.GradientTape() as tape:
+
+        # Complex representation of parametrization
+        Ac = qgo.manifolds.real_to_complex(A)
+        # POVM
+        povm = Ac @ tf.linalg.adjoint(Ac)
+        # Inverce POVM
+        povm_inv = tf.linalg.inv(tf.reshape(povm, (4, 4)))
+        # Matrix T maps probability vector to four real parameters representing
+        # a quantum state (equivalent to inverse POVM)
+        T = tf.concat([tf.math.real(povm_inv[0, tf.newaxis]),
+                        tf.math.real(povm_inv[3, tf.newaxis]),
+                        tf.math.real(povm_inv[2, tf.newaxis]),
+                        tf.math.imag(povm_inv[2, tf.newaxis])], axis=0)
+
+        # POVM maps a quantum state to probability vector
+        p = tf.tensordot(rho, povm, axes=[[2], [1]])
+        p = tf.transpose(p, (0, 2, 1, 3))
+        p = tf.math.real(tf.linalg.trace(p))
+
+        # Covariance matrix of a reconstructed density matrix
+        cov = -p[:, tf.newaxis] * p[..., tf.newaxis]
+        cov = cov + tf.linalg.diag(p ** 2)
+        cov = cov + tf.linalg.diag(p * (1 - p))
+        cov = tf.tensordot(T, cov, [[1], [1]])
+        cov = tf.tensordot(cov, T, [[2], [1]])
+        cov = tf.transpose(cov, (1, 0, 2))
+
+        # Covariance matrix avaraged over prior distribution
+        av_cov = tf.reduce_mean(cov, axis=0)
+
+        # loss function (log volume of Covariance matrix)
+        loss = tf.reduce_sum(tf.math.log(tf.linalg.svd(av_cov)[0][:-1]))
+    grad = tape.gradient(loss, A)  # gradient
+    opt.apply_gradients(zip([grad], [A]))  # optimization step
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="Validation">
+<h2>Validation<a class="headerlink" href="#Validation" title="Permalink to this headline">¶</a></h2>
+<p>Here we check a resulting POVM. For tetrahedral POVM one has the following relation <span class="math notranslate nohighlight">\({\rm Tr}\left(M^\alpha M^\beta\right) = \frac{2\delta_{\alpha\beta} + 1}{12}\)</span>. One can see, that this relation is almost true for a resulting POVM. The small error appears due to the approximate averaging.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+</pre></div>
+</div>
+<div class="input_area highlight-none notranslate"><div class="highlight"><pre>
+<span></span>cross = tf.tensordot(povm, povm, [[2], [1]])
+cross = tf.transpose(cross, (0, 2, 1, 3))
+cross = tf.linalg.trace(cross)
+cross = tf.math.real(cross)
+plt.matshow(cross)
+cross
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;tf.Tensor: shape=(4, 4), dtype=float64, numpy=
+array([[0.25003257, 0.08331541, 0.08331288, 0.08337171],
+       [0.08331541, 0.25074221, 0.08337179, 0.08331225],
+       [0.08331288, 0.08337179, 0.25007641, 0.08331532],
+       [0.08337171, 0.08331225, 0.08331532, 0.24915009]])&gt;
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/optimal_povm_7_1.png" src="_images/optimal_povm_7_1.png" />
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="state_tomography.html" class="btn btn-neutral float-left" title="Quantum state tomography" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, I. Luhnikov, A. Ryzhov, M. Krechetov
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

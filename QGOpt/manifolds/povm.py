@@ -2,23 +2,15 @@ from QGOpt.manifolds import base_manifold
 import tensorflow as tf
 from QGOpt.manifolds.utils import adj
 from QGOpt.manifolds.utils import lyap_symmetric
-import math
 
 
-class ChoiMatrix(base_manifold.Manifold):
-    """The manifold of Choi matrices of fixed rank (Kraus rank).
-    Choi matrices of fixed Kraus rank are the set of matrices of
-    size (n^2)x(n^2) (n is the dimension of a quantum system) with rank k
-    that are positive definite (the corresponding quantum channel is
-    completely positive) and with the additional constraint Tr_2(choi) = Id,
-    where Tr_2 is the partial trace over the second subsystem, Id is
-    the identity matrix (ensures the trace-preserving property of the
-    corresponding quantum channel). In the general case Kraus rank of
-    a Choi matrix is equal to n^2. An element of this manifold is
-    represented by a complex matrix A of size (n^2)xk that parametrizes
-    a Choi matrix choi = A @ adj(A) (positive by construction).
-    Notice that for any unitary matrix Q of size kxk the transformation
-    A --> AQ leaves resulting matrix the same. This fact is taken into
+class POVM(base_manifold.Manifold):
+    """The manifold of all POVMs of size m.
+    POVM is a set of complex positive semi-definite matrices {E_i} for which
+    sum_i(E_i) = I, where I is the identity matrix. We use quadratic
+    parametrization to represent a particular POVM: E_i = A_i @ adj(A_i).
+    Notice that for any unitary matrix Q of size nxn the transformation
+    A_i --> A_iQ_i leaves resulting matrix the same. This fact is taken into
     account by consideration of quotient manifold from
 
     Yatawatta, S. (2013, May). Radio interferometric calibration using a
@@ -30,18 +22,14 @@ class ChoiMatrix(base_manifold.Manifold):
             Types of metrics are available: 'euclidean'.
 
     Notes:
-        All methods of this class operates with tensors of shape (..., n ** 2, k),
-        where (...) enumerates manifold (can be any shaped), (n ** 2, k)
+        All methods of this class operates with tensors of shape (..., m, n, n),
+        where (...) enumerates manifold (can be any shaped), (m, n, n)
         is the shape of a particular matrix (e.g. an element of the manifold
-        or its tangent vector).
-        In order to take a partial trace of a choi matrix over the second
-        subsystem one can at first reshape a choi matrix
-        (n ** 2, n ** 2) --> (n, n, n, n) and then take a trace over
-        1st and 3rd indices (the numeration starts from 0)."""
+        or its tangent vector)."""
 
     def __init__(self, metric='euclidean'):
 
-        self.rank = 2
+        self.rank = 3
         list_of_metrics = ['euclidean']
 
         if metric not in list_of_metrics:
@@ -52,20 +40,23 @@ class ChoiMatrix(base_manifold.Manifold):
         a tangent space.
 
         Args:
-            u: complex valued tensor of shape (..., n ** 2, k),
+            u: complex valued tensor of shape (..., m, n, n),
                 a set of points from the manifold.
-            vec1: complex valued tensor of shape (..., n ** 2, k),
+            vec1: complex valued tensor of shape (..., m, n, n),
                 a set of tangent vectors from the manifold.
-            vec2: complex valued tensor of shape (..., n ** 2, k),
+            vec2: complex valued tensor of shape (..., m, n, n),
                 a set of tangent vectors from the manifold.
 
         Returns:
-            complex valued tensor of shape (..., 1, 1),
+            complex valued tensor of shape (..., 1, 1, 1),
                 manifold wise inner product"""
 
-        prod = tf.reduce_sum(tf.math.conj(vec1) * vec2, axis=(-2, -1))
+        prod = tf.reduce_sum(tf.math.conj(vec1) * vec2, axis=(-3, -2, -1))
         prod = tf.math.real(prod)
-        prod = tf.cast(prod, dtype=u.dtype)[..., tf.newaxis, tf.newaxis]
+        prod = tf.cast(prod, dtype=u.dtype)[...,
+                                            tf.newaxis,
+                                            tf.newaxis,
+                                            tf.newaxis]
         return prod
 
     def proj(self, u, vec):
@@ -73,31 +64,34 @@ class ChoiMatrix(base_manifold.Manifold):
         of the manifold.
 
         Args:
-            u: complex valued tensor of shape (..., n ** 2, k),
+            u: complex valued tensor of shape (..., m, n, n),
                 a set of points from the manifold.
-            vec: complex valued tensor of shape (..., n ** 2, k),
+            vec: complex valued tensor of shape (..., m, n, n),
                 a set of vectors to be projected.
 
         Returns:
-            complex valued tensor of shape (..., n ** 2, k),
+            complex valued tensor of shape (..., m, n, n),
             a set of projected vectors."""
 
-        k = u.shape[-1]
-        n = int(math.sqrt(u.shape[-2]))
-        shape = u.shape[:-2]
+        n = u.shape[-1]
+        m = u.shape[-3]
+        shape = u.shape[:-3]
+        size = len(shape)
+        idx = tuple(range(size))
 
         # projection onto the tangent space of the Stiefel manifold
-        vec_mod = tf.reshape(vec, shape + (n, k * n))
-        vec_mod = tf.linalg.matrix_transpose(vec_mod)
+        vec_mod = tf.transpose(vec, idx + (size + 2, size, size + 1))
+        vec_mod = tf.reshape(vec_mod, shape + (n * m, n))
 
-        u_mod = tf.reshape(u, shape + (n, k * n))
-        u_mod = tf.linalg.matrix_transpose(u_mod)
+        u_mod = tf.transpose(u, idx + (size + 2, size, size + 1))
+        u_mod = tf.reshape(u_mod, shape + (n * m, n))
+
         vec_mod = vec_mod - 0.5 * u_mod @ (adj(u_mod) @ vec_mod +\
                                            adj(vec_mod) @ u_mod)
-        vec_mod = tf.linalg.matrix_transpose(vec_mod)
-        vec_mod = tf.reshape(vec_mod, shape + (n ** 2, k))
+        vec_mod = tf.reshape(vec_mod, shape + (n, m, n))
+        vec_mod = tf.transpose(vec_mod, idx + (size + 1, size + 2, size))
 
-        # projection onto the horizontal space
+        # projection onto the horizontal space (POVM element-wise)
         uu = adj(u) @ u
         Omega = lyap_symmetric(uu, adj(u) @ vec_mod - adj(vec_mod) @ u)
         return vec_mod - u @ Omega
@@ -106,29 +100,33 @@ class ChoiMatrix(base_manifold.Manifold):
         """Returns the Riemannian gradient from an Euclidean gradient.
 
         Args:
-            u: complex valued tensor of shape (..., n ** 2, k),
+            u: complex valued tensor of shape (..., m, n, n),
                 a set of points from the manifold.
-            egrad: complex valued tensor of shape (..., n ** 2, k),
+            egrad: complex valued tensor of shape (..., m, n, n),
                 a set of Euclidean gradients.
 
         Returns:
-            complex valued tensor of shape (..., n ** 2, k),
+            complex valued tensor of shape (..., m, n, n),
             the set of Reimannian gradients."""
 
-        k = u.shape[-1]
-        n = int(math.sqrt(u.shape[-2]))
-        shape = u.shape[:-2]
+        n = u.shape[-1]
+        m = u.shape[-3]
+        shape = u.shape[:-3]
+        size = len(shape)
+        idx = tuple(range(size))
 
         # projection onto the tangent space of the Stiefel manifold
-        vec_mod = tf.reshape(egrad, shape + (n, k * n))
-        vec_mod = tf.linalg.matrix_transpose(vec_mod)
+        vec_mod = tf.transpose(egrad, idx + (size + 2, size, size + 1))
+        vec_mod = tf.reshape(vec_mod, shape + (n * m, n))
 
-        u_mod = tf.reshape(u, shape + (n, k * n))
-        u_mod = tf.linalg.matrix_transpose(u_mod)
+        u_mod = tf.transpose(u, idx + (size + 2, size, size + 1))
+        u_mod = tf.reshape(u_mod, shape + (n * m, n))
+
         vec_mod = vec_mod - 0.5 * u_mod @ (adj(u_mod) @ vec_mod +\
                                            adj(vec_mod) @ u_mod)
-        vec_mod = tf.linalg.matrix_transpose(vec_mod)
-        vec_mod = tf.reshape(vec_mod, shape + (n ** 2, k))
+        vec_mod = tf.reshape(vec_mod, shape + (n, m, n))
+        vec_mod = tf.transpose(vec_mod, idx + (size + 1, size + 2, size))
+
         return vec_mod
 
     def retraction(self, u, vec):
@@ -136,26 +134,30 @@ class ChoiMatrix(base_manifold.Manifold):
         retraction map.
 
         Args:
-            u: complex valued tensor of shape (..., n ** 2, k), a set
+            u: complex valued tensor of shape (..., m, n, n), a set
                 of points to be transported.
-            vec: complex valued tensor of shape (..., n ** 2, k),
+            vec: complex valued tensor of shape (..., m, n, n),
                 a set of direction vectors.
 
         Returns:
-            complex valued tensor of shape (..., n ** 2, k),
+            complex valued tensor of shape (..., m, n, n),
             a set of transported points."""
 
-        k = u.shape[-1]
-        n = int(math.sqrt(u.shape[-2]))
-        shape = u.shape[:-2]
+        n = u.shape[-1]
+        m = u.shape[-3]
+        shape = u.shape[:-3]
+        size = len(shape)
+        idx = tuple(range(size))
 
         # svd based retraction
         u_new = u + vec
-        u_new = tf.reshape(u_new, shape + (n, n * k))
+        u_new = tf.transpose(u_new, idx + (size + 1, size + 2, size))
+        u_new = tf.reshape(u_new, shape + (n, n * m))
         _, U, V = tf.linalg.svd(u_new)
 
         u_new = U @ adj(V)
-        u_new = tf.reshape(u_new, shape + (n ** 2, k))
+        u_new = tf.reshape(u_new, shape + (n, n, m))
+        u_new = tf.transpose(u_new, idx + (size + 2, size, size + 1))
         return u_new
 
     def vector_transport(self, u, vec1, vec2):
@@ -163,15 +165,15 @@ class ChoiMatrix(base_manifold.Manifold):
         via vector transport.
 
         Args:
-            u: complex valued tensor of shape (..., n ** 2, k),
+            u: complex valued tensor of shape (..., m, n, n),
                 a set of points from the manifold, starting points.
-            vec1: complex valued tensor of shape (..., n ** 2, k),
+            vec1: complex valued tensor of shape (..., m, n, n),
                 a set of vectors to be transported.
-            vec2: complex valued tensor of shape (..., n ** 2, k),
+            vec2: complex valued tensor of shape (..., m, n, n),
                 a set of direction vectors.
 
         Returns:
-            complex valued tensor of shape (..., n ** 2, k),
+            complex valued tensor of shape (..., m, n, n),
             a set of transported vectors."""
 
         u_new = self.retraction(u, vec2)
@@ -181,15 +183,15 @@ class ChoiMatrix(base_manifold.Manifold):
         """Performs a retraction and a vector transport simultaneously.
 
         Args:
-            u: complex valued tensor of shape (..., n ** 2, k),
+            u: complex valued tensor of shape (..., m, n, n),
                 a set of points from the manifold, starting points.
-            vec1: complex valued tensor of shape (..., n ** 2, k),
+            vec1: complex valued tensor of shape (..., m, n, n),
                 a set of vectors to be transported.
-            vec2: complex valued tensor of shape (..., n ** 2, k),
+            vec2: complex valued tensor of shape (..., m, n, n),
                 a set of direction vectors.
 
         Returns:
-            two complex valued tensors of shape (..., n ** 2, k),
+            two complex valued tensors of shape (..., m, n, n),
             a set of transported points and vectors."""
 
         u_new = self.retraction(u, vec2)
@@ -200,13 +202,13 @@ class ChoiMatrix(base_manifold.Manifold):
         randomly.
 
         Args:
-            shape: tuple of integer numbers (..., n ** 2, k),
+            shape: tuple of integer numbers (..., m, n, n),
                 shape of a generated matrix.
             dtype: type of an output tensor, can be
                 either tf.complex64 or tf.complex128.
 
         Returns:
-            complex valued tensor of shape (..., n ** 2, k),
+            complex valued tensor of shape (..., m, n, n),
             a generated matrix."""
 
         list_of_dtypes = [tf.complex64, tf.complex128]
@@ -218,14 +220,14 @@ class ChoiMatrix(base_manifold.Manifold):
         u = tf.complex(tf.random.normal(shape, dtype=real_dtype),
                        tf.random.normal(shape, dtype=real_dtype))
 
-        k = shape[-1]
-        n = int(math.sqrt(shape[-2]))
+        n = u.shape[-1]
+        m = u.shape[-3]
+        shape = u.shape[:-3]
 
-        u = tf.reshape(u, shape[:-2] + (n, n * k))
-        u = tf.linalg.matrix_transpose(u)
+        u = tf.reshape(u, shape + (n * m, n))
         u, _ = tf.linalg.qr(u)
+        u = tf.reshape(u, shape + (m, n, n))
         u = tf.linalg.matrix_transpose(u)
-        u = tf.reshape(u, shape[:-2] + (n ** 2, k))
 
         return u
 
@@ -234,7 +236,7 @@ class ChoiMatrix(base_manifold.Manifold):
         the manifold.
 
         Args:
-            u: complex valued tensor of shape (..., n ** 2, k), points
+            u: complex valued tensor of shape (..., m, n, n), points
                 from the manifold.
 
         Returns:
@@ -249,17 +251,18 @@ class ChoiMatrix(base_manifold.Manifold):
         """Checks if a point is in the manifold or not.
 
         Args:
-            u: complex valued tensor of shape (..., n ** 2, k),
+            u: complex valued tensor of shape (..., m, n, n),
                 a point to be checked.
             tol: small real value showing tolerance.
 
         Returns:
             bolean tensor of shape (...)."""
 
-        shape = u.shape[:-2]
-        n_sq, k = u.shape[-2], u.shape[-1]
-        n = int(tf.math.sqrt(tf.cast(n_sq, dtype=tf.float32)))
-        u_resh = tf.reshape(u, shape + (n, n * k))
+        shape = u.shape[:-3]
+        m, n = u.shape[-3], u.shape[-1]
+        u_resh = tf.linalg.matrix_transpose(u)
+        u_resh = tf.reshape(u_resh, shape + (m * n, n))
+        u_resh = tf.linalg.matrix_transpose(u_resh)
         uudag = u_resh @ adj(u_resh)
         Id = tf.eye(uudag.shape[-1], dtype=u.dtype)
         diff = tf.linalg.norm(uudag - Id, axis=(-2, -1))

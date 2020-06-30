@@ -61,6 +61,7 @@ class RAdam(opt.OptimizerV2):
     # TODO explain why we update this method
     def add_slot(self, var, slot_name, initializer="zeros",
                  manifold_wise=False):
+        rank = self.manifold.rank  # rank of tensot of a manifold
         """Add a new slot variable for `var`."""
         if slot_name not in self._slot_names:
           self._slot_names.append(slot_name)
@@ -72,7 +73,7 @@ class RAdam(opt.OptimizerV2):
             initializer = initializers.get(initializer)
             if manifold_wise:
                 initial_value = functools.partial(
-                    initializer, shape=var.shape[:-3] + (1, 1, 2),
+                    initializer, shape=var.shape[:-rank - 1] + rank * (1,) + (2,),
                     dtype=var.dtype)
             else:
                 initial_value = functools.partial(

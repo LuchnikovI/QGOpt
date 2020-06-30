@@ -33,6 +33,7 @@ class PositiveCone(base_manifold.Manifold):
 
     def __init__(self, metric='log_cholesky'):
 
+        self.rank = 2
         list_of_metrics = ['log_cholesky', 'log_euclidean']
         if metric not in list_of_metrics:
             raise ValueError("Incorrect metric")

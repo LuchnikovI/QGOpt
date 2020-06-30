@@ -10,7 +10,7 @@
     "# Comparison of optimization methods on the complex Stiefel manifold\n",
     "One can open this tutorial in Google Colab (is recommended)\n",
     "\n",
-    "[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/LuchnikovI/QGOpt/blob/Dev/docs/source/comparison.ipynb)\n",
+    "[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/LuchnikovI/QGOpt/blob/master/docs/source/comparison.ipynb)\n",
     "\n",
     "In the given tutorial, we compare different first-order Riemannian optimization methods on the complex Stiefel manifold. We consider a toy example of Hamiltonian renormalization. We use isometric matrices (elements of the complex Stiefel manifold) to solve the following problem\n",
     "\n",
