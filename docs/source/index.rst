@@ -11,7 +11,9 @@ QGOpt is an extension of TensorFlow optimizers on Riemannian manifolds that ofte
 
 * Manifold of Hermitian matrices;
 
-* Complex positive-definite cone.
+* Complex positive-definite cone;
+
+* Manfiold of POVMs.
 
 QGOpt includes Riemannian versions of popular first-order optimization algorithms that are used in deep learning.
 
@@ -35,3 +37,4 @@ One can use this library to perform quantum tomography of states and channels, t
    comparison
    channel_tomography
    state_tomography
+   optimal_povm
