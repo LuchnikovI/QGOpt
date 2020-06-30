@@ -260,9 +260,8 @@ class POVM(base_manifold.Manifold):
 
         shape = u.shape[:-3]
         m, n = u.shape[-3], u.shape[-1]
-        u_resh = tf.reshape(u, shape + (m, n, n))
-        u_resh = tf.linalg.matrix_transpose(u_resh)
-        u_resh = tf.reshape(u, shape + (m * n, n))
+        u_resh = tf.linalg.matrix_transpose(u)
+        u_resh = tf.reshape(u_resh, shape + (m * n, n))
         u_resh = tf.linalg.matrix_transpose(u_resh)
         uudag = u_resh @ adj(u_resh)
         Id = tf.eye(uudag.shape[-1], dtype=u.dtype)
