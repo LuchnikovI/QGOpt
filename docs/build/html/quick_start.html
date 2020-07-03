@@ -87,9 +87,9 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Quick Start</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#Kronecker-product-function.">Kronecker product function.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#A-random-two-qubit-gate-and-parameters-of-its-decomposition.">A random two qubit gate and parameters of its decomposition.</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#Optimization-loop.">Optimization loop.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Kronecker-product-function">Kronecker product function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#A-random-two-qubit-gate-and-parameters-of-its-decomposition">A random two qubit gate and parameters of its decomposition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Optimization-loop">Optimization loop</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#Plotting-of-the-Frobenius-distance-between-the-target-gate-and-its-decomposition">Plotting of the Frobenius distance between the target gate and its decomposition</a></li>
 </ul>
 </li>
@@ -425,7 +425,7 @@ div.rendered_html tbody tr:hover {
 <h1>Quick Start<a class="headerlink" href="#Quick-Start" title="Permalink to this headline">¶</a></h1>
 <p>One can open this tutorial in Google Colab (is recommended)</p>
 <p><a class="reference external" href="https://colab.research.google.com/github/LuchnikovI/QGOpt/blob/master/docs/source/quick_start.ipynb"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a></p>
-<p>In the given short tutorial, we show the basic steps of working with QGOpt. It is known that an arbitrary two qubits unitary gate can be decomposed into a sequence of CNOT gates and one qubit gates as it is shown on the tensor diagram below (if the diagram is not displayed here, please open the notebook in Google Colab <a class="reference external" href="https://colab.research.google.com/github/LuchnikovI/QGOpt/blob/master/docs/source/quick_start.ipynb"><img alt="Open In Colab2" src="https://colab.research.google.com/assets/colab-badge.svg" /></a>). <img alt="renorm_layer.png" src="_images/gate_decomposition.png" /></p>
+<p>In the given short tutorial, we show the basic steps of working with QGOpt. It is known that an arbitrary two-qubit unitary gate can be decomposed into a sequence of CNOT gates and one qubit gates as it is shown on the tensor diagram below (if the diagram is not displayed here, please open the notebook in Google Colab).<img alt="renorm_layer.png" src="_images/gate_decomposition.png" /></p>
 <p>Local unitary gates are elements of the complex Stiefel manifold; thus, the decomposition can be found by minimizing Frobenius distance between a given two qubits unitary gate and its decomposition. In the beginning, let us import some libraries.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
@@ -447,8 +447,8 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-<div class="section" id="Kronecker-product-function.">
-<h2>Kronecker product function.<a class="headerlink" href="#Kronecker-product-function." title="Permalink to this headline">¶</a></h2>
+<div class="section" id="Kronecker-product-function">
+<h2>Kronecker product function<a class="headerlink" href="#Kronecker-product-function" title="Permalink to this headline">¶</a></h2>
 <p>Here we define an auxiliary function that returns Kronecker product between two matrices.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
@@ -476,8 +476,8 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 </div>
-<div class="section" id="A-random-two-qubit-gate-and-parameters-of-its-decomposition.">
-<h2>A random two qubit gate and parameters of its decomposition.<a class="headerlink" href="#A-random-two-qubit-gate-and-parameters-of-its-decomposition." title="Permalink to this headline">¶</a></h2>
+<div class="section" id="A-random-two-qubit-gate-and-parameters-of-its-decomposition">
+<h2>A random two qubit gate and parameters of its decomposition<a class="headerlink" href="#A-random-two-qubit-gate-and-parameters-of-its-decomposition" title="Permalink to this headline">¶</a></h2>
 <p>Here we define a random two qubit gate to decompose and initialize building blocks of its decomposition (CNOT gate and local unitary gates).</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
@@ -494,25 +494,31 @@ div.rendered_html tbody tr:hover {
                     <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
                     <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
 
-<span class="c1"># complex Stiefel manifold</span>
+<span class="c1"># example of complex Stiefel manifold</span>
 <span class="n">m</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">StiefelManifold</span><span class="p">()</span>
+
 <span class="c1"># random two qubit gate to decompose</span>
 <span class="n">target_U</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
 
-<span class="c1"># initial local unitary gates (will be optimized)</span>
-<span class="n">u_1</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">circuit_length</span><span class="p">)]</span>
-<span class="n">u_2</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">circuit_length</span><span class="p">)]</span>
+<span class="c1"># here we generate complex valued tensor of shape (2, circuit_length, 2, 2)</span>
+<span class="c1"># describing initial local unitary gates. First two indices of</span>
+<span class="c1"># this tensor show position of a local unitary gate in the decomposition</span>
+<span class="c1"># (see tensor diagram above), last two indices mark matrix element</span>
+<span class="c1"># of a unitary gate</span>
+<span class="n">u</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="n">circuit_length</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
 
-<span class="c1"># real representation of local unitary gates</span>
-<span class="n">u_1</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">complex_to_real</span><span class="p">,</span> <span class="n">u_1</span><span class="p">))</span>
-<span class="n">u_2</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">complex_to_real</span><span class="p">,</span> <span class="n">u_2</span><span class="p">))</span>
+<span class="c1"># real representation of local unitary gates converted</span>
+<span class="c1"># to tf.Variable</span>
+<span class="c1"># (tf.Variable should be real, to make optimizers</span>
+<span class="c1"># work stable)</span>
+<span class="n">u</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">complex_to_real</span><span class="p">(</span><span class="n">u</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
 </div>
-<div class="section" id="Optimization-loop.">
-<h2>Optimization loop.<a class="headerlink" href="#Optimization-loop." title="Permalink to this headline">¶</a></h2>
-<p>Here we minimize the Frobenius distance between the target two qubit gate and its decomposition.</p>
+<div class="section" id="Optimization-loop">
+<h2>Optimization loop<a class="headerlink" href="#Optimization-loop" title="Permalink to this headline">¶</a></h2>
+<p>Here we minimize the Frobenius distance between the target two-qubit gate and its decomposition.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
@@ -523,29 +529,29 @@ div.rendered_html tbody tr:hover {
 <span class="n">lr</span> <span class="o">=</span> <span class="mf">0.2</span> <span class="c1"># learning rate</span>
 <span class="c1">#=================================#</span>
 
-
-<span class="c1"># complex Stiefel manifold</span>
-<span class="n">m</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">StiefelManifold</span><span class="p">()</span>
-<span class="c1"># Riemannian Adam optimizer</span>
+<span class="c1"># Riemannian Adam optimizer,</span>
+<span class="c1"># we pass m that is an example of</span>
+<span class="c1"># complex Stiefel manifold to guide optimizer</span>
+<span class="c1"># how to perform optimization on complex</span>
+<span class="c1"># Stiefel manifold</span>
 <span class="n">opt</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">RAdam</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">lr</span><span class="p">,</span> <span class="n">ams</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-<span class="c1"># transforming initial local unitary gates to tf.Variables</span>
-<span class="n">varu_1</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">,</span> <span class="n">u_1</span><span class="p">))</span>
-<span class="n">varu_2</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">,</span> <span class="n">u_2</span><span class="p">))</span>
-
-<span class="n">errs</span> <span class="o">=</span> <span class="p">[]</span> <span class="c1"># will be filled by err vs iteration number</span>
+<span class="n">errs</span> <span class="o">=</span> <span class="p">[]</span> <span class="c1"># will be filled by err vs number of iterations</span>
 
 <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">iters</span><span class="p">):</span>
     <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">GradientTape</span><span class="p">()</span> <span class="k">as</span> <span class="n">tape</span><span class="p">:</span>
-        <span class="c1"># transforming real variables to complex representation</span>
-        <span class="n">varu_1c</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">real_to_complex</span><span class="p">,</span> <span class="n">varu_1</span><span class="p">))</span>
-        <span class="n">varu_2c</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">real_to_complex</span><span class="p">,</span> <span class="n">varu_2</span><span class="p">))</span>
+
+        <span class="c1"># transforming real variable back to the complex representation</span>
+        <span class="c1"># (it is only necessary to have real variables, but in the body</span>
+        <span class="c1"># of a graph on can use complex tensors)</span>
+        <span class="n">uc</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">real_to_complex</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
 
         <span class="c1"># gate decomposition</span>
-        <span class="n">gate</span> <span class="o">=</span> <span class="n">kron</span><span class="p">(</span><span class="n">varu_1c</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">varu_2c</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">varu_1c</span><span class="p">)):</span>
+        <span class="c1"># Here we sequentially apply CNOTs and local unitary gates</span>
+        <span class="n">gate</span> <span class="o">=</span> <span class="n">kron</span><span class="p">(</span><span class="n">uc</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">uc</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">circuit_length</span><span class="p">):</span>
             <span class="n">gate</span> <span class="o">=</span> <span class="n">cnot</span> <span class="o">@</span> <span class="n">gate</span>
-            <span class="n">gate</span> <span class="o">=</span> <span class="n">kron</span><span class="p">(</span><span class="n">varu_1c</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">varu_2c</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">@</span> <span class="n">gate</span>
+            <span class="n">gate</span> <span class="o">=</span> <span class="n">kron</span><span class="p">(</span><span class="n">uc</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">],</span> <span class="n">uc</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">i</span><span class="p">])</span> <span class="o">@</span> <span class="n">gate</span>
 
         <span class="c1"># square of Frobenius distance between the target gate and its</span>
         <span class="c1"># decomposition</span>
@@ -554,8 +560,8 @@ div.rendered_html tbody tr:hover {
 
     <span class="n">errs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">loss</span><span class="p">))</span>
 
-    <span class="n">grad</span> <span class="o">=</span> <span class="n">tape</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">loss</span><span class="p">,</span> <span class="n">varu_1</span> <span class="o">+</span> <span class="n">varu_2</span><span class="p">)</span>  <span class="c1"># gradient</span>
-    <span class="n">opt</span><span class="o">.</span><span class="n">apply_gradients</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">grad</span><span class="p">,</span> <span class="n">varu_1</span> <span class="o">+</span> <span class="n">varu_2</span><span class="p">))</span>  <span class="c1"># optimization step</span>
+    <span class="n">grad</span> <span class="o">=</span> <span class="n">tape</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">loss</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>  <span class="c1"># gradient</span>
+    <span class="n">opt</span><span class="o">.</span><span class="n">apply_gradients</span><span class="p">(</span><span class="nb">zip</span><span class="p">([</span><span class="n">grad</span><span class="p">],</span> <span class="p">[</span><span class="n">u</span><span class="p">]))</span>  <span class="c1"># optimization step</span>
 </pre></div>
 </div>
 </div>
