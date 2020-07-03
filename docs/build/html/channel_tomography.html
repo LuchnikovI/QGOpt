@@ -94,7 +94,7 @@
 <li class="toctree-l1"><a class="reference internal" href="entanglement_renormalization.html">Entanglement renormalization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="comparison.html">Comparison of optimization methods on the complex Stiefel manifold</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Quantum channel tomography</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#Many-qubits,-informationally-complete,-positive-operator-valued-measure-(IC-POVM)">Many-qubits, informationally complete, positive operator-valued measure (IC POVM)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Many-qubit,-informationally-complete,-positive-operator-valued-measure-(IC-POVM)">Many-qubit, informationally complete, positive operator-valued measure (IC POVM)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#Data-set-generation-(measurement-outcomes-simulation).">Data set generation (measurement outcomes simulation).</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#Optimization-loop">Optimization loop</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#Validation-curves">Validation curves</a></li>
@@ -427,7 +427,7 @@ div.rendered_html tbody tr:hover {
 <p><a class="reference external" href="https://colab.research.google.com/github/LuchnikovI/QGOpt/blob/master/docs/build/doctrees/nbsphinx/channel_tomography.ipynb"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a></p>
 <p>In the given tutorial, we perform quantum channel tomography via the manifold of Choi matrices. First of all, let us import some libraries.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -457,15 +457,15 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-<div class="section" id="Many-qubits,-informationally-complete,-positive-operator-valued-measure-(IC-POVM)">
-<h2>Many-qubits, informationally complete, positive operator-valued measure (IC POVM)<a class="headerlink" href="#Many-qubits,-informationally-complete,-positive-operator-valued-measure-(IC-POVM)" title="Permalink to this headline">¶</a></h2>
-<p>Before generating measurement outcomes and performing quantum tomography, one needs to introduce POVM describing quantum measurements. For simplicity, we use one-qubit tetrahedral POVM and generalize it on a many-qubit case by taking tensor products between POVM elements, i.e. <span class="math notranslate nohighlight">\(\{M_\alpha\}_{\alpha=1}^4\)</span> is the one-qubit tetrahedral POVM, <span class="math notranslate nohighlight">\(\{M_{\alpha_1}\otimes \dots \otimes M_{\alpha_N}\}_{\alpha_1=1,\dots,\alpha_N=1}^4\)</span> is the many-qubits tetrahedral POVM.</p>
+<div class="section" id="Many-qubit,-informationally-complete,-positive-operator-valued-measure-(IC-POVM)">
+<h2>Many-qubit, informationally complete, positive operator-valued measure (IC POVM)<a class="headerlink" href="#Many-qubit,-informationally-complete,-positive-operator-valued-measure-(IC-POVM)" title="Permalink to this headline">¶</a></h2>
+<p>Before generating measurement outcomes and performing quantum tomography, one needs to introduce POVM describing quantum measurements. For simplicity, we use one-qubit tetrahedral POVM and generalize it on a many-qubit case by taking tensor product between POVM elements, i.e. <span class="math notranslate nohighlight">\(\{M_\alpha\}_{\alpha=1}^4\)</span> is the one-qubit tetrahedral POVM, <span class="math notranslate nohighlight">\(\{M_{\alpha_1}\otimes \dots \otimes M_{\alpha_N}\}_{\alpha_1=1,\dots,\alpha_N=1}^4\)</span> is the many-qubits tetrahedral POVM.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># auxiliary function that returns Kronecker product between POVM elements</span>
+<span></span><span class="c1"># Auxiliary function that returns Kronecker product between POVM elements</span>
 <span class="k">def</span> <span class="nf">kron</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Kronecker product of two POVM elements.</span>
 
@@ -484,8 +484,9 @@ div.rendered_html tbody tr:hover {
                          <span class="n">shape</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">*</span> <span class="n">shape</span><span class="p">[</span><span class="mi">5</span><span class="p">]))</span>
     <span class="k">return</span> <span class="n">AB</span>
 
-<span class="c1"># number of qubits in many-qubits POVMs</span>
-<span class="n">num_of_qubits</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>  <span class="c1"># number of qubits</span>
+<span class="c1"># Number of qubits in many-qubit POVMs, we perform generation of data set and</span>
+<span class="c1"># channel tomography for each particular size of a system</span>
+<span class="n">num_of_qubits</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
 
 <span class="c1"># Pauli matrices</span>
 <span class="n">sigma_x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
@@ -497,7 +498,7 @@ div.rendered_html tbody tr:hover {
                    <span class="n">sigma_y</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">newaxis</span><span class="p">],</span>
                    <span class="n">sigma_z</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
-<span class="c1"># coordinates of thetrahedron peaks (is needed to build tetr. POVM)</span>
+<span class="c1"># coordinates of thetrahedron peaks (is needed to build tetrahedral POVM)</span>
 <span class="n">s0</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
 <span class="n">s1</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">([</span><span class="mi">2</span> <span class="o">*</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="o">/</span><span class="mi">3</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
 <span class="n">s2</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">([</span><span class="o">-</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">/</span> <span class="mi">3</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
@@ -513,6 +514,7 @@ div.rendered_html tbody tr:hover {
 <span class="n">M</span> <span class="o">=</span> <span class="mf">0.25</span> <span class="o">*</span> <span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span> <span class="o">+</span> <span class="n">tf</span><span class="o">.</span><span class="n">tensordot</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
 
 <span class="c1"># Many qubits POVMs</span>
+<span class="c1"># List is filled by a POVM tensor per size of a system (num_of_qubits)</span>
 <span class="n">povms</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">num_of_qubits</span><span class="p">:</span>
     <span class="n">Mmq</span> <span class="o">=</span> <span class="n">M</span>
@@ -527,43 +529,45 @@ div.rendered_html tbody tr:hover {
 <h2>Data set generation (measurement outcomes simulation).<a class="headerlink" href="#Data-set-generation-(measurement-outcomes-simulation)." title="Permalink to this headline">¶</a></h2>
 <p>Here we generate a set of measurements (training set). First of all, we generate a random quantum channel with Kraus rank 𝑘 by using the Stinespring representation of a quantum channel. Then we generate a set of random pure density matrices pass them trough the generated channel and simulate measurements of output states. Results of measurements and initial states we write in a data set.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[31]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 
-<span></span><span class="c1">#================Parameters===================#</span>
+<span></span><span class="c1">#=================Parameters===================#</span>
 <span class="n">num_of_meas</span> <span class="o">=</span> <span class="mi">600000</span>  <span class="c1"># number of measurements</span>
-<span class="n">k</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># Kraus rank</span>
-<span class="c1">#=============================================#</span>
+<span class="n">k</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># Kraus rank (number of Kraus operators)</span>
+<span class="c1">#==============================================#</span>
 
-<span class="n">data_sets</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># dict will be filled by number_of_qubits: data_set</span>
-<span class="n">true_choi_matrices</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># will be filled by true choi matrices</span>
+<span class="n">data_sets</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># dict contains data sets</span>
+<span class="n">true_choi_matrices</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># dict contains true Choi matrices</span>
+
+<span class="c1"># Here we generate sets of random Kraus operators representing true</span>
+<span class="c1"># quantum channels by using Stinespring representation</span>
 <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">num_of_qubits</span><span class="p">):</span>
 
-    <span class="sd">&#39;&#39;&#39;random Kraus set trough Stinespring representation&#39;&#39;&#39;</span>
-    <span class="c1"># complex Stiefel manifold</span>
+    <span class="c1"># complex Stiefel manifold example</span>
     <span class="n">m</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">StiefelManifold</span><span class="p">()</span>
-    <span class="c1"># random isometry</span>
+    <span class="c1"># random isometry generated by using Stiefel manifold</span>
     <span class="n">V</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="n">k</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">n</span><span class="p">),</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">n</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
     <span class="c1"># reshape to Kraus operators (first index enumerates Kraus operators)</span>
     <span class="n">V</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">V</span><span class="p">,</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">2</span> <span class="o">**</span> <span class="n">n</span><span class="p">,</span> <span class="mi">2</span> <span class="o">**</span> <span class="n">n</span><span class="p">))</span>
 
-    <span class="c1"># Bell state (is needed to build Choi matric of a channel)</span>
+    <span class="c1"># Bell state (is needed to build Choi matrix of a channel)</span>
     <span class="n">bell_psi</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="n">n</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
     <span class="n">bell_rho</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">tensordot</span><span class="p">(</span><span class="n">bell_psi</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">bell_psi</span><span class="p">),</span> <span class="n">axes</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
     <span class="c1"># Choi matrix of a generated channel</span>
-    <span class="c1"># (will be used to verify results of tomography)</span>
+    <span class="c1"># (will be used to verify results of channel tomography tomography)</span>
     <span class="n">choi_true</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;qij,qkl,ajbl-&gt;aibk&#39;</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">V</span><span class="p">),</span> <span class="n">bell_rho</span><span class="p">)</span>
     <span class="n">choi_true</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">choi_true</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">n</span><span class="p">),</span> <span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">n</span><span class="p">)))</span>
     <span class="n">true_choi_matrices</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">choi_true</span>
 
-    <span class="c1"># random initial dens. matrices</span>
+    <span class="c1"># random initial density matrices</span>
     <span class="n">psi_set</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="n">num_of_meas</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">n</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
     <span class="n">rho_set</span> <span class="o">=</span> <span class="n">psi_set</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span> <span class="o">*</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">psi_set</span><span class="p">[:,</span> <span class="n">tf</span><span class="o">.</span><span class="n">newaxis</span><span class="p">])</span>
 
-    <span class="c1"># outpur states</span>
+    <span class="c1"># output states (we pass initial density matrices trough a channel)</span>
     <span class="n">out_rho</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;kij,klm,qjm-&gt;qil&#39;</span><span class="p">,</span> <span class="n">V</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">V</span><span class="p">),</span> <span class="n">rho_set</span><span class="p">)</span>
 
     <span class="c1"># Measurements simulation (by using Gumbel trick for sampling from a</span>
@@ -576,32 +580,31 @@ div.rendered_html tbody tr:hover {
     <span class="c1"># projectors came true</span>
     <span class="n">M_set</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">gather_nd</span><span class="p">(</span><span class="n">povms</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">ind_set</span><span class="p">[:,</span> <span class="n">tf</span><span class="o">.</span><span class="n">newaxis</span><span class="p">])</span>
 
-    <span class="n">data_sets</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">rho_set</span><span class="p">,</span> <span class="n">M_set</span><span class="p">]</span> <span class="c1"># data sets filling</span>
+    <span class="c1"># resulting datasets</span>
+    <span class="n">data_sets</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">rho_set</span><span class="p">,</span> <span class="n">M_set</span><span class="p">]</span>
 </pre></div>
 </div>
 </div>
 </div>
 <div class="section" id="Optimization-loop">
 <h2>Optimization loop<a class="headerlink" href="#Optimization-loop" title="Permalink to this headline">¶</a></h2>
-<p>Here we perform maximization of logarithmic likelihood. In order to preserve constraints of a quantum channel, we use the manifold of Choi matrices. The manifold of choi matrices is imlemented differently in comparison with other manifolds. Any Choi matrix <span class="math notranslate nohighlight">\(\rho\)</span> is represented by a matrix <span class="math notranslate nohighlight">\(A\)</span>, where <span class="math notranslate nohighlight">\(\rho = AA^\dagger\)</span>. Since there is an equivalence between <span class="math notranslate nohighlight">\(A\sim AQ\)</span>, where <span class="math notranslate nohighlight">\(Q\)</span> is an arbitrary unitary matrix, optimization is performed on the quotient manifold
-eliminating this simmetry. The corresponding quotient geometry is described in</p>
+<p>Here we perform maximization of logarithmic likelihood. In order to preserve constraints of a quantum channel, we use the manifold of Choi matrices. The manifold of Choi matrices is imlemented through a special parametrization. Any Choi matrix <span class="math notranslate nohighlight">\(\rho\)</span> is represented by a matrix <span class="math notranslate nohighlight">\(A\)</span>, where <span class="math notranslate nohighlight">\(\rho = AA^\dagger\)</span>. Then Choi matrix is non-negative by construction. One also needs to require corresponding quantum channel to be trace preserving, it is atchieved by imposing additional
+constraint <span class="math notranslate nohighlight">\({\rm Tr}_2(\rho) = {\rm Tr}_2(AA^\dagger) = I\)</span>, where <span class="math notranslate nohighlight">\({\rm Tr}_2\)</span> is a partial trace and <span class="math notranslate nohighlight">\(I\)</span> is the identity matrix. Since there is an equivalence between <span class="math notranslate nohighlight">\(A\sim AQ\)</span>, where <span class="math notranslate nohighlight">\(Q\)</span> is an arbitrary unitary matrix, optimization is performed on the quotient manifold eliminating this simmetry. The corresponding quotient geometry is described in</p>
 <p>Yatawatta, S. (2013, May). Radio interferometric calibration using a Riemannian manifold. In 2013 IEEE International Conference on Acoustics, Speech and Signal Processing (pp. 3866-3870). IEEE.</p>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[32]:
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># Parameters of learning</span>
-<span class="c1">#=========================================#</span>
+<span></span><span class="c1">#=========================================#</span>
 <span class="n">lr</span> <span class="o">=</span> <span class="mf">0.07</span>  <span class="c1"># learning rate</span>
 <span class="n">num_of_iter</span> <span class="o">=</span> <span class="mi">400</span>  <span class="c1"># number of iterations</span>
 <span class="c1">#=========================================#</span>
 
-<span class="c1"># manifold of Choi matrices</span>
+<span class="c1"># example of Choi matrices manifold</span>
 <span class="n">m</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">ChoiMatrix</span><span class="p">()</span>
 
-<span class="c1"># dict will be filled by validation curve per data set</span>
-<span class="n">distances</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">distances</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># dict with validation dtat</span>
 
 <span class="c1"># loop over data sets</span>
 <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">num_of_qubits</span><span class="p">:</span>
@@ -609,61 +612,67 @@ eliminating this simmetry. The corresponding quotient geometry is described in</
     <span class="c1"># initial parametrization</span>
     <span class="n">A</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">n</span><span class="p">),</span> <span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">n</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
     <span class="c1"># real representation of the initial parametrization</span>
+    <span class="c1"># variables should be real to make an optimizer works correctly</span>
     <span class="n">A</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">complex_to_real</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
     <span class="c1"># variable to optimize</span>
     <span class="n">A</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
 
-    <span class="c1"># optimizer initialization</span>
-    <span class="n">opt</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">RAdam</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">lr</span><span class="p">)</span> <span class="c1"># riemannian optimizer</span>
+    <span class="c1"># optimizer initialization (riemannian Adam)</span>
+    <span class="n">opt</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">RAdam</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">lr</span><span class="p">)</span>
 
-    <span class="n">dist</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># to be filled by distance between Choi matrices vs iteration</span>
+    <span class="n">dist</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># distance between Choi matrices vs iteration</span>
 
     <span class="c1"># optimization loop</span>
     <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">num_of_iter</span><span class="p">)):</span>
         <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">GradientTape</span><span class="p">()</span> <span class="k">as</span> <span class="n">tape</span><span class="p">:</span>
             <span class="c1"># complex representation of parametrization</span>
             <span class="n">A_c</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">real_to_complex</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+
+            <span class="c1"># reshape parametrization</span>
+            <span class="c1"># (2 ** 2n, 2 ** 2n) --&gt; (2 ** n, 2 ** n 2 ** 2n)</span>
             <span class="n">A_c</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">A_c</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="n">n</span><span class="p">,</span> <span class="mi">2</span> <span class="o">**</span> <span class="n">n</span><span class="p">,</span> <span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">n</span><span class="p">)))</span>
-            <span class="c1"># choi matrix and its preprocessing</span>
+
+            <span class="c1"># Choi tensor (reshaped matrix) from its parametrization</span>
             <span class="n">choi</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">tensordot</span><span class="p">(</span><span class="n">A_c</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">A_c</span><span class="p">),</span> <span class="p">[[</span><span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">]])</span>
+            <span class="c1"># current Choi matrix, necessary to compare with the</span>
+            <span class="c1"># corresponding true Choi matrix</span>
             <span class="n">current_choi</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">choi</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">n</span><span class="p">),</span> <span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">n</span><span class="p">)))</span>
-            <span class="n">choi</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">choi</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
-            <span class="n">choi</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">choi</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">n</span><span class="p">),</span> <span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">n</span><span class="p">)))</span>
-            <span class="c1"># some preprocessing of input density matrices</span>
+
+            <span class="c1"># turning Choi matrix to the corresponding quantum channel</span>
+            <span class="n">phi</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">choi</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+            <span class="n">phi</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">phi</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">n</span><span class="p">),</span> <span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">n</span><span class="p">)))</span>
+
+            <span class="c1"># reshape initial density matrices to vectors</span>
             <span class="n">rho_set_resh</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">data_sets</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">n</span><span class="p">)))</span>
-            <span class="c1"># quantum channel application</span>
-            <span class="n">rho_out_resh</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">tensordot</span><span class="p">(</span><span class="n">choi</span><span class="p">,</span> <span class="n">rho_set_resh</span><span class="p">,</span> <span class="p">[[</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
+
+            <span class="c1"># passing density matrices trough a quantum channel</span>
+            <span class="n">rho_out_resh</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">tensordot</span><span class="p">(</span><span class="n">phi</span><span class="p">,</span> <span class="n">rho_set_resh</span><span class="p">,</span> <span class="p">[[</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
             <span class="n">rho_out_resh</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">rho_out_resh</span><span class="p">)</span>
             <span class="n">rho_out</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">rho_out_resh</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span> <span class="o">**</span> <span class="n">n</span><span class="p">,</span> <span class="mi">2</span> <span class="o">**</span> <span class="n">n</span><span class="p">))</span>
-            <span class="c1"># probabilities of measurements outcomes</span>
+
+            <span class="c1"># probabilities of measurement outcomes</span>
             <span class="n">p</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">data_sets</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">@</span> <span class="n">rho_out</span><span class="p">))</span>
-            <span class="c1"># mean negative log likelihood (to be optimized)</span>
+
+            <span class="c1"># mean negative log likelihood (to be minimized)</span>
             <span class="n">loss</span> <span class="o">=</span> <span class="o">-</span><span class="n">tf</span><span class="o">.</span><span class="n">reduce_mean</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
+
         <span class="n">grad</span> <span class="o">=</span> <span class="n">tape</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">loss</span><span class="p">,</span> <span class="n">A</span><span class="p">)</span>  <span class="c1"># gradient</span>
         <span class="n">opt</span><span class="o">.</span><span class="n">apply_gradients</span><span class="p">(</span><span class="nb">zip</span><span class="p">([</span><span class="n">grad</span><span class="p">],</span> <span class="p">[</span><span class="n">A</span><span class="p">]))</span>  <span class="c1"># optimization step</span>
-        <span class="c1"># append current value distance between the true Choi matrix and</span>
-        <span class="c1"># the reconstructed Choi matrix to the list of distances</span>
+
+        <span class="c1"># collecting data for validation of tomography</span>
         <span class="n">dist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigvalsh</span><span class="p">(</span><span class="n">current_choi</span> <span class="o">-</span>\
                                     <span class="n">true_choi_matrices</span><span class="p">[</span><span class="n">n</span><span class="p">])))</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="n">n</span><span class="p">)))</span>
+
     <span class="n">distances</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">dist</span>  <span class="c1"># filling dict with validation curves</span>
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-100%|██████████| 400/400 [06:10&lt;00:00,  1.08it/s]
-100%|██████████| 400/400 [06:14&lt;00:00,  1.07it/s]
-</pre></div></div>
-</div>
 </div>
 <div class="section" id="Validation-curves">
 <h2>Validation curves<a class="headerlink" href="#Validation-curves" title="Permalink to this headline">¶</a></h2>
-<p>Here we plot validation curves. <span class="math notranslate nohighlight">\(d\)</span> is the dimension of Hilbert space.</p>
+<p>Here we plot validation curves. <span class="math notranslate nohighlight">\(d\)</span> is the dimension of a Hilbert space.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[35]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -677,7 +686,7 @@ eliminating this simmetry. The corresponding quotient geometry is described in</
 </div>
 </div>
 <div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[35]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
