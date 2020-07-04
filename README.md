@@ -73,3 +73,6 @@ Make sure you have TensorFlow >= 2.0. One can install the package from GitHub (i
 or from pypi (might be different in comparison with the current state of master)
 
 ```pip install QGOpt```
+
+## Paper
+We have a [paper](https://arxiv.org/abs/2007.01287) describing some use cases of Riemannian optimization on complex Stiefel manifold and cone of complex positive matrices in quantum mechanics.
