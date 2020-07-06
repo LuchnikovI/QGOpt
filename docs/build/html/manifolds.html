@@ -198,8 +198,8 @@ on manifolds which friquently appear in the quantum data processing</p>
 <dl class="py class">
 <dt id="QGOpt.manifolds.StiefelManifold">
 <em class="property">class </em><code class="sig-prename descclassname">QGOpt.manifolds.</code><code class="sig-name descname">StiefelManifold</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">retraction</span><span class="o">=</span><span class="default_value">'svd'</span></em>, <em class="sig-param"><span class="n">metric</span><span class="o">=</span><span class="default_value">'euclidean'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#QGOpt.manifolds.StiefelManifold" title="Permalink to this definition">¶</a></dt>
-<dd><p>The complex Stiefel manifold (St(n, p) – the manifold of complex
-valued isometric matrices of size nxp). One can use it to perform
+<dd><p>The complex Stiefel manifold (St(n, p) is the manifold of complex
+valued isometric matrices of size n x p). One can use it to perform
 moving of points and vectors along the manifold.</p>
 <p>The geometry of the complex Stiefel manifold is taken from</p>
 <p>Sato, H., &amp; Iwai, T. (2013, December). A complex singular value
@@ -265,11 +265,8 @@ Stiefel manifold.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>complex valued tensor of shape (…, 1, 1),</dt><dd><p>manifold wise inner product</p>
-</dd>
-</dl>
-</p>
+<dd class="field-even"><p>complex valued tensor of shape (…, 1, 1),
+manifold wise inner product</p>
 </dd>
 </dl>
 </dd></dl>
@@ -483,11 +480,8 @@ a set of tangent vectors from the manifold.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>complex valued tensor of shape (…, 1, 1),</dt><dd><p>manifold wise inner product</p>
-</dd>
-</dl>
-</p>
+<dd class="field-even"><p>complex valued tensor of shape (…, 1, 1),
+manifold wise inner product</p>
 </dd>
 </dl>
 </dd></dl>
@@ -641,18 +635,18 @@ a set of transported vectors.</p>
 <em class="property">class </em><code class="sig-prename descclassname">QGOpt.manifolds.</code><code class="sig-name descname">ChoiMatrix</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">metric</span><span class="o">=</span><span class="default_value">'euclidean'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#QGOpt.manifolds.ChoiMatrix" title="Permalink to this definition">¶</a></dt>
 <dd><p>The manifold of Choi matrices of fixed rank (Kraus rank).
 Choi matrices of fixed Kraus rank are the set of matrices of
-size (n^2)x(n^2) (n is the dimension of a quantum system) with rank k
+size (n^2) x (n^2) (n is the dimension of a quantum system) with rank k
 that are positive definite (the corresponding quantum channel is
-completely positive) and with the additional constraint Tr_2(choi) = Id,
+completely positive) and with the additional constraint: Tr_2(choi) = Id,
 where Tr_2 is the partial trace over the second subsystem, Id is
 the identity matrix (ensures the trace-preserving property of the
 corresponding quantum channel). In the general case Kraus rank of
 a Choi matrix is equal to n^2. An element of this manifold is
 represented by a complex matrix A of size (n^2)xk that parametrizes
-a Choi matrix choi = A &#64; adj(A) (positive by construction).
-Notice that for any unitary matrix Q of size kxk the transformation
+a Choi matrix C = A &#64; adj(A) (positive by construction).
+Notice that for any unitary matrix Q of size k x k the transformation
 A –&gt; AQ leaves resulting matrix the same. This fact is taken into
-account by consideration of quotient manifold from</p>
+account via consideration of a quotient manifold from</p>
 <p>Yatawatta, S. (2013, May). Radio interferometric calibration using a
 Riemannian manifold. In 2013 IEEE International Conference on Acoustics,
 Speech and Signal Processing (pp. 3866-3870). IEEE.</p>
@@ -663,12 +657,12 @@ Types of metrics are available: ‘euclidean’.</p>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
-<p>All methods of this class operates with tensors of shape (…, n ** 2, k),
-where (…) enumerates manifold (can be any shaped), (n ** 2, k)
+<p>All methods of this class operate with tensors of shape (…, n ** 2, k),
+where (…) enumerates a manifold (can be any shaped), (n ** 2, k)
 is the shape of a particular matrix (e.g. an element of the manifold
 or its tangent vector).
-In order to take a partial trace of a choi matrix over the second
-subsystem one can at first reshape a choi matrix
+In order to take a partial trace of a Choi matrix over the second
+subsystem one can at first reshape a Choi matrix
 (n ** 2, n ** 2) –&gt; (n, n, n, n) and then take a trace over
 1st and 3rd indices (the numeration starts from 0).</p>
 <dl class="py method">
@@ -708,11 +702,8 @@ a set of tangent vectors from the manifold.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>complex valued tensor of shape (…, 1, 1),</dt><dd><p>manifold wise inner product</p>
-</dd>
-</dl>
-</p>
+<dd class="field-even"><p>complex valued tensor of shape (…, 1, 1),
+manifold wise inner product</p>
 </dd>
 </dl>
 </dd></dl>
@@ -909,11 +900,8 @@ a set of tangent vectors from the manifold.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>complex valued tensor of shape (…, 1, 1),</dt><dd><p>manifold wise inner product</p>
-</dd>
-</dl>
-</p>
+<dd class="field-even"><p>complex valued tensor of shape (…, 1, 1),
+manifold wise inner product</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1121,11 +1109,8 @@ a set of tangent vectors from the manifold.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>complex valued tensor of shape (…, 1, 1),</dt><dd><p>manifold wise inner product.</p>
-</dd>
-</dl>
-</p>
+<dd class="field-even"><p>complex valued tensor of shape (…, 1, 1),
+manifold wise inner product.</p>
 </dd>
 </dl>
 </dd></dl>

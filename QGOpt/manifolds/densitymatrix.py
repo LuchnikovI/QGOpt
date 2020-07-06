@@ -51,7 +51,7 @@ class DensityMatrix(base_manifold.Manifold):
 
         Returns:
             complex valued tensor of shape (..., 1, 1),
-                manifold wise inner product"""
+            manifold wise inner product"""
 
         prod = tf.reduce_sum(tf.math.conj(vec1) * vec2, axis=(-2, -1))
         prod = tf.math.real(prod)
