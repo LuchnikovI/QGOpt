@@ -4,8 +4,8 @@ from QGOpt.manifolds.utils import adj
 
 
 class StiefelManifold(base_manifold.Manifold):
-    """The complex Stiefel manifold (St(n, p) -- the manifold of complex
-    valued isometric matrices of size nxp). One can use it to perform
+    """The complex Stiefel manifold (St(n, p) is the manifold of complex
+    valued isometric matrices of size n x p). One can use it to perform
     moving of points and vectors along the manifold.
 
     The geometry of the complex Stiefel manifold is taken from
@@ -63,7 +63,7 @@ class StiefelManifold(base_manifold.Manifold):
 
         Returns:
             complex valued tensor of shape (..., 1, 1),
-                manifold wise inner product"""
+            manifold wise inner product"""
 
         if self._metric == 'euclidean':
             s_sq = tf.linalg.trace(adj(vec1) @ vec2)[...,

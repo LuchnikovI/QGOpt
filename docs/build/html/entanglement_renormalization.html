@@ -422,9 +422,9 @@ div.rendered_html tbody tr:hover {
 </style>
 <div class="section" id="Entanglement-renormalization">
 <h1>Entanglement renormalization<a class="headerlink" href="#Entanglement-renormalization" title="Permalink to this headline">¶</a></h1>
-<p>One can open it in Google Colab (is recommended)</p>
+<p>One can open this notebook in Google Colab (is recommended)</p>
 <p><a class="reference external" href="https://colab.research.google.com/github/LuchnikovI/QGOpt/blob/master/docs/source/entanglement_renormalization.ipynb"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a></p>
-<p>In the given tutorial, we show how the Riemannian optimization on the complex Stiefel manifold can be used to perform entanglement renormalization and find the ground state of a many-body spin system in the point of phase transition. First of all, let us import some libraries.</p>
+<p>In the given tutorial, we show how the Riemannian optimization on the complex Stiefel manifold can be used to perform entanglement renormalization and find the ground state energy of a many-body spin system in the point of phase transition. First of all, let us import some libraries.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
@@ -458,7 +458,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="section" id="Renormalization-layer">
 <h2>Renormalization layer<a class="headerlink" href="#Renormalization-layer" title="Permalink to this headline">¶</a></h2>
-<p>Here we define a renormalization layer by using TensorNetwork library. The function mera_layer takes unitary and isometric blocks and perform renormalization as it shown on the tensor diagram below (if the diagram is not displayed here, please open the notebook in Google Colab <a class="reference external" href="https://colab.research.google.com/github/LuchnikovI/QGOpt/blob/master/docs/source/entanglement_renormalization.ipynb"><img alt="Open In Colab2" src="https://colab.research.google.com/assets/colab-badge.svg" /></a>). <img alt="renorm_layer.png" src="_images/renorm_layer.png" /> For more information please see</p>
+<p>Here we define a renormalization layer by using TensorNetwork library. The function mera_layer takes unitary and isometric blocks and perform renormalization of a local Hamiltonian as it is shown on the tensor diagram below (if the diagram is not displayed here, please open the notebook in Google Colab). <img alt="renorm_layer.png" src="_images/renorm_layer.png" /> For more information please see</p>
 <p>Evenbly, G., &amp; Vidal, G. (2009). Algorithms for entanglement renormalization. Physical Review B, 79(14), 144108.</p>
 <p>Evenbly, G., &amp; Vidal, G. (2014). Algorithms for entanglement renormalization: boundaries, impurities and interfaces. Journal of Statistical Physics, 157(4-5), 931-978.</p>
 <div class="nbinput nblast docutils container">
@@ -479,7 +479,7 @@ div.rendered_html tbody tr:hover {
 
 <span class="sd">    Args:</span>
 <span class="sd">        H: complex valued tensor of shape (chi ** 2, chi ** 2),</span>
-<span class="sd">            input two-side Hamiltonian.</span>
+<span class="sd">            input two-side Hamiltonian (a local term).</span>
 <span class="sd">        U: complex valued tensor of shape (chi ** 2, chi ** 2), disentangler</span>
 <span class="sd">        U_conj: complex valued tensor of shape (chi ** 2, chi ** 2),</span>
 <span class="sd">            conjugated disentangler.</span>
@@ -495,16 +495,23 @@ div.rendered_html tbody tr:hover {
 <span class="sd">    Returns:</span>
 <span class="sd">        complex valued tensor of shape (new_chi ** 2, new_chi ** 2),</span>
 <span class="sd">        renormalized two side hamiltonian.</span>
+
+<span class="sd">    Notes:</span>
+<span class="sd">        chi is the dimension of an index. chi increases with the depth of mera, however,</span>
+<span class="sd">        at some point, chi is cut to prevent exponential growth of indices</span>
+<span class="sd">        dimensionality.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="c1"># index dim. before renormalization</span>
+    <span class="c1"># index dimension before renormalization</span>
     <span class="n">chi</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">U</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">)),</span>
                   <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
 
-    <span class="c1"># index dim. after renormalization</span>
+    <span class="c1"># index dimension after renormalization</span>
     <span class="n">chi_new</span> <span class="o">=</span> <span class="n">Z_left</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 
     <span class="c1"># tn nodes</span>
+    <span class="c1"># here we build a tensor network that renormalizes a local Hamiltonian term</span>
+    <span class="c1"># one can skip this part and use it as a black box</span>
 
     <span class="c1"># Hamiltonian</span>
     <span class="n">h</span> <span class="o">=</span> <span class="n">tn</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="p">(</span><span class="n">chi</span><span class="p">,</span> <span class="n">chi</span><span class="p">,</span> <span class="n">chi</span><span class="p">,</span> <span class="n">chi</span><span class="p">)))</span>
@@ -610,10 +617,10 @@ div.rendered_html tbody tr:hover {
 
 <span class="nd">@tf</span><span class="o">.</span><span class="n">function</span>
 <span class="k">def</span> <span class="nf">u_gen</span><span class="p">(</span><span class="n">chi</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Returns identical matrix (initial disentangler).</span>
+    <span class="sd">&quot;&quot;&quot;Returns the identity matrix of a given size (initial disentangler).</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        chi: int number, chi.</span>
+<span class="sd">        chi: int number.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        complex valued tensor of shape (chi ** 2, chi ** 2).&quot;&quot;&quot;</span>
@@ -626,7 +633,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="section" id="TFI-hamiltonian-and-MERA-building-blocks">
 <h2>TFI hamiltonian and MERA building blocks<a class="headerlink" href="#TFI-hamiltonian-and-MERA-building-blocks" title="Permalink to this headline">¶</a></h2>
-<p>Here we define the Transverse-field Ising model Hamiltonian and building blocks (disentanglers and isometries) of MERA that are being optimized during the optimization process.</p>
+<p>Here we define the Transverse-field Ising model Hamiltonian and building blocks (disentanglers and isometries) of MERA network that will be optimized.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
@@ -635,7 +642,7 @@ div.rendered_html tbody tr:hover {
 <span></span><span class="c1">#===========================================================================#</span>
 <span class="n">max_chi</span> <span class="o">=</span> <span class="mi">4</span> <span class="c1"># max bond dim</span>
 <span class="n">num_of_layers</span> <span class="o">=</span> <span class="mi">5</span> <span class="c1"># number of MERA layers (corresponds to 2*3^5 = 486 spins)</span>
-<span class="n">h_x</span> <span class="o">=</span> <span class="mf">1.</span> <span class="c1"># transvers field (h_x=1 -- critical field)</span>
+<span class="n">h_x</span> <span class="o">=</span> <span class="mf">1.</span> <span class="c1"># transvers field (h_x=1 is the critical field)</span>
 <span class="c1">#===========================================================================#</span>
 
 <span class="c1"># Pauli matrices</span>
@@ -648,19 +655,26 @@ div.rendered_html tbody tr:hover {
 <span class="n">tf</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ij,kl-&gt;ikjl&#39;</span><span class="p">,</span> <span class="o">-</span><span class="n">h_x</span> <span class="o">*</span> <span class="n">sigma</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">tf</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">))</span>
 
 <span class="c1"># initial building blocks (disentanglers and isometries)</span>
+
+<span class="c1"># first layer</span>
 <span class="n">U</span> <span class="o">=</span> <span class="n">u_gen</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
 <span class="n">Z</span> <span class="o">=</span> <span class="n">z_gen</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">max_chi</span><span class="p">)</span>
+
+<span class="c1"># the rest layers</span>
 <span class="n">U_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">u_gen</span><span class="p">(</span><span class="n">max_chi</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_of_layers</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span>
 <span class="n">Z_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">z_gen</span><span class="p">(</span><span class="n">max_chi</span><span class="p">,</span> <span class="n">max_chi</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_of_layers</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span>
+
+<span class="c1"># all building blocks of mera packed in two lists</span>
 <span class="n">U_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">U</span><span class="p">]</span> <span class="o">+</span> <span class="n">U_list</span>
 <span class="n">Z_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">Z</span><span class="p">]</span> <span class="o">+</span> <span class="n">Z_list</span>
 
-<span class="c1"># state in the renormalie space</span>
+<span class="c1"># trial state in the renormalized space (low dimensional in comparison</span>
+<span class="c1"># with the dimensionality of the initial problem)</span>
 <span class="n">psi</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">real_to_complex</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">((</span><span class="n">max_chi</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
                                                      <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">))</span>
 <span class="n">psi</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">qr</span><span class="p">(</span><span class="n">psi</span><span class="p">)</span>
 
-<span class="c1"># converting U, Z, psi to float64 (necessary for optimizer)</span>
+<span class="c1"># converting building blocks of mera to real representation (necessary for an optimizer)</span>
 <span class="n">U_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">complex_to_real</span><span class="p">(</span><span class="n">U_list</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">U_list</span><span class="p">))]</span>
 <span class="n">Z_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">complex_to_real</span><span class="p">(</span><span class="n">Z_list</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">Z_list</span><span class="p">))]</span>
 <span class="n">psi</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">complex_to_real</span><span class="p">(</span><span class="n">psi</span><span class="p">)</span>
@@ -670,9 +684,9 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="section" id="Optimization-loop">
 <h2>Optimization loop<a class="headerlink" href="#Optimization-loop" title="Permalink to this headline">¶</a></h2>
-<p>In order to find the ground state and its energy, we perform optimization of variational energy</p>
+<p>MERA parametrizes quantum state <span class="math notranslate nohighlight">\(\Psi(\{U\}, \{Z\}, \psi)\)</span> of a spin system, where <span class="math notranslate nohighlight">\(\{U\}\)</span> is a set of disentanglers, <span class="math notranslate nohighlight">\(\{Z\}\)</span> is a set of isometries, <span class="math notranslate nohighlight">\(\psi\)</span> is a state in the renormalized space. In order to find the ground state and its energy, we perform optimization of variational energy</p>
 <div class="math notranslate nohighlight">
-\[\langle\Psi(U, Z, psi)|H_{\rm TFI}|\Psi(U, Z, psi)\rangle\rightarrow \min_{U, Z, psi\in {\rm Stiefel \ manifold}}\]</div>
+\[\langle\Psi(\{U\}, \{Z\}, \psi)|H_{\rm TFI}|\Psi(\{U\}, \{Z\}, \psi)\rangle\rightarrow \min_{\{U\}, \{Z\}, \psi\in {\rm Stiefel \ manifold}}\]</div>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
@@ -706,15 +720,15 @@ div.rendered_html tbody tr:hover {
     <span class="c1"># gradient calculation</span>
     <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">GradientTape</span><span class="p">()</span> <span class="k">as</span> <span class="n">tape</span><span class="p">:</span>
 
-        <span class="c1"># convert real variables to complex representation</span>
+        <span class="c1"># convert real valued variables to complex valued tensors</span>
         <span class="n">varU_c</span> <span class="o">=</span> <span class="p">[</span><span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">real_to_complex</span><span class="p">(</span><span class="n">varU</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">varU</span><span class="p">))]</span>
         <span class="n">varZ_c</span> <span class="o">=</span> <span class="p">[</span><span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">real_to_complex</span><span class="p">(</span><span class="n">varZ</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">varZ</span><span class="p">))]</span>
         <span class="n">varpsi_c</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">real_to_complex</span><span class="p">(</span><span class="n">varpsi</span><span class="p">)</span>
 
-        <span class="c1"># initial Hamiltonian</span>
+        <span class="c1"># initial local Hamiltonian term</span>
         <span class="n">h_renorm</span> <span class="o">=</span> <span class="n">h</span>
 
-        <span class="c1"># renormalization</span>
+        <span class="c1"># renormalization of a local Hamiltonian term</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">varU</span><span class="p">)):</span>
             <span class="n">h_renorm</span> <span class="o">=</span> <span class="n">mera_layer</span><span class="p">(</span><span class="n">h_renorm</span><span class="p">,</span>
                                   <span class="n">varU_c</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
@@ -724,7 +738,7 @@ div.rendered_html tbody tr:hover {
                                   <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">varZ_c</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span>
                                   <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">varZ_c</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
 
-        <span class="c1"># renormalizad hamiltonian (low dimensional)</span>
+        <span class="c1"># renormalizad Hamiltonian (low dimensional)</span>
         <span class="n">h_renorm</span> <span class="o">=</span> <span class="p">(</span><span class="n">h_renorm</span> <span class="o">+</span> <span class="n">tf</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">h_renorm</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">)))</span> <span class="o">/</span> <span class="mi">2</span>
         <span class="n">h_renorm</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">h_renorm</span><span class="p">,</span> <span class="p">(</span><span class="n">max_chi</span> <span class="o">*</span> <span class="n">max_chi</span><span class="p">,</span> <span class="n">max_chi</span> <span class="o">*</span> <span class="n">max_chi</span><span class="p">))</span>
 
@@ -732,7 +746,7 @@ div.rendered_html tbody tr:hover {
         <span class="n">E</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">((</span><span class="n">tf</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">varpsi_c</span><span class="p">))</span> <span class="o">@</span> <span class="n">h_renorm</span> <span class="o">@</span> <span class="n">varpsi_c</span><span class="p">),</span>
                     <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">)[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
 
-        <span class="c1"># filling E_list</span>
+        <span class="c1"># adding information for validation</span>
         <span class="n">E_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">E</span><span class="p">)</span>
 
     <span class="c1"># gradients</span>

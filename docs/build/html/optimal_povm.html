@@ -428,19 +428,19 @@ div.rendered_html tbody tr:hover {
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
-<div class="input_area highlight-none notranslate"><div class="highlight"><pre>
-<span></span>import tensorflow as tf  # tf 2.x
-import matplotlib.pyplot as plt
-import math
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>  <span class="c1"># tf 2.x</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">math</span>
 
-try:
-    import QGOpt as qgo
-except ImportError:
-    !pip install git+https://github.com/LuchnikovI/QGOpt@Dev
-    import QGOpt as qgo
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">QGOpt</span> <span class="k">as</span> <span class="nn">qgo</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="o">!</span>pip install git+https://github.com/LuchnikovI/QGOpt@Dev
+    <span class="kn">import</span> <span class="nn">QGOpt</span> <span class="k">as</span> <span class="nn">qgo</span>
 
-# Fix random seed to make results reproducable.
-tf.random.set_seed(42)
+<span class="c1"># Fix random seed to make results reproducable.</span>
+<span class="n">tf</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">set_seed</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -451,33 +451,33 @@ tf.random.set_seed(42)
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
-<div class="input_area highlight-none notranslate"><div class="highlight"><pre>
-<span></span>#=======================================================================#
-num_of_samples = 10000  # number of samples representing prior knowledge
-#=======================================================================#
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1">#=======================================================================#</span>
+<span class="n">num_of_samples</span> <span class="o">=</span> <span class="mi">10000</span>  <span class="c1"># number of samples representing prior knowledge</span>
+<span class="c1">#=======================================================================#</span>
 
-# Pauli matrices
-sigma_x = tf.constant([[0, 1], [1, 0]], dtype=tf.complex128)
-sigma_y = tf.constant([[0 + 0j, -1j], [1j, 0 + 0j]], dtype=tf.complex128)
-sigma_z = tf.constant([[1, 0], [0, -1]], dtype=tf.complex128)
+<span class="c1"># Pauli matrices</span>
+<span class="n">sigma_x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+<span class="n">sigma_y</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">([[</span><span class="mi">0</span> <span class="o">+</span> <span class="mi">0</span><span class="n">j</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="n">j</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="n">j</span><span class="p">,</span> <span class="mi">0</span> <span class="o">+</span> <span class="mi">0</span><span class="n">j</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+<span class="n">sigma_z</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
 
-# All Pauli matrices in one tensor of shape (3, 2, 2)
-sigma = tf.concat([sigma_x[tf.newaxis],
-                   sigma_y[tf.newaxis],
-                   sigma_z[tf.newaxis]], axis=0)
+<span class="c1"># All Pauli matrices in one tensor of shape (3, 2, 2)</span>
+<span class="n">sigma</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">sigma_x</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">newaxis</span><span class="p">],</span>
+                   <span class="n">sigma_y</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">newaxis</span><span class="p">],</span>
+                   <span class="n">sigma_z</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
-# Set of points distributed uniformly across Bloch ball
-x = tf.random.normal((num_of_samples, 3), dtype=tf.float64)
-x = x / tf.linalg.norm(x, axis=-1, keepdims=True)
-x = tf.cast(x, dtype=tf.complex128)
-u = tf.random.uniform((num_of_samples, 1), maxval=1, dtype=tf.float64)
-u = u ** (1 / 3)
-u = tf.cast(u, dtype=tf.complex128)
-x = x * u
+<span class="c1"># Set of points distributed uniformly across Bloch ball</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">((</span><span class="n">num_of_samples</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">/</span> <span class="n">tf</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+<span class="n">u</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">((</span><span class="n">num_of_samples</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">maxval</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+<span class="n">u</span> <span class="o">=</span> <span class="n">u</span> <span class="o">**</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">)</span>
+<span class="n">u</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">*</span> <span class="n">u</span>
 
-# Set of density matrices distributed uniformly across Bloch ball
-# (prior information)
-rho = 0.5 * (tf.eye(2, dtype=tf.complex128) + tf.tensordot(x, sigma, axes=1))
+<span class="c1"># Set of density matrices distributed uniformly across Bloch ball</span>
+<span class="c1"># (prior information)</span>
+<span class="n">rho</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span> <span class="o">+</span> <span class="n">tf</span><span class="o">.</span><span class="n">tensordot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
@@ -492,60 +492,60 @@ corresponding quotient geometry is described in</p>
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
-<div class="input_area highlight-none notranslate"><div class="highlight"><pre>
-<span></span>#=========================#
-lr = 0.03  # learning rate
-#=========================#
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1">#=========================#</span>
+<span class="n">lr</span> <span class="o">=</span> <span class="mf">0.03</span>  <span class="c1"># learning rate</span>
+<span class="c1">#=========================#</span>
 
-#  Manifold of different POVMs
-m = qgo.manifolds.POVM()
-# Initial parametrization of POVM
-A = m.random((4, 2, 2), dtype=tf.complex128)
-# Real representtion of A
-A = qgo.manifolds.complex_to_real(A)
-# tf.Variable to be tuned
-A = tf.Variable(A)
+<span class="c1">#  Manifold of different POVMs</span>
+<span class="n">m</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">POVM</span><span class="p">()</span>
+<span class="c1"># Initial parametrization of POVM</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+<span class="c1"># Real representtion of A</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">complex_to_real</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+<span class="c1"># tf.Variable to be tuned</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
 
-# Riemannian Adam optimizer
-opt = qgo.optimizers.RAdam(m, lr)
+<span class="c1"># Riemannian Adam optimizer</span>
+<span class="n">opt</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">RAdam</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">lr</span><span class="p">)</span>
 
-# Optimization loop
-for i in range(1000):
-    with tf.GradientTape() as tape:
+<span class="c1"># Optimization loop</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1000</span><span class="p">):</span>
+    <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">GradientTape</span><span class="p">()</span> <span class="k">as</span> <span class="n">tape</span><span class="p">:</span>
 
-        # Complex representation of parametrization
-        Ac = qgo.manifolds.real_to_complex(A)
-        # POVM
-        povm = Ac @ tf.linalg.adjoint(Ac)
-        # Inverce POVM
-        povm_inv = tf.linalg.inv(tf.reshape(povm, (4, 4)))
-        # Matrix T maps probability vector to four real parameters representing
-        # a quantum state (equivalent to inverse POVM)
-        T = tf.concat([tf.math.real(povm_inv[0, tf.newaxis]),
-                        tf.math.real(povm_inv[3, tf.newaxis]),
-                        tf.math.real(povm_inv[2, tf.newaxis]),
-                        tf.math.imag(povm_inv[2, tf.newaxis])], axis=0)
+        <span class="c1"># Complex representation of parametrization</span>
+        <span class="n">Ac</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">real_to_complex</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+        <span class="c1"># POVM</span>
+        <span class="n">povm</span> <span class="o">=</span> <span class="n">Ac</span> <span class="o">@</span> <span class="n">tf</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">adjoint</span><span class="p">(</span><span class="n">Ac</span><span class="p">)</span>
+        <span class="c1"># Inverce POVM</span>
+        <span class="n">povm_inv</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">povm</span><span class="p">,</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">)))</span>
+        <span class="c1"># Matrix T maps probability vector to four real parameters representing</span>
+        <span class="c1"># a quantum state (equivalent to inverse POVM)</span>
+        <span class="n">T</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">povm_inv</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]),</span>
+                        <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">povm_inv</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]),</span>
+                        <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">povm_inv</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]),</span>
+                        <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">povm_inv</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">newaxis</span><span class="p">])],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
-        # POVM maps a quantum state to probability vector
-        p = tf.tensordot(rho, povm, axes=[[2], [1]])
-        p = tf.transpose(p, (0, 2, 1, 3))
-        p = tf.math.real(tf.linalg.trace(p))
+        <span class="c1"># POVM maps a quantum state to probability vector</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">tensordot</span><span class="p">(</span><span class="n">rho</span><span class="p">,</span> <span class="n">povm</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="p">[[</span><span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
 
-        # Covariance matrix of a reconstructed density matrix
-        cov = -p[:, tf.newaxis] * p[..., tf.newaxis]
-        cov = cov + tf.linalg.diag(p ** 2)
-        cov = cov + tf.linalg.diag(p * (1 - p))
-        cov = tf.tensordot(T, cov, [[1], [1]])
-        cov = tf.tensordot(cov, T, [[2], [1]])
-        cov = tf.transpose(cov, (1, 0, 2))
+        <span class="c1"># Covariance matrix of a reconstructed density matrix</span>
+        <span class="n">cov</span> <span class="o">=</span> <span class="o">-</span><span class="n">p</span><span class="p">[:,</span> <span class="n">tf</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span> <span class="o">*</span> <span class="n">p</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+        <span class="n">cov</span> <span class="o">=</span> <span class="n">cov</span> <span class="o">+</span> <span class="n">tf</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">p</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">cov</span> <span class="o">=</span> <span class="n">cov</span> <span class="o">+</span> <span class="n">tf</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">p</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">p</span><span class="p">))</span>
+        <span class="n">cov</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">tensordot</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">cov</span><span class="p">,</span> <span class="p">[[</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
+        <span class="n">cov</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">tensordot</span><span class="p">(</span><span class="n">cov</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="p">[[</span><span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
+        <span class="n">cov</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">cov</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
 
-        # Covariance matrix avaraged over prior distribution
-        av_cov = tf.reduce_mean(cov, axis=0)
+        <span class="c1"># Covariance matrix avaraged over prior distribution</span>
+        <span class="n">av_cov</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_mean</span><span class="p">(</span><span class="n">cov</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
-        # loss function (log volume of Covariance matrix)
-        loss = tf.reduce_sum(tf.math.log(tf.linalg.svd(av_cov)[0][:-1]))
-    grad = tape.gradient(loss, A)  # gradient
-    opt.apply_gradients(zip([grad], [A]))  # optimization step
+        <span class="c1"># loss function (log volume of Covariance matrix)</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">av_cov</span><span class="p">)[</span><span class="mi">0</span><span class="p">][:</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+    <span class="n">grad</span> <span class="o">=</span> <span class="n">tape</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">loss</span><span class="p">,</span> <span class="n">A</span><span class="p">)</span>  <span class="c1"># gradient</span>
+    <span class="n">opt</span><span class="o">.</span><span class="n">apply_gradients</span><span class="p">(</span><span class="nb">zip</span><span class="p">([</span><span class="n">grad</span><span class="p">],</span> <span class="p">[</span><span class="n">A</span><span class="p">]))</span>  <span class="c1"># optimization step</span>
 </pre></div>
 </div>
 </div>
@@ -557,13 +557,13 @@ for i in range(1000):
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
 </pre></div>
 </div>
-<div class="input_area highlight-none notranslate"><div class="highlight"><pre>
-<span></span>cross = tf.tensordot(povm, povm, [[2], [1]])
-cross = tf.transpose(cross, (0, 2, 1, 3))
-cross = tf.linalg.trace(cross)
-cross = tf.math.real(cross)
-plt.matshow(cross)
-cross
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">cross</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">tensordot</span><span class="p">(</span><span class="n">povm</span><span class="p">,</span> <span class="n">povm</span><span class="p">,</span> <span class="p">[[</span><span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
+<span class="n">cross</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">cross</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<span class="n">cross</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">cross</span><span class="p">)</span>
+<span class="n">cross</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">cross</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">matshow</span><span class="p">(</span><span class="n">cross</span><span class="p">)</span>
+<span class="n">cross</span>
 </pre></div>
 </div>
 </div>

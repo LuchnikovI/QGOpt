@@ -53,7 +53,7 @@ class PositiveCone(base_manifold.Manifold):
 
         Returns:
             complex valued tensor of shape (..., 1, 1),
-                manifold wise inner product."""
+            manifold wise inner product."""
 
         if self.metric == 'log_euclidean':
             lmbd, U = tf.linalg.eigh(u)

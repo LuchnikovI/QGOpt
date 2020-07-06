@@ -8,18 +8,18 @@ import math
 class ChoiMatrix(base_manifold.Manifold):
     """The manifold of Choi matrices of fixed rank (Kraus rank).
     Choi matrices of fixed Kraus rank are the set of matrices of
-    size (n^2)x(n^2) (n is the dimension of a quantum system) with rank k
+    size (n^2) x (n^2) (n is the dimension of a quantum system) with rank k
     that are positive definite (the corresponding quantum channel is
-    completely positive) and with the additional constraint Tr_2(choi) = Id,
+    completely positive) and with the additional constraint: Tr_2(choi) = Id,
     where Tr_2 is the partial trace over the second subsystem, Id is
     the identity matrix (ensures the trace-preserving property of the
     corresponding quantum channel). In the general case Kraus rank of
     a Choi matrix is equal to n^2. An element of this manifold is
     represented by a complex matrix A of size (n^2)xk that parametrizes
-    a Choi matrix choi = A @ adj(A) (positive by construction).
-    Notice that for any unitary matrix Q of size kxk the transformation
+    a Choi matrix C = A @ adj(A) (positive by construction).
+    Notice that for any unitary matrix Q of size k x k the transformation
     A --> AQ leaves resulting matrix the same. This fact is taken into
-    account by consideration of quotient manifold from
+    account via consideration of a quotient manifold from
 
     Yatawatta, S. (2013, May). Radio interferometric calibration using a
     Riemannian manifold. In 2013 IEEE International Conference on Acoustics,
@@ -30,12 +30,12 @@ class ChoiMatrix(base_manifold.Manifold):
             Types of metrics are available: 'euclidean'.
 
     Notes:
-        All methods of this class operates with tensors of shape (..., n ** 2, k),
-        where (...) enumerates manifold (can be any shaped), (n ** 2, k)
+        All methods of this class operate with tensors of shape (..., n ** 2, k),
+        where (...) enumerates a manifold (can be any shaped), (n ** 2, k)
         is the shape of a particular matrix (e.g. an element of the manifold
         or its tangent vector).
-        In order to take a partial trace of a choi matrix over the second
-        subsystem one can at first reshape a choi matrix
+        In order to take a partial trace of a Choi matrix over the second
+        subsystem one can at first reshape a Choi matrix
         (n ** 2, n ** 2) --> (n, n, n, n) and then take a trace over
         1st and 3rd indices (the numeration starts from 0)."""
 
@@ -61,7 +61,7 @@ class ChoiMatrix(base_manifold.Manifold):
 
         Returns:
             complex valued tensor of shape (..., 1, 1),
-                manifold wise inner product"""
+            manifold wise inner product"""
 
         prod = tf.reduce_sum(tf.math.conj(vec1) * vec2, axis=(-2, -1))
         prod = tf.math.real(prod)
