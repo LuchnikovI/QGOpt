@@ -92,10 +92,9 @@
 <p class="caption"><span class="caption-text">Tutorials:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="entanglement_renormalization.html">Entanglement renormalization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="comparison.html">Comparison of optimization methods on the complex Stiefel manifold</a></li>
 <li class="toctree-l1"><a class="reference internal" href="channel_tomography.html">Quantum channel tomography</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Quantum state tomography</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#Many-qubits,-informationally-complete,-positive-operator-valued-measure-(IC-POVM)">Many-qubits, informationally complete, positive operator-valued measure (IC POVM)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Many-qubit,-informationally-complete,-positive-operator-valued-measure-(IC-POVM)">Many-qubit, informationally complete, positive operator-valued measure (IC POVM)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#Data-set-generation-(measurement-outcomes-simulation).">Data set generation (measurement outcomes simulation).</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#Optimization-loop">Optimization loop</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#Validation-curves">Validation curves</a></li>
@@ -423,7 +422,7 @@ div.rendered_html tbody tr:hover {
 </style>
 <div class="section" id="Quantum-state-tomography">
 <h1>Quantum state tomography<a class="headerlink" href="#Quantum-state-tomography" title="Permalink to this headline">¶</a></h1>
-<p>One can open it in Google Colab (is recommended)</p>
+<p>One can open this notebook in Google Colab (is recommended)</p>
 <p><a class="reference external" href="https://colab.research.google.com/github/LuchnikovI/QGOpt/blob/master/docs/source/state_tomography.ipynb"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a></p>
 <p>In the given tutorial, we perform quantum state tomography via the manifold of density matrices. First of all, let us import some libraries.</p>
 <div class="nbinput nblast docutils container">
@@ -457,9 +456,9 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-<div class="section" id="Many-qubits,-informationally-complete,-positive-operator-valued-measure-(IC-POVM)">
-<h2>Many-qubits, informationally complete, positive operator-valued measure (IC POVM)<a class="headerlink" href="#Many-qubits,-informationally-complete,-positive-operator-valued-measure-(IC-POVM)" title="Permalink to this headline">¶</a></h2>
-<p>Before generating measurement outcomes and performing quantum state tomography, one needs to introduce POVM describing quantum measurements. For simplicity, we use one-qubit tetrahedral POVM and generalize it on a many-qubit case by taking tensor products between POVM elements, i.e. <span class="math notranslate nohighlight">\(\{M_\alpha\}_{\alpha=1}^4\)</span> is the one-qubit tetrahedral POVM, <span class="math notranslate nohighlight">\(\{M_{\alpha_1}\otimes \dots \otimes M_{\alpha_N}\}_{\alpha_1=1,\dots,\alpha_N=1}^4\)</span> is the many-qubits tetrahedral POVM.</p>
+<div class="section" id="Many-qubit,-informationally-complete,-positive-operator-valued-measure-(IC-POVM)">
+<h2>Many-qubit, informationally complete, positive operator-valued measure (IC POVM)<a class="headerlink" href="#Many-qubit,-informationally-complete,-positive-operator-valued-measure-(IC-POVM)" title="Permalink to this headline">¶</a></h2>
+<p>Before generating measurement outcomes (data set) and performing a quantum state tomography, one needs to introduce POVM describing quantum measurements. For simplicity, we use one-qubit tetrahedral POVM and generalize it on a many-qubit case by taking tensor products between POVM elements, i.e. <span class="math notranslate nohighlight">\(\{M_\alpha\}_{\alpha=1}^4\)</span> is the one-qubit tetrahedral POVM, <span class="math notranslate nohighlight">\(\{M_{\alpha_1}\otimes \dots \otimes M_{\alpha_N}\}_{\alpha_1=1,\dots,\alpha_N=1}^4\)</span> is the many-qubit tetrahedral POVM.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
@@ -484,7 +483,7 @@ div.rendered_html tbody tr:hover {
                          <span class="n">shape</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">*</span> <span class="n">shape</span><span class="p">[</span><span class="mi">5</span><span class="p">]))</span>
     <span class="k">return</span> <span class="n">AB</span>
 
-<span class="c1"># number of qubits in many-qubits POVMs</span>
+<span class="c1"># list with sizes of a quantum system</span>
 <span class="n">num_of_qubits</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>  <span class="c1"># number of qubits</span>
 
 <span class="c1"># Pauli matrices</span>
@@ -525,23 +524,28 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="section" id="Data-set-generation-(measurement-outcomes-simulation).">
 <h2>Data set generation (measurement outcomes simulation).<a class="headerlink" href="#Data-set-generation-(measurement-outcomes-simulation)." title="Permalink to this headline">¶</a></h2>
-<p>Here we generate a set of measurements (training set). First of all, we generate a random density matrix that is the target state we want to reconstruct. Then we simulate measurement outcomes over the target state driven by tetrahedral POVM.</p>
+<p>Here we generate a set of measurement outcomes (training set). First of all, we generate a random density matrix that is the target state we want to reconstruct. Then, we simulate measurement outcomes over the target state driven by tetrahedral POVM.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">num_of_meas</span> <span class="o">=</span> <span class="mi">600000</span>  <span class="c1"># number of measurements</span>
+<span></span><span class="n">num_of_meas</span> <span class="o">=</span> <span class="mi">600000</span>  <span class="c1"># number of measurement outcomes</span>
 
-<span class="n">data_sets</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># dict will be filled by number_of_qubits: data_set</span>
-<span class="n">true_states</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># will be filled by target density matrices</span>
+<span class="c1"># dicts with validation information</span>
+<span class="n">data_sets</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">true_states</span> <span class="o">=</span> <span class="p">{}</span>
+
+<span class="c1"># loop over different system sizes</span>
 <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">num_of_qubits</span><span class="p">):</span>
 
     <span class="c1"># random (target) density matrix</span>
     <span class="n">m</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">DensityMatrix</span><span class="p">()</span>
     <span class="n">A</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">2</span> <span class="o">**</span> <span class="n">n</span><span class="p">,</span> <span class="mi">2</span> <span class="o">**</span> <span class="n">n</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
     <span class="n">rho</span> <span class="o">=</span> <span class="n">A</span> <span class="o">@</span> <span class="n">tf</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">adjoint</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
-    <span class="n">true_states</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">rho</span>  <span class="c1"># adding state to the dict with target states</span>
+
+    <span class="c1"># filling validation information</span>
+    <span class="n">true_states</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">rho</span>
 
     <span class="c1"># Measurements simulation (by using Gumbel trick for sampling from a</span>
     <span class="c1"># discrete distribution)</span>
@@ -550,18 +554,17 @@ div.rendered_html tbody tr:hover {
     <span class="n">eps</span> <span class="o">=</span> <span class="o">-</span><span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="o">-</span><span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">eps</span><span class="p">))</span>
     <span class="n">ind_set</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">eps</span> <span class="o">+</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">P</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
 
-    <span class="c1"># projectors came true</span>
+    <span class="c1"># projectors came true (data set)</span>
     <span class="n">M_set</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">gather_nd</span><span class="p">(</span><span class="n">povms</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">ind_set</span><span class="p">[:,</span> <span class="n">tf</span><span class="o">.</span><span class="n">newaxis</span><span class="p">])</span>
-
-    <span class="n">data_sets</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">M_set</span> <span class="c1"># data sets filling</span>
+    <span class="n">data_sets</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">M_set</span>
 </pre></div>
 </div>
 </div>
 </div>
 <div class="section" id="Optimization-loop">
 <h2>Optimization loop<a class="headerlink" href="#Optimization-loop" title="Permalink to this headline">¶</a></h2>
-<p>Here we perform maximization of logarithmic likelihood. In order to preserve constraints of a density matrix, we use the manifold of density matrices. The manifold of density matrices is imlemented differently in comparison with other manifolds. Any density matrix <span class="math notranslate nohighlight">\(\rho\)</span> is represented by a matrix <span class="math notranslate nohighlight">\(A\)</span>, where <span class="math notranslate nohighlight">\(\rho = AA^\dagger\)</span>. Since there is an equivalence relation between <span class="math notranslate nohighlight">\(A\sim AQ\)</span>, where <span class="math notranslate nohighlight">\(Q\)</span> is an arbitrary unitary matrix, optimization is performed on the
-quotient manifold eliminating this simmetry. The corresponding quotient geometry is described in</p>
+<p>Here we perform maximization of the logarithmic likelihood function. In order to preserve constraints of a density matrix, we use the manifold of density matrices. The manifold of density matrices is imlemented via a quadratic parameterization. Any density matrix <span class="math notranslate nohighlight">\(\rho\)</span> is represented by a matrix <span class="math notranslate nohighlight">\(A\)</span>, where <span class="math notranslate nohighlight">\(\rho = AA^\dagger\)</span>, <span class="math notranslate nohighlight">\(\rho\)</span> is non-negative by construction. One also has a unit trace constraint <span class="math notranslate nohighlight">\({\rm Tr}(AA^\dagger) = 1\)</span>. Since there is an equivalence
+relation <span class="math notranslate nohighlight">\(A\sim AQ\)</span>, where <span class="math notranslate nohighlight">\(Q\)</span> is an arbitrary unitary matrix, optimization is performed on the quotient manifold eliminating this simmetry. The corresponding quotient geometry is described in</p>
 <p>Yatawatta, S. (2013, May). Radio interferometric calibration using a Riemannian manifold. In 2013 IEEE International Conference on Acoustics, Speech and Signal Processing (pp. 3866-3870). IEEE.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
@@ -577,23 +580,25 @@ quotient manifold eliminating this simmetry. The corresponding quotient geometry
 <span class="c1"># manifold of density matrices</span>
 <span class="n">m</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">DensityMatrix</span><span class="p">()</span>
 
-<span class="c1"># dict will be filled by validation curve per data set</span>
+<span class="c1"># dict with validation information</span>
 <span class="n">distances</span> <span class="o">=</span> <span class="p">{}</span>
 
-<span class="c1"># loop over data sets</span>
+<span class="c1"># loop over different system sizes</span>
 <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">num_of_qubits</span><span class="p">:</span>
 
-    <span class="c1"># initial parametrization</span>
+    <span class="c1"># initial parametrization of a density matrix</span>
     <span class="n">A</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">2</span> <span class="o">**</span> <span class="n">n</span><span class="p">,</span> <span class="mi">2</span> <span class="o">**</span> <span class="n">n</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
-    <span class="c1"># real representation of the initial parametrization</span>
+
+    <span class="c1"># real representation of the initial parametrization of a density matrix</span>
     <span class="n">A</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">complex_to_real</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+
     <span class="c1"># variable to optimize</span>
     <span class="n">A</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
 
-    <span class="c1"># optimizer initialization</span>
+    <span class="c1"># Riemannian Adam optimizer</span>
     <span class="n">opt</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">RAdam</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">lr</span><span class="p">)</span> <span class="c1"># riemannian optimizer</span>
 
-    <span class="c1"># to be filled by trace distance between density matrices vs iteration</span>
+    <span class="c1"># dict with validation information</span>
     <span class="n">dist</span> <span class="o">=</span> <span class="p">[]</span>
 
     <span class="c1"># optimization loop</span>
@@ -601,19 +606,23 @@ quotient manifold eliminating this simmetry. The corresponding quotient geometry
         <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">GradientTape</span><span class="p">()</span> <span class="k">as</span> <span class="n">tape</span><span class="p">:</span>
             <span class="c1"># complex representation of a parametrization</span>
             <span class="n">A_c</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">real_to_complex</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+
             <span class="c1"># density matrix</span>
             <span class="n">rho</span> <span class="o">=</span> <span class="n">A_c</span> <span class="o">@</span> <span class="n">tf</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">adjoint</span><span class="p">(</span><span class="n">A_c</span><span class="p">)</span>
+
             <span class="c1"># probabilities of measurement outcomes</span>
             <span class="n">p</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">data_sets</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">@</span> <span class="n">rho</span><span class="p">))</span>
+
             <span class="c1"># mean negative log likelihood (to be optimized)</span>
             <span class="n">loss</span> <span class="o">=</span> <span class="o">-</span><span class="n">tf</span><span class="o">.</span><span class="n">reduce_mean</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
+
         <span class="n">grad</span> <span class="o">=</span> <span class="n">tape</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">loss</span><span class="p">,</span> <span class="n">A</span><span class="p">)</span>  <span class="c1"># gradient</span>
         <span class="n">opt</span><span class="o">.</span><span class="n">apply_gradients</span><span class="p">(</span><span class="nb">zip</span><span class="p">([</span><span class="n">grad</span><span class="p">],</span> <span class="p">[</span><span class="n">A</span><span class="p">]))</span>  <span class="c1"># optimization step</span>
-        <span class="c1"># append current trace distance between the target denisty matrix and</span>
-        <span class="c1"># the reconstructed density matrix to the list of distances</span>
+
+
         <span class="n">dist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigvalsh</span><span class="p">(</span><span class="n">rho</span> <span class="o">-</span>\
                                     <span class="n">true_states</span><span class="p">[</span><span class="n">n</span><span class="p">]))))</span>
-    <span class="n">distances</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">dist</span>  <span class="c1"># filling dict with validation curves</span>
+    <span class="n">distances</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">dist</span>
 </pre></div>
 </div>
 </div>
@@ -630,7 +639,7 @@ quotient manifold eliminating this simmetry. The corresponding quotient geometry
 </div>
 <div class="section" id="Validation-curves">
 <h2>Validation curves<a class="headerlink" href="#Validation-curves" title="Permalink to this headline">¶</a></h2>
-<p>Here we plot validation curves.</p>
+<p>Here we plot validation curves (trace distance between true density matrix and current density matrix vs the number of iterations).</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
