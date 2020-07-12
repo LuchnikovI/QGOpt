@@ -91,7 +91,6 @@
 <p class="caption"><span class="caption-text">Tutorials:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="entanglement_renormalization.html">Entanglement renormalization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="comparison.html">Comparison of optimization methods on the complex Stiefel manifold</a></li>
 <li class="toctree-l1"><a class="reference internal" href="channel_tomography.html">Quantum channel tomography</a></li>
 <li class="toctree-l1"><a class="reference internal" href="state_tomography.html">Quantum state tomography</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Optimal POVM</a><ul>
@@ -423,7 +422,7 @@ div.rendered_html tbody tr:hover {
 <h1>Optimal POVM<a class="headerlink" href="#Optimal-POVM" title="Permalink to this headline">¶</a></h1>
 <p>One can open this tutorial in Google Colab (is recommended)</p>
 <p><a class="reference external" href="https://colab.research.google.com/github/LuchnikovI/QGOpt/blob/master/docs/source/optimal_povm.ipynb"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a></p>
-<p>In the following tutorial, we show how to perform optimization over the manifold of different POVMs by using QGOpt library. It is known that measurements of a qubit induced by tetrahedral POVM allow reconstructing unknown qubit state with a minimal variance if there is no prior knowledge about qubit state. Let us show it using numerical optimization over the manifold of different POVMs. In the beginning, let us import some libraries.</p>
+<p>In the following tutorial, we show how to perform optimization over the manifold of different POVMs by using QGOpt library. It is known that measurements of a qubit induced by tetrahedral POVM allow reconstructing unknown qubit state with a minimal variance if there is no prior information about a qubit state. Let us show it using numerical optimization over the manifold of different POVMs. In the beginning, let us import some libraries.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
@@ -446,15 +445,15 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="section" id="Prior-information-about-a-quantum-state">
 <h2>Prior information about a quantum state<a class="headerlink" href="#Prior-information-about-a-quantum-state" title="Permalink to this headline">¶</a></h2>
-<p>Here we generate prior information about a quantum state we want to measure. We represent a prior probability distribution over quantum state approximately, by using a set of samples from a distribution. Since tetrahedral POVM is optimal when there is no prior information about a state, we consider uniform distribution across Bloch ball.</p>
+<p>Here we generate prior information about a quantum state. We represent a prior probability distribution over a quantum state approximately, by using a set of samples from a distribution. Since tetrahedral POVM is optimal when there is no prior information about a state, we consider uniform distribution across the Bloch ball.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1">#=======================================================================#</span>
-<span class="n">num_of_samples</span> <span class="o">=</span> <span class="mi">10000</span>  <span class="c1"># number of samples representing prior knowledge</span>
-<span class="c1">#=======================================================================#</span>
+<span></span><span class="c1">#=========================================================================#</span>
+<span class="n">num_of_samples</span> <span class="o">=</span> <span class="mi">10000</span>  <span class="c1"># number of samples representing prior information</span>
+<span class="c1">#=========================================================================#</span>
 
 <span class="c1"># Pauli matrices</span>
 <span class="n">sigma_x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
@@ -485,8 +484,8 @@ div.rendered_html tbody tr:hover {
 <div class="section" id="POVM-optimization">
 <h2>POVM optimization<a class="headerlink" href="#POVM-optimization" title="Permalink to this headline">¶</a></h2>
 <p>Here we search optimal POVM via minimizing the variance of a posterior distribution over density matrices.</p>
-<p>The POVMs manifold is imlemented differently in comparison with other manifolds. Any POVM <span class="math notranslate nohighlight">\(\{M_\alpha\}_{\alpha=1}^N\)</span> is represented by a set of matrices <span class="math notranslate nohighlight">\(\{A_\alpha\}_{\alpha=1}^N\)</span>, where <span class="math notranslate nohighlight">\(M_\alpha = A_\alpha A^\dagger_\alpha\)</span>. Since there is an equivalence relation <span class="math notranslate nohighlight">\(A_\alpha \sim A_\alpha Q_\alpha\)</span>, where <span class="math notranslate nohighlight">\(\{Q_\alpha\}_{\alpha=1}^N\)</span> is a set of arbitrary unitary matrices, optimization is performed on the quotient manifold eliminating this simmetry. The
-corresponding quotient geometry is described in</p>
+<p>The POVMs is implemented via a quadratic parameterization. Any POVM <span class="math notranslate nohighlight">\(\{M_\alpha\}_{\alpha=1}^N\)</span> is represented by a set of matrices <span class="math notranslate nohighlight">\(\{A_\alpha\}_{\alpha=1}^N\)</span>, where <span class="math notranslate nohighlight">\(M_\alpha = A_\alpha A^\dagger_\alpha\)</span>. <span class="math notranslate nohighlight">\(M_\alpha\)</span> is non-negative and hermitian by construction. One also has <span class="math notranslate nohighlight">\(\sum_\alpha A_\alpha A_\alpha^\dagger = I\)</span>. Since there is an equivalence relation <span class="math notranslate nohighlight">\(A_\alpha \sim A_\alpha Q_\alpha\)</span>, where <span class="math notranslate nohighlight">\(\{Q_\alpha\}_{\alpha=1}^N\)</span> is a set of arbitrary
+unitary matrices, optimization is performed on the quotient manifold eliminating this simmetry. The corresponding quotient geometry is described in</p>
 <p>Yatawatta, S. (2013, May). Radio interferometric calibration using a Riemannian manifold. In 2013 IEEE International Conference on Acoustics, Speech and Signal Processing (pp. 3866-3870). IEEE.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
@@ -497,7 +496,7 @@ corresponding quotient geometry is described in</p>
 <span class="n">lr</span> <span class="o">=</span> <span class="mf">0.03</span>  <span class="c1"># learning rate</span>
 <span class="c1">#=========================#</span>
 
-<span class="c1">#  Manifold of different POVMs</span>
+<span class="c1">#  Manifold of POVMs</span>
 <span class="n">m</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">POVM</span><span class="p">()</span>
 <span class="c1"># Initial parametrization of POVM</span>
 <span class="n">A</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
@@ -513,11 +512,11 @@ corresponding quotient geometry is described in</p>
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1000</span><span class="p">):</span>
     <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">GradientTape</span><span class="p">()</span> <span class="k">as</span> <span class="n">tape</span><span class="p">:</span>
 
-        <span class="c1"># Complex representation of parametrization</span>
+        <span class="c1"># Complex representation of A</span>
         <span class="n">Ac</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">real_to_complex</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
-        <span class="c1"># POVM</span>
+        <span class="c1"># POVM from its parametrization</span>
         <span class="n">povm</span> <span class="o">=</span> <span class="n">Ac</span> <span class="o">@</span> <span class="n">tf</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">adjoint</span><span class="p">(</span><span class="n">Ac</span><span class="p">)</span>
-        <span class="c1"># Inverce POVM</span>
+        <span class="c1"># Inverce POVM (is needed to map a probability distribution to a density matrix)</span>
         <span class="n">povm_inv</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">povm</span><span class="p">,</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">)))</span>
         <span class="c1"># Matrix T maps probability vector to four real parameters representing</span>
         <span class="c1"># a quantum state (equivalent to inverse POVM)</span>
@@ -526,7 +525,7 @@ corresponding quotient geometry is described in</p>
                         <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">povm_inv</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]),</span>
                         <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">povm_inv</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">newaxis</span><span class="p">])],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
-        <span class="c1"># POVM maps a quantum state to probability vector</span>
+        <span class="c1"># POVM maps a quantum state to a probability vector</span>
         <span class="n">p</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">tensordot</span><span class="p">(</span><span class="n">rho</span><span class="p">,</span> <span class="n">povm</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="p">[[</span><span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
         <span class="n">p</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
         <span class="n">p</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
@@ -545,14 +544,14 @@ corresponding quotient geometry is described in</p>
         <span class="c1"># loss function (log volume of Covariance matrix)</span>
         <span class="n">loss</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">av_cov</span><span class="p">)[</span><span class="mi">0</span><span class="p">][:</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
     <span class="n">grad</span> <span class="o">=</span> <span class="n">tape</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">loss</span><span class="p">,</span> <span class="n">A</span><span class="p">)</span>  <span class="c1"># gradient</span>
-    <span class="n">opt</span><span class="o">.</span><span class="n">apply_gradients</span><span class="p">(</span><span class="nb">zip</span><span class="p">([</span><span class="n">grad</span><span class="p">],</span> <span class="p">[</span><span class="n">A</span><span class="p">]))</span>  <span class="c1"># optimization step</span>
+    <span class="n">opt</span><span class="o">.</span><span class="n">apply_gradients</span><span class="p">(</span><span class="nb">zip</span><span class="p">([</span><span class="n">grad</span><span class="p">],</span> <span class="p">[</span><span class="n">A</span><span class="p">]))</span>  <span class="c1"># minimization step</span>
 </pre></div>
 </div>
 </div>
 </div>
 <div class="section" id="Validation">
 <h2>Validation<a class="headerlink" href="#Validation" title="Permalink to this headline">¶</a></h2>
-<p>Here we check a resulting POVM. For tetrahedral POVM one has the following relation <span class="math notranslate nohighlight">\({\rm Tr}\left(M^\alpha M^\beta\right) = \frac{2\delta_{\alpha\beta} + 1}{12}\)</span>. One can see, that this relation is almost true for a resulting POVM. The small error appears due to the approximate averaging.</p>
+<p>Here we check a resulting POVM. For tetrahedral POVM one has the following relation <span class="math notranslate nohighlight">\({\rm Tr}\left(M^\alpha M^\beta\right) = \frac{2\delta_{\alpha\beta} + 1}{12}\)</span>. One can see, that this relation is almost true for a resulting POVM. The small error appears due to the approximate monte carlo averaging of a covariance matric by using a set of samples from the prior distribution.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
 </pre></div>

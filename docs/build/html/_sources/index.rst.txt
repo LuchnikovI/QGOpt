@@ -29,6 +29,8 @@ One can use this library to perform quantum tomography of states and channels, t
 
    api
 
+   faq
+
 .. toctree::
    :maxdepth: 1
    :caption: Tutorials:

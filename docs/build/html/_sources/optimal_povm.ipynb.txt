@@ -13,7 +13,7 @@
     "\n",
     "[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/LuchnikovI/QGOpt/blob/master/docs/source/optimal_povm.ipynb)\n",
     "\n",
-    "In the following tutorial, we show how to perform optimization over the manifold of different POVMs by using QGOpt library. It is known that measurements of a qubit induced by tetrahedral POVM allow reconstructing unknown qubit state with a minimal variance if there is no prior knowledge about qubit state. Let us show it using numerical optimization over the manifold of different POVMs.\n",
+    "In the following tutorial, we show how to perform optimization over the manifold of different POVMs by using QGOpt library. It is known that measurements of a qubit induced by tetrahedral POVM allow reconstructing unknown qubit state with a minimal variance if there is no prior information about a qubit state. Let us show it using numerical optimization over the manifold of different POVMs.\n",
     "In the beginning, let us import some libraries."
    ]
   },
@@ -50,7 +50,7 @@
    "source": [
     "## Prior information about a quantum state\n",
     "\n",
-    "Here we generate prior information about a quantum state we want to measure. We represent a prior probability distribution over quantum state approximately, by using a set of samples from a distribution. Since tetrahedral POVM is optimal when there is no prior information about a state, we consider uniform distribution across Bloch ball."
+    "Here we generate prior information about a quantum state. We represent a prior probability distribution over a quantum state approximately, by using a set of samples from a distribution. Since tetrahedral POVM is optimal when there is no prior information about a state, we consider uniform distribution across the Bloch ball."
    ]
   },
   {
@@ -63,9 +63,9 @@
    },
    "outputs": [],
    "source": [
-    "#=======================================================================#\n",
-    "num_of_samples = 10000  # number of samples representing prior knowledge\n",
-    "#=======================================================================#\n",
+    "#=========================================================================#\n",
+    "num_of_samples = 10000  # number of samples representing prior information\n",
+    "#=========================================================================#\n",
     "\n",
     "# Pauli matrices\n",
     "sigma_x = tf.constant([[0, 1], [1, 0]], dtype=tf.complex128)\n",
@@ -102,7 +102,7 @@
     "\n",
     "Here we search optimal POVM via minimizing the variance of a posterior distribution over density matrices.\n",
     "\n",
-    "The POVMs manifold is imlemented differently in comparison with other manifolds. Any POVM $\\{M_\\alpha\\}_{\\alpha=1}^N$ is represented by a set of matrices $\\{A_\\alpha\\}_{\\alpha=1}^N$, where $M_\\alpha = A_\\alpha A^\\dagger_\\alpha$. Since there is an equivalence relation $A_\\alpha \\sim A_\\alpha Q_\\alpha$, where $\\{Q_\\alpha\\}_{\\alpha=1}^N$ is a set of arbitrary unitary matrices, optimization is performed on the quotient manifold eliminating this simmetry. The corresponding quotient geometry is described in\n",
+    "The POVMs is implemented via a quadratic parameterization. Any POVM $\\{M_\\alpha\\}_{\\alpha=1}^N$ is represented by a set of matrices $\\{A_\\alpha\\}_{\\alpha=1}^N$, where $M_\\alpha = A_\\alpha A^\\dagger_\\alpha$. $M_\\alpha$ is non-negative and hermitian by construction. One also has $\\sum_\\alpha A_\\alpha A_\\alpha^\\dagger = I$. Since there is an equivalence relation $A_\\alpha \\sim A_\\alpha Q_\\alpha$, where $\\{Q_\\alpha\\}_{\\alpha=1}^N$ is a set of arbitrary unitary matrices, optimization is performed on the quotient manifold eliminating this simmetry. The corresponding quotient geometry is described in\n",
     "\n",
     "Yatawatta, S. (2013, May). Radio interferometric calibration using a Riemannian manifold. In 2013 IEEE International Conference on Acoustics, Speech and Signal Processing (pp. 3866-3870). IEEE."
    ]
@@ -121,7 +121,7 @@
     "lr = 0.03  # learning rate\n",
     "#=========================#\n",
     "\n",
-    "#  Manifold of different POVMs\n",
+    "#  Manifold of POVMs\n",
     "m = qgo.manifolds.POVM()\n",
     "# Initial parametrization of POVM\n",
     "A = m.random((4, 2, 2), dtype=tf.complex128)\n",
@@ -137,11 +137,11 @@
     "for i in range(1000):\n",
     "    with tf.GradientTape() as tape:\n",
     "\n",
-    "        # Complex representation of parametrization\n",
+    "        # Complex representation of A\n",
     "        Ac = qgo.manifolds.real_to_complex(A)\n",
-    "        # POVM\n",
+    "        # POVM from its parametrization\n",
     "        povm = Ac @ tf.linalg.adjoint(Ac)\n",
-    "        # Inverce POVM\n",
+    "        # Inverce POVM (is needed to map a probability distribution to a density matrix)\n",
     "        povm_inv = tf.linalg.inv(tf.reshape(povm, (4, 4)))\n",
     "        # Matrix T maps probability vector to four real parameters representing\n",
     "        # a quantum state (equivalent to inverse POVM)\n",
@@ -150,7 +150,7 @@
     "                        tf.math.real(povm_inv[2, tf.newaxis]),\n",
     "                        tf.math.imag(povm_inv[2, tf.newaxis])], axis=0)\n",
     "\n",
-    "        # POVM maps a quantum state to probability vector\n",
+    "        # POVM maps a quantum state to a probability vector\n",
     "        p = tf.tensordot(rho, povm, axes=[[2], [1]])\n",
     "        p = tf.transpose(p, (0, 2, 1, 3))\n",
     "        p = tf.math.real(tf.linalg.trace(p))\n",
@@ -169,7 +169,7 @@
     "        # loss function (log volume of Covariance matrix)\n",
     "        loss = tf.reduce_sum(tf.math.log(tf.linalg.svd(av_cov)[0][:-1]))\n",
     "    grad = tape.gradient(loss, A)  # gradient\n",
-    "    opt.apply_gradients(zip([grad], [A]))  # optimization step"
+    "    opt.apply_gradients(zip([grad], [A]))  # minimization step"
    ]
   },
   {
@@ -181,7 +181,7 @@
    "source": [
     "## Validation\n",
     "\n",
-    "Here we check a resulting POVM. For tetrahedral POVM one has the following relation ${\\rm Tr}\\left(M^\\alpha M^\\beta\\right) = \\frac{2\\delta_{\\alpha\\beta} + 1}{12}$. One can see, that this relation is almost true for a resulting POVM. The small error appears due to the approximate averaging."
+    "Here we check a resulting POVM. For tetrahedral POVM one has the following relation ${\\rm Tr}\\left(M^\\alpha M^\\beta\\right) = \\frac{2\\delta_{\\alpha\\beta} + 1}{12}$. One can see, that this relation is almost true for a resulting POVM. The small error appears due to the approximate monte carlo averaging of a covariance matric by using a set of samples from the prior distribution."
    ]
   },
   {
