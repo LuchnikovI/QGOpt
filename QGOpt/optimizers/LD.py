@@ -47,7 +47,7 @@ class LangevinDynamics(opt.OptimizerV2):
 
         # search direction
         r = -self.manifold.egrad_to_rgrad(complex_var,
-                                          eps * complex_grad + noise)
+                                          0.5 * eps * complex_grad + noise)
 
         # New value of var
         new_var = self.manifold.retraction(complex_var, r)
