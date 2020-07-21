@@ -40,15 +40,16 @@ For more examples, see ipython notebooks and documentation.
 
 ## Types of manifolds
 
-The current version of the package includes five types of manifolds: the complex Stiefel manifold, the manifold of density matrices, the manifold of Choi matrices, the manifold of Hermitian matrices and the manifold of positive-definite matrices (positive-definite cone).
+The current version of the package includes six types of manifolds: the complex Stiefel manifold, the manifold of density matrices, the manifold of Choi matrices, the manifold of Hermitian matrices, the manifold of POVMs and the manifold of positive-definite matrices (positive-definite cone).
 ```Python
 stiefel = qgo.manifolds.StiefelManifold()
 density_matrix = qgo.manifolds.DensityMatrix()
 choi_matrix = qgo.manifolds.ChoiMatrix()
 hermitian_matrix = qgo.manifolds.HermitianMatrix()
 positive_cone = qgo.manifolds.PositiveCone()
+povm = qgo.manifolds.POVM()
 ```
-For some manifolds, one can also choose a type of reaction and a metric.
+For some manifolds, one can also choose a type of reaction and metric.
 
 ## Types of optimizers
 
