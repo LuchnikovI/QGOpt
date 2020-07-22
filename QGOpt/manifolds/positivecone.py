@@ -29,17 +29,23 @@ class PositiveCone(base_manifold.Manifold):
 
     Args:
         metric: string specifies type of a metric, Defaults to 'log_cholesky'
-            Types of metrics are available: 'log_cholesky', 'log_euclidean.'"""
+            Types of metrics are available: 'log_cholesky', 'log_euclidean.'
+        retraction: string specifies type of retraction, Defaults to 'expmap'.
+            Types of metrics are available: 'expmap'."""
 
-    def __init__(self, metric='log_cholesky'):
+    def __init__(self, retraction='expmap', metric='log_cholesky'):
 
         self.rank = 2
         self.quotient = False
         list_of_metrics = ['log_cholesky', 'log_euclidean']
+        list_of_retractions = ['expmap']
+
         if metric not in list_of_metrics:
             raise ValueError("Incorrect metric")
+        if retraction not in list_of_retractions:
+            raise ValueError("Incorrect retraction")
 
-        super(PositiveCone, self).__init__('expmap', metric)
+        super(PositiveCone, self).__init__(retraction, metric)
 
     def inner(self, u, vec1, vec2):
         """Returns manifold wise inner product of vectors from

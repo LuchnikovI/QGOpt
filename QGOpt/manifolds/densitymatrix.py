@@ -22,6 +22,8 @@ class DensityMatrix(base_manifold.Manifold):
     Args:
         metric: string specifies type of metric, Defaults to 'euclidean'.
             Types of metrics are available: 'euclidean'.
+        retraction: string specifies type of retraction, Defaults to 'projection'.
+            Types of metrics are available: 'projection'.
 
     Notes:
         All methods of this class operates with tensors of shape (..., n, n),
@@ -29,16 +31,19 @@ class DensityMatrix(base_manifold.Manifold):
         is the shape of a particular matrix (e.g. an element of the manifold
         or its tangent vector)."""
 
-    def __init__(self, metric='euclidean'):
+    def __init__(self, retraction='projection', metric='euclidean'):
 
         self.rank = 2
         self.quotient = True
         list_of_metrics = ['euclidean']
+        list_of_retractions = ['projection']
 
         if metric not in list_of_metrics:
             raise ValueError("Incorrect metric")
+        if retraction not in list_of_retractions:
+            raise ValueError("Incorrect retraction")
 
-        super(DensityMatrix, self).__init__('projection', metric)
+        super(DensityMatrix, self).__init__(retraction, metric)
 
     def inner(self, u, vec1, vec2):
         """Returns manifold wise inner product of vectors from

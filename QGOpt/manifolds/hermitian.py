@@ -10,18 +10,23 @@ class HermitianMatrix(base_manifold.Manifold):
     Args:
         metric: string specifies type of metric, Defaults to 'euclidean'.
             Types of metrics are available: 'euclidean'.
+        retraction: string specifies type of retraction, Defaults to 'expmap'.
+            Types of metrics are available: 'expmap'.
     """
 
-    def __init__(self, metric='euclidean'):
+    def __init__(self, retraction='expmap', metric='euclidean'):
 
         self.rank = 2
         self.quotient = False
         list_of_metrics = ['euclidean']
+        list_of_retractions = ['expmap']
 
         if metric not in list_of_metrics:
             raise ValueError("Incorrect metric")
+        if retraction not in list_of_retractions:
+            raise ValueError("Incorrect retraction")
 
-        super(HermitianMatrix, self).__init__('expmap', metric)
+        super(HermitianMatrix, self).__init__(retraction, metric)
 
     def inner(self, u, vec1, vec2):
         """Returns manifold wise inner product of vectors from
