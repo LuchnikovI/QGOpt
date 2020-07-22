@@ -30,10 +30,13 @@ class POVM(base_manifold.Manifold):
     def __init__(self, metric='euclidean'):
 
         self.rank = 3
+        self.quotient = True
         list_of_metrics = ['euclidean']
 
         if metric not in list_of_metrics:
             raise ValueError("Incorrect metric")
+
+        super(POVM, self).__init__('svd', metric)
 
     def inner(self, u, vec1, vec2):
         """Returns manifold wise inner product of vectors from
