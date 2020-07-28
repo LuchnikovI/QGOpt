@@ -71,7 +71,7 @@ class CheckManifolds():
         dretr = (retr - self.u) / dt
         err2 = tf.math.real(tf.linalg.norm(dretr - self.v1))
 
-        err3 = self.m.is_in_manifold(self.m.retraction(self.u, self.v1), 
+        err3 = self.m.is_in_manifold(self.m.retraction(self.u, self.v1),
                                                                 tol=self.tol)
         return tf.cast(err1, dtype=tf.float32), tf.cast(err2,
                                             dtype=tf.float32), err3
@@ -156,78 +156,15 @@ class CheckManifolds():
             assert err2 < self.tol, "Rgrad (<v1 egrad> != inner<v1 rgrad>) error \
                     for:{}.".format(self.descr)
 
+testdata = [
+    ('ChoiMatrix', 'euclidean', manifolds.ChoiMatrix(metric='euclidean'), (4, 4), 1.e-6),
+    ('DensityMatrix', 'euclidean', manifolds.DensityMatrix(metric='euclidean'), (4, 4), 1.e-6),
+    ('HermitianMatrix', 'euclidean', manifolds.HermitianMatrix(metric='euclidean'), (4, 4), 1.e-6),
+    ('PositiveCone', 'log_euclidean', manifolds.PositiveCone(metric='log_euclidean'), (4, 4), 1.e-5),
+    ('PositiveCone', 'log_cholesky', manifolds.PositiveCone(metric='log_cholesky'), (4, 4), 1.e-5),
+]
 
-def return_manifold(name):
-    """
-    Returns a list of possible manifolds with name 'name'.
-    Args:
-        name: manifold name, str.
-    Returns:
-        list of manifolds, name, metrics, retractions
-    """
-    m_list = []
-    descr_list = []
-    if name == 'ChoiMatrix':
-        list_of_metrics = ['euclidean']
-        for metric in list_of_metrics:
-            m_list.append(manifolds.ChoiMatrix(metric=metric))
-            descr_list.append((name, metric))
-    if name == 'DensityMatrix':
-        list_of_metrics = ['euclidean']
-        for metric in list_of_metrics:
-            m_list.append(manifolds.DensityMatrix(metric=metric))
-            descr_list.append((name, metric))
-    if name == 'HermitianMatrix':
-        list_of_metrics = ['euclidean']
-        for metric in list_of_metrics:
-            m_list.append(manifolds.HermitianMatrix(metric=metric))
-            descr_list.append((name, metric))
-    if name == 'PositiveCone':
-        list_of_metrics = ['log_euclidean', 'log_cholesky']
-        for metric in list_of_metrics:
-            m_list.append(manifolds.PositiveCone(metric=metric))
-            descr_list.append((name, metric))
-    if name == 'StiefelManifold':
-        list_of_metrics = ['euclidean', 'canonical']
-        list_of_retractions = ['svd', 'cayley', 'qr']
-        for metric in list_of_metrics:
-            for retraction in list_of_retractions:
-                m_list.append(manifolds.StiefelManifold(metric=metric,
-                                                    retraction=retraction))
-                descr_list.append((name, metric, retraction))
-    return m_list, descr_list
-
-def test_ChoiMatrix(shape=(4,4), tol=1.e-6):
-    name = 'ChoiMatrix'
-    m_list, descr_list = return_manifold(name)
-    for _, (m, descr) in enumerate(zip(m_list, descr_list)):
-        Test = CheckManifolds(m, descr, shape, tol)
-        Test.checks()
-
-def test_DensityMatrix(shape=(4,4), tol=1.e-6):
-    name = 'DensityMatrix'
-    m_list, descr_list = return_manifold(name)
-    for _, (m, descr) in enumerate(zip(m_list, descr_list)):
-        Test = CheckManifolds(m, descr, shape, tol)
-        Test.checks()
-
-def test_HermitianMatrix(shape=(4,4), tol=1.e-6):
-    name = 'HermitianMatrix'
-    m_list, descr_list = return_manifold(name)
-    for _, (m, descr) in enumerate(zip(m_list, descr_list)):
-        Test = CheckManifolds(m, descr, shape, tol)
-        Test.checks()
-
-def test_PositiveCone(shape=(4,4), tol=1.e-5):
-    name = 'PositiveCone'
-    m_list, descr_list = return_manifold(name)
-    for _, (m, descr) in enumerate(zip(m_list, descr_list)):
-        Test = CheckManifolds(m, descr, shape, tol)
-        Test.checks()
-
-def test_StiefelManifold(shape=(8,4), tol=1.e-6):
-    name = 'StiefelManifold'
-    m_list, descr_list = return_manifold(name)
-    for _, (m, descr) in enumerate(zip(m_list, descr_list)):
-        Test = CheckManifolds(m, descr, shape, tol)
-        Test.checks()
+@pytest.mark.parametrize("name,metric,manifold,shape,tol", testdata)
+def test_manifolds(name, metric, manifold, shape, tol):
+    Test = CheckManifolds(manifold, (name, metric), shape, tol)
+    Test.checks()
