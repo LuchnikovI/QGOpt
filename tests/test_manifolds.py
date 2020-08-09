@@ -75,7 +75,7 @@ class CheckManifolds():
         # differential (second cond)
         t = tf.constant(dt, dtype=self.u.dtype)
         retr = self.m.retraction(self.u, t * self.v1)
-        dretr = (retr - self.u) / t
+        dretr = (retr - self.u) / dt
         err2 = tf.math.real(tf.linalg.norm(dretr - self.v1))
 
         # presence of a new point in a manifold (third cond)
