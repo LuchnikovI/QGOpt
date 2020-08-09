@@ -336,6 +336,6 @@ class PositiveCone(base_manifold.Manifold):
         rel_diff = tf.abs(diff_norm / u_norm)
         herm_mask = tol > rel_diff
         lmbd = tf.math.real(tf.linalg.eigvalsh(u))
-        num_of_neg = tf.reduce_sum(tf.cast(lmbd < 0, dtype=tf.int32), axis=-1)
-        positivity_mask = num_of_neg == 0
+        min_lmbd = tf.math.reduce_min(lmbd)
+        positivity_mask = min_lmbd > 0
         return tf.math.logical_and(positivity_mask, herm_mask)
