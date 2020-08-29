@@ -20,6 +20,8 @@ class POVM(base_manifold.Manifold):
     Args:
         metric: string specifies type of metric, Defaults to 'euclidean'.
             Types of metrics are available: 'euclidean'.
+        retraction: string specifies type of retraction, Defaults to 'svd'.
+            Types of metrics are available: 'svd'.
 
     Notes:
         All methods of this class operates with tensors of shape (..., m, n, n),
@@ -27,13 +29,19 @@ class POVM(base_manifold.Manifold):
         is the shape of a particular matrix (e.g. an element of the manifold
         or its tangent vector)."""
 
-    def __init__(self, metric='euclidean'):
+    def __init__(self, retraction='svd', metric='euclidean'):
 
         self.rank = 3
+        self.quotient = True
         list_of_metrics = ['euclidean']
+        list_of_retractions = ['svd']
 
         if metric not in list_of_metrics:
             raise ValueError("Incorrect metric")
+        if retraction not in list_of_retractions:
+            raise ValueError("Incorrect retraction")
+
+        super(POVM, self).__init__(retraction, metric)
 
     def inner(self, u, vec1, vec2):
         """Returns manifold wise inner product of vectors from

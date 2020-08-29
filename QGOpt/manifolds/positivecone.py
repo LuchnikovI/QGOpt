@@ -29,15 +29,23 @@ class PositiveCone(base_manifold.Manifold):
 
     Args:
         metric: string specifies type of a metric, Defaults to 'log_cholesky'
-            Types of metrics are available: 'log_cholesky', 'log_euclidean.'"""
+            Types of metrics are available: 'log_cholesky', 'log_euclidean.'
+        retraction: string specifies type of retraction, Defaults to 'expmap'.
+            Types of metrics are available: 'expmap'."""
 
-    def __init__(self, metric='log_cholesky'):
+    def __init__(self, retraction='expmap', metric='log_cholesky'):
 
         self.rank = 2
+        self.quotient = False
         list_of_metrics = ['log_cholesky', 'log_euclidean']
+        list_of_retractions = ['expmap']
+
         if metric not in list_of_metrics:
             raise ValueError("Incorrect metric")
-        self.metric = metric
+        if retraction not in list_of_retractions:
+            raise ValueError("Incorrect retraction")
+
+        super(PositiveCone, self).__init__(retraction, metric)
 
     def inner(self, u, vec1, vec2):
         """Returns manifold wise inner product of vectors from
@@ -55,7 +63,7 @@ class PositiveCone(base_manifold.Manifold):
             complex valued tensor of shape (..., 1, 1),
             manifold wise inner product."""
 
-        if self.metric == 'log_euclidean':
+        if self._metric == 'log_euclidean':
             lmbd, U = tf.linalg.eigh(u)
             W = _pull_back_log(vec1, U, lmbd)
             V = _pull_back_log(vec2, U, lmbd)
@@ -66,7 +74,7 @@ class PositiveCone(base_manifold.Manifold):
 
             return prod
 
-        elif self.metric == 'log_cholesky':
+        elif self._metric == 'log_cholesky':
             L = tf.linalg.cholesky(u)
             inv_L = tf.linalg.inv(L)
 
@@ -111,7 +119,7 @@ class PositiveCone(base_manifold.Manifold):
             complex valued tensor of shape (..., n, n),
             the set of Reimannian gradients."""
 
-        if self.metric == 'log_euclidean':
+        if self._metric == 'log_euclidean':
             lmbd, U = tf.linalg.eigh(u)
             f = _f_matrix(lmbd)
             # Riemannian gradient
@@ -119,7 +127,7 @@ class PositiveCone(base_manifold.Manifold):
             R = U @ (E * f * f) @ adj(U)
             return R
 
-        elif self.metric == 'log_cholesky':
+        elif self._metric == 'log_cholesky':
             n = u.shape[-1]
             dtype = u.dtype
             L = tf.linalg.cholesky(u)
@@ -148,7 +156,7 @@ class PositiveCone(base_manifold.Manifold):
             complex valued tensor of shape (..., n, n),
             a set of transported points."""
 
-        if self.metric == 'log_euclidean':
+        if self._metric == 'log_euclidean':
             lmbd, U = tf.linalg.eigh(u)
             # geodesic in S
             Su = U @ tf.linalg.diag(tf.math.log(lmbd)) @ adj(U)
@@ -157,7 +165,7 @@ class PositiveCone(base_manifold.Manifold):
 
             return tf.linalg.expm(Sresult)
 
-        elif self.metric == 'log_cholesky':
+        elif self._metric == 'log_cholesky':
             L = tf.linalg.cholesky(u)
             inv_L = tf.linalg.inv(L)
 
@@ -187,7 +195,7 @@ class PositiveCone(base_manifold.Manifold):
             complex valued tensor of shape (..., n, n),
             a set of transported vectors."""
 
-        if self.metric == 'log_euclidean':
+        if self._metric == 'log_euclidean':
             lmbd, U = tf.linalg.eigh(u)
             # geoidesic in S
             Su = U @ tf.linalg.diag(tf.math.log(lmbd)) @ adj(U)
@@ -203,7 +211,7 @@ class PositiveCone(base_manifold.Manifold):
 
             return new_vec1
 
-        elif self.metric == 'log_cholesky':
+        elif self._metric == 'log_cholesky':
             v = self.retraction(u, vec2)
 
             L = tf.linalg.cholesky(u)
@@ -235,7 +243,7 @@ class PositiveCone(base_manifold.Manifold):
             two complex valued tensors of shape (..., n, n),
             a set of transported points and vectors."""
 
-        if self.metric == 'log_euclidean':
+        if self._metric == 'log_euclidean':
             lmbd, U = tf.linalg.eigh(u)
             # geoidesic in S
             Su = U @ tf.linalg.diag(tf.math.log(lmbd)) @ adj(U)
@@ -254,7 +262,7 @@ class PositiveCone(base_manifold.Manifold):
 
             return new_point, new_vec1
 
-        elif self.metric == 'log_cholesky':
+        elif self._metric == 'log_cholesky':
             v = self.retraction(u, vec2)
 
             L = tf.linalg.cholesky(u)
@@ -328,6 +336,6 @@ class PositiveCone(base_manifold.Manifold):
         rel_diff = tf.abs(diff_norm / u_norm)
         herm_mask = tol > rel_diff
         lmbd = tf.math.real(tf.linalg.eigvalsh(u))
-        num_of_neg = tf.reduce_sum(tf.cast(lmbd < 0, dtype=tf.int32), axis=-1)
-        positivity_mask = num_of_neg == 0
+        min_lmbd = tf.math.reduce_min(lmbd)
+        positivity_mask = min_lmbd > 0
         return tf.math.logical_and(positivity_mask, herm_mask)

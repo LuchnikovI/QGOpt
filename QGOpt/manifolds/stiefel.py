@@ -36,6 +36,7 @@ class StiefelManifold(base_manifold.Manifold):
                  metric='euclidean'):
 
         self.rank = 2
+        self.quotient = False
         list_of_metrics = ['euclidean', 'canonical']
         list_of_retractions = ['svd', 'cayley', 'qr']
 

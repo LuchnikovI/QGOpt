@@ -28,6 +28,8 @@ class ChoiMatrix(base_manifold.Manifold):
     Args:
         metric: string specifies type of metric, Defaults to 'euclidean'.
             Types of metrics are available: 'euclidean'.
+        retraction: string specifies type of retraction, Defaults to 'svd'.
+            Types of metrics are available: 'svd'.
 
     Notes:
         All methods of this class operate with tensors of shape (..., n ** 2, k),
@@ -39,13 +41,19 @@ class ChoiMatrix(base_manifold.Manifold):
         (n ** 2, n ** 2) --> (n, n, n, n) and then take a trace over
         1st and 3rd indices (the numeration starts from 0)."""
 
-    def __init__(self, metric='euclidean'):
+    def __init__(self, retraction='svd', metric='euclidean'):
 
         self.rank = 2
+        self.quotient = True
         list_of_metrics = ['euclidean']
+        list_of_retractions = ['svd']
 
         if metric not in list_of_metrics:
             raise ValueError("Incorrect metric")
+        if retraction not in list_of_retractions:
+            raise ValueError("Incorrect retraction")
+
+        super(ChoiMatrix, self).__init__(retraction, metric)
 
     def inner(self, u, vec1, vec2):
         """Returns manifold wise inner product of vectors from
