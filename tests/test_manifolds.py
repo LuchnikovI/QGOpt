@@ -6,6 +6,7 @@ import tensorflow as tf
 class CheckManifolds():
 
     def __init__(self, m, descr, shape, tol):
+
         self.m = m  # example of a manifold
         self.descr = descr
         self.shape = shape  # shape of a tensor
@@ -17,27 +18,32 @@ class CheckManifolds():
 
     def _proj_of_tangent(self):
         """
-        Checking m.proj: Projection of a vector from the tangent space
-        at some point.
+        Checking m.proj: Projection of a tangent vector should remain the same
+        after application of the proj method.
 
         Args:
 
         Returns:
-            error, float number
+            real valued tensor filled by values of error per manifold
         """
 
-        err = tf.linalg.norm(self.v1 - self.m.proj(self.u, self.v1),
-                                                    axis=(-2, -1))
+        rank = self.m.rank
+        if rank == 2:
+            err = tf.linalg.norm(self.v1 - self.m.proj(self.u, self.v1),
+                                                        axis=(-2, -1))
+        elif rank == 3:
+            err = tf.linalg.norm(self.v1 - self.m.proj(self.u, self.v1),
+                                                        axis=(-3, -2, -1))
         return tf.math.real(err)
 
     def _inner_proj_matching(self):
         """
         Checking matching between m.inner and m.proj
-
+        (suitable only for embedded manifolds with globally defined metric)
         Args:
 
         Returns:
-            error, float number
+            real valued tensor filled by values of error per manifold
         """
 
         xi = tf.complex(tf.random.normal(self.shape),
@@ -48,7 +54,11 @@ class CheckManifolds():
         first_inner = self.m.inner(self.u, xi_proj, self.v1)
         second_inner = self.m.inner(self.u, xi, self.v1)
         err = tf.abs(first_inner - second_inner)
-        return tf.cast(tf.math.real(err), dtype=tf.float32)
+        if self.m.rank == 2:
+            err = err[..., 0, 0]
+        elif self.m.rank == 3:
+            err = err[..., 0, 0, 0]
+        return err
 
     def _retraction(self):
         """
@@ -62,27 +72,37 @@ class CheckManifolds():
         Args:
 
         Returns:
-            list of errors, first two errors have float dtype, the last one
-            has boolean dtype
+            list with three tensors. First complex valued tensor is filled 
+            by values of error per manifold for the first condition. Second
+            complex valued tensor is filled by values of error per manifold
+            for the second condition. Third boolean tensor is filled by values
+            of error per manifold for the third condition
         """
 
         dt = 1e-8  # dt for numerical derivative
         
         # transition along zero vector (first cond)
         err1 = self.u - self.m.retraction(self.u, self.zero)
-        err1 = tf.math.real(tf.linalg.norm(err1))
+        if self.m.rank == 2:
+            err1 = tf.math.real(tf.linalg.norm(err1, axis=(-2, -1)))
+        if self.m.rank == 3:
+            err1 = tf.math.real(tf.linalg.norm(err1, axis=(-3, -2, -1)))
 
-        # differential (second cond)
+        # differential of retraction (second cond)
         t = tf.constant(dt, dtype=self.u.dtype)
         retr = self.m.retraction(self.u, t * self.v1)
         dretr = (retr - self.u) / dt
-        err2 = tf.math.real(tf.linalg.norm(dretr - self.v1))
+        if self.m.rank == 2:
+            err2 = tf.math.real(tf.linalg.norm(dretr - self.v1,
+                                               axis=(-2, -1)))
+        elif self.m.rank == 3:
+            err2 = tf.math.real(tf.linalg.norm(dretr - self.v1,
+                                               axis=(-3, -2, -1)))
 
         # presence of a new point in a manifold (third cond)
         err3 = self.m.is_in_manifold(self.m.retraction(self.u, self.v1),
                                                                 tol=self.tol)
-        return tf.cast(err1, dtype=tf.float32), tf.cast(err2,
-                                            dtype=tf.float32), err3
+        return err1, err2, err3
 
     def _vector_transport(self):
         """
@@ -95,39 +115,62 @@ class CheckManifolds():
         Args:
 
         Returns:
-            list of errors, each error has float dtype
+            list with two tensors. First complex valued tensor is filled 
+            by values of error per manifold for the first condition. Second
+            complex valued tensor is filled by values of error per manifold
+            for the second condition.
         """
 
         vt = self.m.vector_transport(self.u, self.v1, self.v2)
         err1 = vt - self.m.proj(self.m.retraction(self.u, self.v2), vt)
-        err1 = tf.math.real(tf.linalg.norm(err1))
+        if self.m.rank == 2:
+            err1 = tf.math.real(tf.linalg.norm(err1, axis=(-2, -1)))
+        elif self.m.rank == 3:
+            err1 = tf.math.real(tf.linalg.norm(err1, axis=(-3, -2, -1)))
 
         err2 = self.v1 - self.m.vector_transport(self.u, self.v1, self.zero)
-        err2 = tf.math.real(tf.linalg.norm(err2))
-        return tf.cast(err1, dtype=tf.float32), tf.cast(err2, dtype=tf.float32)
+        if self.m.rank == 2:
+            err2 = tf.math.real(tf.linalg.norm(err2, axis=(-2, -1)))
+        elif self.m.rank == 3:
+            err2 = tf.math.real(tf.linalg.norm(err2, axis=(-3, -2, -1)))
+        return err1, err2
 
     def _egrad_to_rgrad(self):
         """
         Checking egrad_to_rgrad method.
-        1) rgrad is in a tangent space
+        1) rgrad is in the tangent space of a manifold's point
         2) <v1 egrad> = <v1 rgrad>_m (matching between egrad and rgrad)
         Args:
 
         Returns:
-            list of errors, each error has float dtype
+            list with two tensors. First complex valued tensor is filled 
+            by values of error per manifold for the first condition. Second
+            complex valued tensor is filled by values of error per manifold
+            for the second condition.
         """
-
+        
+        # vector that plays the role of a gradient
         xi = tf.random.normal(self.u.shape + (2,))
         xi = manifolds.real_to_complex(xi)
         xi = tf.cast(xi, dtype=self.u.dtype)
+        
+        # rgrad
         rgrad = self.m.egrad_to_rgrad(self.u, xi)
+        
         err1 = rgrad - self.m.proj(self.u, rgrad)
-        err1 = tf.math.real(tf.linalg.norm(err1))
+        if self.m.rank == 2:
+            err1 = tf.math.real(tf.linalg.norm(err1, axis=(-2, -1)))
+        elif self.m.rank == 3:
+            err1 = tf.math.real(tf.linalg.norm(err1, axis=(-3, -2, -1)))
 
-        err2 = tf.reduce_sum(tf.math.conj(self.v1) * xi, axis=(-2, -1)) -\
-                        self.m.inner(self.u, self.v1, rgrad)
-        err2 = tf.abs(tf.math.real(err2))
-        return tf.cast(err1, dtype=tf.float32), tf.cast(err2, dtype=tf.float32)
+        if self.m.rank == 2:
+            err2 = tf.reduce_sum(tf.math.conj(self.v1) * xi, axis=(-2, -1)) -\
+                            self.m.inner(self.u, self.v1, rgrad)[..., 0, 0]
+        elif self.m.rank == 2:
+            err2 = tf.reduce_sum(tf.math.conj(self.v1) * xi, axis=(-3, -2, -1)) -\
+                            self.m.inner(self.u, self.v1, rgrad)[..., 0, 0, 0]
+        err2 = tf.abs(err2)
+        return err1, err2
 
     def checks(self):
         # TODO after checking: rewrite with asserts
