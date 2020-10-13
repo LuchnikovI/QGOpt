@@ -24,7 +24,7 @@ class CheckManifolds():
         Args:
 
         Returns:
-            real valued tensor filled by values of error per manifold
+            tf scalar, maximum value of error
         """
 
         rank = self.m.rank
@@ -34,7 +34,8 @@ class CheckManifolds():
         elif rank == 3:
             err = tf.linalg.norm(self.v1 - self.m.proj(self.u, self.v1),
                                                         axis=(-3, -2, -1))
-        return tf.math.real(err)
+        err = tf.reduce_max(tf.math.real(err))
+        return err
 
     def _inner_proj_matching(self):
         """
@@ -43,7 +44,7 @@ class CheckManifolds():
         Args:
 
         Returns:
-            real valued tensor filled by values of error per manifold
+            tf scalar, maximum value of error
         """
 
         xi = tf.complex(tf.random.normal(self.shape),
@@ -58,6 +59,7 @@ class CheckManifolds():
             err = err[..., 0, 0]
         elif self.m.rank == 3:
             err = err[..., 0, 0, 0]
+        err = tf.reduce_max(err)
         return err
 
     def _retraction(self):
@@ -72,11 +74,10 @@ class CheckManifolds():
         Args:
 
         Returns:
-            list with three tensors. First complex valued tensor is filled 
-            by values of error per manifold for the first condition. Second
-            complex valued tensor is filled by values of error per manifold
-            for the second condition. Third boolean tensor is filled by values
-            of error per manifold for the third condition
+            list with three tf scalars. First two scalars give maximum
+            violation of first two conditions, third scalar shows wether
+            any point
+            
         """
 
         dt = 1e-8  # dt for numerical derivative
@@ -102,6 +103,9 @@ class CheckManifolds():
         # presence of a new point in a manifold (third cond)
         err3 = self.m.is_in_manifold(self.m.retraction(self.u, self.v1),
                                                                 tol=self.tol)
+        err1 = tf.reduce_max(err1)
+        err2 = tf.reduce_max(err2)
+        err3 = tf.reduce_any(err3)
         return err1, err2, err3
 
     def _vector_transport(self):
@@ -115,10 +119,8 @@ class CheckManifolds():
         Args:
 
         Returns:
-            list with two tensors. First complex valued tensor is filled 
-            by values of error per manifold for the first condition. Second
-            complex valued tensor is filled by values of error per manifold
-            for the second condition.
+            list with two tf scalars that give maximum
+            violation of two conditions
         """
 
         vt = self.m.vector_transport(self.u, self.v1, self.v2)
@@ -133,6 +135,8 @@ class CheckManifolds():
             err2 = tf.math.real(tf.linalg.norm(err2, axis=(-2, -1)))
         elif self.m.rank == 3:
             err2 = tf.math.real(tf.linalg.norm(err2, axis=(-3, -2, -1)))
+        err1 = tf.reduce_max(err1)
+        err2 = tf.reduce_max(err2)
         return err1, err2
 
     def _egrad_to_rgrad(self):
@@ -143,10 +147,8 @@ class CheckManifolds():
         Args:
 
         Returns:
-            list with two tensors. First complex valued tensor is filled 
-            by values of error per manifold for the first condition. Second
-            complex valued tensor is filled by values of error per manifold
-            for the second condition.
+            list with two tf scalars that give maximum
+            violation of two conditions
         """
         
         # vector that plays the role of a gradient
@@ -170,6 +172,9 @@ class CheckManifolds():
             err2 = tf.reduce_sum(tf.math.conj(self.v1) * xi, axis=(-3, -2, -1)) -\
                             self.m.inner(self.u, self.v1, rgrad)[..., 0, 0, 0]
         err2 = tf.abs(err2)
+        
+        err1 = tf.reduce_max(err1)
+        err2 = tf.reduce_max(err2)
         return err1, err2
 
     def checks(self):
