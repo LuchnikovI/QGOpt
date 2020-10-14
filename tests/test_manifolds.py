@@ -77,11 +77,11 @@ class CheckManifolds():
             list with three tf scalars. First two scalars give maximum
             violation of first two conditions, third scalar shows wether
             any point
-            
+
         """
 
         dt = 1e-8  # dt for numerical derivative
-        
+
         # transition along zero vector (first cond)
         err1 = self.u - self.m.retraction(self.u, self.zero)
         if self.m.rank == 2:
@@ -150,15 +150,15 @@ class CheckManifolds():
             list with two tf scalars that give maximum
             violation of two conditions
         """
-        
+
         # vector that plays the role of a gradient
         xi = tf.random.normal(self.u.shape + (2,))
         xi = manifolds.real_to_complex(xi)
         xi = tf.cast(xi, dtype=self.u.dtype)
-        
+
         # rgrad
         rgrad = self.m.egrad_to_rgrad(self.u, xi)
-        
+
         err1 = rgrad - self.m.proj(self.u, rgrad)
         if self.m.rank == 2:
             err1 = tf.math.real(tf.linalg.norm(err1, axis=(-2, -1)))
@@ -168,11 +168,12 @@ class CheckManifolds():
         if self.m.rank == 2:
             err2 = tf.reduce_sum(tf.math.conj(self.v1) * xi, axis=(-2, -1)) -\
                             self.m.inner(self.u, self.v1, rgrad)[..., 0, 0]
-        elif self.m.rank == 2:
+        elif self.m.rank == 3:
             err2 = tf.reduce_sum(tf.math.conj(self.v1) * xi, axis=(-3, -2, -1)) -\
                             self.m.inner(self.u, self.v1, rgrad)[..., 0, 0, 0]
-        err2 = tf.abs(err2)
-        
+
+        err2 = tf.abs(tf.math.real(err2))
+
         err1 = tf.reduce_max(err1)
         err2 = tf.reduce_max(err2)
         return err1, err2
@@ -210,8 +211,8 @@ class CheckManifolds():
             assert err1 < self.tol, "Rgrad (not in a TMx) error for:{}.\
                     ".format(self.descr)
         if self.descr[1] not in ['log_cholesky']:
-            assert err2 < self.tol, "Rgrad (<v1 egrad> != inner<v1 rgrad>) error \
-                    for:{}.".format(self.descr)
+            assert err2 < self.tol, "Rgrad (<v1 egrad> != inner<v1 rgrad>) \
+                    error for:{}.".format(self.descr)
 
 #TODO find a problem with tests or/and PositiveCone manifold
 testdata = [
