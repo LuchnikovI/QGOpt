@@ -93,11 +93,12 @@
 <li class="toctree-l2"><a class="reference internal" href="auxiliary.html">Auxiliary functions</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently asked questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="manifolds_description.html">Manifolds</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Tutorials:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="entanglement_renormalization.html">Entanglement renormalization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="comparison.html">Comparison of optimization methods on the complex Stiefel manifold</a></li>
 <li class="toctree-l1"><a class="reference internal" href="channel_tomography.html">Quantum channel tomography</a></li>
 <li class="toctree-l1"><a class="reference internal" href="state_tomography.html">Quantum state tomography</a></li>
 <li class="toctree-l1"><a class="reference internal" href="optimal_povm.html">Optimal POVM</a></li>
@@ -420,7 +421,7 @@ a set of transported vectors.</p>
 
 <dl class="py class">
 <dt id="QGOpt.manifolds.DensityMatrix">
-<em class="property">class </em><code class="sig-prename descclassname">QGOpt.manifolds.</code><code class="sig-name descname">DensityMatrix</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">metric</span><span class="o">=</span><span class="default_value">'euclidean'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#QGOpt.manifolds.DensityMatrix" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">QGOpt.manifolds.</code><code class="sig-name descname">DensityMatrix</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">retraction</span><span class="o">=</span><span class="default_value">'projection'</span></em>, <em class="sig-param"><span class="n">metric</span><span class="o">=</span><span class="default_value">'euclidean'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#QGOpt.manifolds.DensityMatrix" title="Permalink to this definition">¶</a></dt>
 <dd><p>The manifold of density matrices (rho(n) the positive definite hermitian
 matrices of size nxn with unit trace). An element of the manifold is
 represented by a complex matrix A that parametrizes density matrix
@@ -434,8 +435,12 @@ Speech and Signal Processing (pp. 3866-3870). IEEE.</p>
 <p>It is also partly inspired by the Manopt package (www.manopt.org).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>metric</strong> – string specifies type of metric, Defaults to ‘euclidean’.
-Types of metrics are available: ‘euclidean’.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>metric</strong> – string specifies type of metric, Defaults to ‘euclidean’.
+Types of metrics are available: ‘euclidean’.</p></li>
+<li><p><strong>retraction</strong> – string specifies type of retraction, Defaults to ‘projection’.
+Types of metrics are available: ‘projection’.</p></li>
+</ul>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
@@ -632,7 +637,7 @@ a set of transported vectors.</p>
 
 <dl class="py class">
 <dt id="QGOpt.manifolds.ChoiMatrix">
-<em class="property">class </em><code class="sig-prename descclassname">QGOpt.manifolds.</code><code class="sig-name descname">ChoiMatrix</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">metric</span><span class="o">=</span><span class="default_value">'euclidean'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#QGOpt.manifolds.ChoiMatrix" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">QGOpt.manifolds.</code><code class="sig-name descname">ChoiMatrix</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">retraction</span><span class="o">=</span><span class="default_value">'svd'</span></em>, <em class="sig-param"><span class="n">metric</span><span class="o">=</span><span class="default_value">'euclidean'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#QGOpt.manifolds.ChoiMatrix" title="Permalink to this definition">¶</a></dt>
 <dd><p>The manifold of Choi matrices of fixed rank (Kraus rank).
 Choi matrices of fixed Kraus rank are the set of matrices of
 size (n^2) x (n^2) (n is the dimension of a quantum system) with rank k
@@ -652,8 +657,12 @@ Riemannian manifold. In 2013 IEEE International Conference on Acoustics,
 Speech and Signal Processing (pp. 3866-3870). IEEE.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>metric</strong> – string specifies type of metric, Defaults to ‘euclidean’.
-Types of metrics are available: ‘euclidean’.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>metric</strong> – string specifies type of metric, Defaults to ‘euclidean’.
+Types of metrics are available: ‘euclidean’.</p></li>
+<li><p><strong>retraction</strong> – string specifies type of retraction, Defaults to ‘svd’.
+Types of metrics are available: ‘svd’.</p></li>
+</ul>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
@@ -854,13 +863,17 @@ a set of transported vectors.</p>
 
 <dl class="py class">
 <dt id="QGOpt.manifolds.HermitianMatrix">
-<em class="property">class </em><code class="sig-prename descclassname">QGOpt.manifolds.</code><code class="sig-name descname">HermitianMatrix</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">metric</span><span class="o">=</span><span class="default_value">'euclidean'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#QGOpt.manifolds.HermitianMatrix" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">QGOpt.manifolds.</code><code class="sig-name descname">HermitianMatrix</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">retraction</span><span class="o">=</span><span class="default_value">'expmap'</span></em>, <em class="sig-param"><span class="n">metric</span><span class="o">=</span><span class="default_value">'euclidean'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#QGOpt.manifolds.HermitianMatrix" title="Permalink to this definition">¶</a></dt>
 <dd><p>The manifold of Hermitian matrices (the set of complex matrices
 of size nxn for which A = adj(A)).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>metric</strong> – string specifies type of metric, Defaults to ‘euclidean’.
-Types of metrics are available: ‘euclidean’.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>metric</strong> – string specifies type of metric, Defaults to ‘euclidean’.
+Types of metrics are available: ‘euclidean’.</p></li>
+<li><p><strong>retraction</strong> – string specifies type of retraction, Defaults to ‘expmap’.
+Types of metrics are available: ‘expmap’.</p></li>
+</ul>
 </dd>
 </dl>
 <dl class="py method">
@@ -1052,7 +1065,7 @@ a set of transported vectors.</p>
 
 <dl class="py class">
 <dt id="QGOpt.manifolds.PositiveCone">
-<em class="property">class </em><code class="sig-prename descclassname">QGOpt.manifolds.</code><code class="sig-name descname">PositiveCone</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">metric</span><span class="o">=</span><span class="default_value">'log_cholesky'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#QGOpt.manifolds.PositiveCone" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">QGOpt.manifolds.</code><code class="sig-name descname">PositiveCone</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">retraction</span><span class="o">=</span><span class="default_value">'expmap'</span></em>, <em class="sig-param"><span class="n">metric</span><span class="o">=</span><span class="default_value">'log_cholesky'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#QGOpt.manifolds.PositiveCone" title="Permalink to this definition">¶</a></dt>
 <dd><p>The manifold of Hermitian positive definite matrices of size nxn.
 The manifold is equipped with two types of metric: Log-Cholesky metric
 and Log-Euclidean metric. The geometry of the manifold with Log-Cholesky
@@ -1068,8 +1081,12 @@ with application to image set classification. In International
 conference on machine learning (pp. 720-729).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>metric</strong> – string specifies type of a metric, Defaults to ‘log_cholesky’
-Types of metrics are available: ‘log_cholesky’, ‘log_euclidean.’</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>metric</strong> – string specifies type of a metric, Defaults to ‘log_cholesky’
+Types of metrics are available: ‘log_cholesky’, ‘log_euclidean.’</p></li>
+<li><p><strong>retraction</strong> – string specifies type of retraction, Defaults to ‘expmap’.
+Types of metrics are available: ‘expmap’.</p></li>
+</ul>
 </dd>
 </dl>
 <dl class="py method">

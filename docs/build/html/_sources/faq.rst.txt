@@ -1,7 +1,7 @@
 Frequently asked questions
 ==========================
 
-Is there a relation between complex manifolds and real manifolds?
+Is there a relation between complex matrix manifolds and real matrix manifolds?
 -----------------------------------------------------------------
 
 One can represent any complex matrix :math:`D = E + iF` as a real matrix :math:`\tilde{D} = \begin{pmatrix}
@@ -11,7 +11,7 @@ E & F\\
 Then, matrix operations on matrices without and with tilde
 are related as follows:
 
-:math:`A + B \longleftrightarrow \tilde{A} + \tilde{B}, \ AB \longleftrightarrow \tilde{A}\tilde{B}, \ A^\dagger \longleftrightarrow A^T`.
+:math:`A + B \longleftrightarrow \tilde{A} + \tilde{B}, \ AB \longleftrightarrow \tilde{A}\tilde{B}, \ A^\dagger \longleftrightarrow \tilde{A}^T`.
 
 Therefore, any complex manifold has a corresponding real one. For more details read
 

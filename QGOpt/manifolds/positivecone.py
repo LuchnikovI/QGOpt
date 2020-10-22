@@ -128,17 +128,14 @@ class PositiveCone(base_manifold.Manifold):
             return R
 
         elif self._metric == 'log_cholesky':
-            n = u.shape[-1]
-            dtype = u.dtype
             L = tf.linalg.cholesky(u)
-
-            mask = tf.ones((n, n), dtype=dtype)
-            mask = _lower(mask)
-            G_inv = mask + tf.linalg.diag(tf.linalg.diag_part(L) ** 2)
-
-            R = G_inv * ((egrad + adj(egrad)) @ L)
-            R_diag = tf.linalg.diag(tf.linalg.diag_part(R))
-            R = R - 1j * tf.cast(tf.math.imag(R_diag), dtype=u.dtype)
+            
+            sym_fl = (egrad + adj(egrad)) @ L
+            L_sq_diag = tf.linalg.diag_part(L) ** 2
+            term2 = 0.5 * L_sq_diag * tf.linalg.diag_part(sym_fl + adj(sym_fl))
+            term2 = tf.linalg.diag(term2)
+            term1 = _lower(sym_fl)
+            R = term1 + term2
 
             return _push_forward_chol(R, L)
 
