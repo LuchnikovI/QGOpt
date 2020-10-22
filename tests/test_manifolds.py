@@ -219,7 +219,7 @@ testdata = [
     ('ChoiMatrix', 'euclidean', manifolds.ChoiMatrix(metric='euclidean'), (4, 4), 1.e-6),
     ('DensityMatrix', 'euclidean', manifolds.DensityMatrix(metric='euclidean'), (4, 4), 1.e-6),
     ('HermitianMatrix', 'euclidean', manifolds.HermitianMatrix(metric='euclidean'), (4, 4), 1.e-6),
-    ('PositiveCone', 'log_euclidean', manifolds.PositiveCone(metric='log_euclidean'), (4, 4), 1.e-5),
+    ('PositiveCone', 'log_euclidean', manifolds.PositiveCone(metric='log_euclidean'), (4, 4), 1.e-4),
     ('PositiveCone', 'log_cholesky', manifolds.PositiveCone(metric='log_cholesky'), (4, 4), 1.e-5),
 ]
 
