@@ -2,6 +2,16 @@ import QGOpt.manifolds as manifolds
 import pytest
 import tensorflow as tf
 
+def rank3_norm(A):
+    """Returns norm of a tesnor wrt 3 last indices.
+
+    Args:
+        A: tensor of rank >=3
+
+    Return:
+        norm of a tesnor wrt 3 last indices"""
+    return tf.math.sqrt(tf.reduce_sum(A * tf.math.conj(A), axis=(-3, -2, -1)))
+    
 
 class CheckManifolds():
 
@@ -32,8 +42,7 @@ class CheckManifolds():
             err = tf.linalg.norm(self.v1 - self.m.proj(self.u, self.v1),
                                                         axis=(-2, -1))
         elif rank == 3:
-            err = tf.linalg.norm(self.v1 - self.m.proj(self.u, self.v1),
-                                                        axis=(-3, -2, -1))
+            err = rank3_norm(self.v1 - self.m.proj(self.u, self.v1))
         err = tf.reduce_max(tf.math.real(err))
         return err
 
@@ -87,7 +96,7 @@ class CheckManifolds():
         if self.m.rank == 2:
             err1 = tf.math.real(tf.linalg.norm(err1, axis=(-2, -1)))
         if self.m.rank == 3:
-            err1 = tf.math.real(tf.linalg.norm(err1, axis=(-3, -2, -1)))
+            err1 = tf.math.real(rank3_norm(err1))
 
         # differential of retraction (second cond)
         t = tf.constant(dt, dtype=self.u.dtype)
@@ -98,8 +107,7 @@ class CheckManifolds():
             err2 = tf.math.real(tf.linalg.norm(dretr - self.v1,
                                                axis=(-2, -1)))
         elif self.m.rank == 3:
-            err2 = tf.math.real(tf.linalg.norm(dretr - self.v1,
-                                               axis=(-3, -2, -1)))
+            err2 = tf.math.real(rank3_norm(dretr - self.v1))
 
         # presence of a new point in a manifold (third cond)
         err3 = self.m.is_in_manifold(self.m.retraction(self.u, self.v1),
@@ -129,13 +137,13 @@ class CheckManifolds():
         if self.m.rank == 2:
             err1 = tf.math.real(tf.linalg.norm(err1, axis=(-2, -1)))
         elif self.m.rank == 3:
-            err1 = tf.math.real(tf.linalg.norm(err1, axis=(-3, -2, -1)))
+            err1 = tf.math.real(rank3_norm(err1))
 
         err2 = self.v1 - self.m.vector_transport(self.u, self.v1, self.zero)
         if self.m.rank == 2:
             err2 = tf.math.real(tf.linalg.norm(err2, axis=(-2, -1)))
         elif self.m.rank == 3:
-            err2 = tf.math.real(tf.linalg.norm(err2, axis=(-3, -2, -1)))
+            err2 = tf.math.real(rank3_norm(err2))
         err1 = tf.reduce_max(err1)
         err2 = tf.reduce_max(err2)
         return err1, err2
@@ -164,7 +172,7 @@ class CheckManifolds():
         if self.m.rank == 2:
             err1 = tf.math.real(tf.linalg.norm(err1, axis=(-2, -1)))
         elif self.m.rank == 3:
-            err1 = tf.math.real(tf.linalg.norm(err1, axis=(-3, -2, -1)))
+            err1 = tf.math.real(rank3_norm(err1))
 
         if self.m.rank == 2:
             err2 = tf.reduce_sum(tf.math.conj(self.v1) * xi, axis=(-2, -1)) -\
