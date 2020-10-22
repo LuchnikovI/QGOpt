@@ -211,8 +211,7 @@ class CheckManifolds():
         if self.descr[0] not in ['ChoiMatrix', 'DensityMatrix']:
             assert err1 < self.tol, "Rgrad (not in a TMx) error for:{}.\
                     ".format(self.descr)
-        if self.descr[1] not in ['log_cholesky']:
-            assert err2 < self.tol, "Rgrad (<v1 egrad> != inner<v1 rgrad>) \
+        assert err2 < self.tol, "Rgrad (<v1 egrad> != inner<v1 rgrad>) \
                     error for:{}.".format(self.descr)
 
 #TODO find a problem with tests or/and PositiveCone manifold
