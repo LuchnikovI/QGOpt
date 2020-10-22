@@ -80,7 +80,7 @@ class CheckManifolds():
 
         """
 
-        dt = 1e-8  # dt for numerical derivative
+        dt = 1e-10  # dt for numerical derivative
 
         # transition along zero vector (first cond)
         err1 = self.u - self.m.retraction(self.u, self.zero)
@@ -219,8 +219,8 @@ testdata = [
     ('ChoiMatrix', 'euclidean', manifolds.ChoiMatrix(metric='euclidean'), (4, 4), 1.e-6),
     ('DensityMatrix', 'euclidean', manifolds.DensityMatrix(metric='euclidean'), (4, 4), 1.e-6),
     ('HermitianMatrix', 'euclidean', manifolds.HermitianMatrix(metric='euclidean'), (4, 4), 1.e-6),
-    ('PositiveCone', 'log_euclidean', manifolds.PositiveCone(metric='log_euclidean'), (4, 4), 1.e-4),
-    ('PositiveCone', 'log_cholesky', manifolds.PositiveCone(metric='log_cholesky'), (4, 4), 1.e-5),
+    ('PositiveCone', 'log_euclidean', manifolds.PositiveCone(metric='log_euclidean'), (4, 4), 1.e-6),
+    ('PositiveCone', 'log_cholesky', manifolds.PositiveCone(metric='log_cholesky'), (4, 4), 1.e-6),
 ]
 
 @pytest.mark.parametrize("name,metric,manifold,shape,tol", testdata)
