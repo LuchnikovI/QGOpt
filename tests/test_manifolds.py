@@ -80,7 +80,7 @@ class CheckManifolds():
 
         """
 
-        dt = 1e-10  # dt for numerical derivative
+        dt = 1e-8  # dt for numerical derivative
 
         # transition along zero vector (first cond)
         err1 = self.u - self.m.retraction(self.u, self.zero)
@@ -91,8 +91,9 @@ class CheckManifolds():
 
         # differential of retraction (second cond)
         t = tf.constant(dt, dtype=self.u.dtype)
-        retr = self.m.retraction(self.u, t * self.v1)
-        dretr = (retr - self.u) / dt
+        retr_forward = self.m.retraction(self.u, t * self.v1)
+        retr_back = self.m.retraction(self.u, -t * self.v1)
+        dretr = (retr_forward - retr_back) / (2 * dt)
         if self.m.rank == 2:
             err2 = tf.math.real(tf.linalg.norm(dretr - self.v1,
                                                axis=(-2, -1)))
