@@ -187,7 +187,8 @@ class CheckManifolds():
         err = self._proj_of_tangent()
         assert err < self.tol, "Projection error for:{}.\
                     ".format(self.descr)
-
+        # no need to test .proj of log_cholesky, it does not
+        # take part in any optimization algorithms
         if self.descr[1] not in ['log_cholesky']:
             err = self._inner_proj_matching()
             assert err < self.tol, "Inner/proj error for:{}.\
@@ -208,7 +209,8 @@ class CheckManifolds():
                     {}.".format(self.descr)
 
         err1, err2 = self._egrad_to_rgrad()
-        if self.descr[0] not in ['ChoiMatrix', 'DensityMatrix']:
+        #TODO separate rgrad test for quotient manifolds
+        if self.descr[0] not in ['ChoiMatrix', 'DensityMatrix', 'POVM']:
             assert err1 < self.tol, "Rgrad (not in a TMx) error for:{}.\
                     ".format(self.descr)
         assert err2 < self.tol, "Rgrad (<v1 egrad> != inner<v1 rgrad>) \
@@ -219,8 +221,9 @@ testdata = [
     ('ChoiMatrix', 'euclidean', manifolds.ChoiMatrix(metric='euclidean'), (4, 4), 1.e-6),
     ('DensityMatrix', 'euclidean', manifolds.DensityMatrix(metric='euclidean'), (4, 4), 1.e-6),
     ('HermitianMatrix', 'euclidean', manifolds.HermitianMatrix(metric='euclidean'), (4, 4), 1.e-6),
-    ('PositiveCone', 'log_euclidean', manifolds.PositiveCone(metric='log_euclidean'), (4, 4), 1.e-6),
-    ('PositiveCone', 'log_cholesky', manifolds.PositiveCone(metric='log_cholesky'), (4, 4), 1.e-6),
+    ('PositiveCone', 'log_euclidean', manifolds.PositiveCone(metric='log_euclidean'), (4, 4), 1.e-5),
+    ('PositiveCone', 'log_cholesky', manifolds.PositiveCone(metric='log_cholesky'), (4, 4), 1.e-5),
+    ('POVM', 'euclidean', manifolds.POVM(metric='euclidean'), (4, 2, 2), 1.e-6)
 ]
 
 @pytest.mark.parametrize("name,metric,manifold,shape,tol", testdata)
