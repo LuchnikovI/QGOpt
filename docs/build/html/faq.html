@@ -38,7 +38,7 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Entanglement renormalization" href="entanglement_renormalization.html" />
+    <link rel="next" title="Manifolds" href="manifolds_description.html" />
     <link rel="prev" title="Auxiliary functions" href="auxiliary.html" /> 
 </head>
 
@@ -89,10 +89,11 @@
 <li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Frequently asked questions</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#is-there-a-relation-between-complex-manifolds-and-real-manifolds">Is there a relation between complex manifolds and real manifolds?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#is-there-a-relation-between-complex-matrix-manifolds-and-real-matrix-manifolds">Is there a relation between complex matrix manifolds and real matrix manifolds?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#how-to-perform-optimization-over-complex-tensors-and-matrices">How to perform optimization over complex tensors and matrices?</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="manifolds_description.html">Manifolds</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Tutorials:</span></p>
 <ul>
@@ -190,15 +191,15 @@
 </style>
 <div class="section" id="frequently-asked-questions">
 <h1>Frequently asked questions<a class="headerlink" href="#frequently-asked-questions" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="is-there-a-relation-between-complex-manifolds-and-real-manifolds">
-<h2>Is there a relation between complex manifolds and real manifolds?<a class="headerlink" href="#is-there-a-relation-between-complex-manifolds-and-real-manifolds" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="is-there-a-relation-between-complex-matrix-manifolds-and-real-matrix-manifolds">
+<h2>Is there a relation between complex matrix manifolds and real matrix manifolds?<a class="headerlink" href="#is-there-a-relation-between-complex-matrix-manifolds-and-real-matrix-manifolds" title="Permalink to this headline">¶</a></h2>
 <p>One can represent any complex matrix <span class="math notranslate nohighlight">\(D = E + iF\)</span> as a real matrix <span class="math notranslate nohighlight">\(\tilde{D} = \begin{pmatrix}
 E &amp; F\\
 -F &amp; E
 \end{pmatrix}\)</span>.
 Then, matrix operations on matrices without and with tilde
 are related as follows:</p>
-<p><span class="math notranslate nohighlight">\(A + B \longleftrightarrow \tilde{A} + \tilde{B}, \ AB \longleftrightarrow \tilde{A}\tilde{B}, \ A^\dagger \longleftrightarrow A^T\)</span>.</p>
+<p><span class="math notranslate nohighlight">\(A + B \longleftrightarrow \tilde{A} + \tilde{B}, \ AB \longleftrightarrow \tilde{A}\tilde{B}, \ A^\dagger \longleftrightarrow \tilde{A}^T\)</span>.</p>
 <p>Therefore, any complex manifold has a corresponding real one. For more details read</p>
 <p>Sato, H., &amp; Iwai, T. (2013). A Riemannian optimization approach to the matrix singular value decomposition. <em>SIAM Journal on Optimization</em>, 23(1), 188-212.</p>
 </div>
@@ -261,7 +262,7 @@ are related as follows:</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="entanglement_renormalization.html" class="btn btn-neutral float-right" title="Entanglement renormalization" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="manifolds_description.html" class="btn btn-neutral float-right" title="Manifolds" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="auxiliary.html" class="btn btn-neutral float-left" title="Auxiliary functions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

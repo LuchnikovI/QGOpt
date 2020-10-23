@@ -20,8 +20,8 @@ def _lower(X):
 
     Args:
         X: tensor of shape (..., m, m).
-    Returns:
 
+    Returns:
         tensor of shape (..., m, m), a set of matrices without
         diagonal and upper triangular parts."""
 
