@@ -98,11 +98,13 @@ class CheckManifolds():
         if self.m.rank == 3:
             err1 = tf.math.real(rank3_norm(err1))
 
-        # differential of retraction (second cond)
+        # third order approximation of differential of retraction (second cond)
         t = tf.constant(dt, dtype=self.u.dtype)
         retr_forward = self.m.retraction(self.u, t * self.v1)
+        retr_forward_two_steps = self.m.retraction(self.u, 2 * t * self.v1)
         retr_back = self.m.retraction(self.u, -t * self.v1)
-        dretr = (retr_forward - retr_back) / (2 * dt)
+        dretr = (-2 * retr_back - 3 * self.u + 6 * retr_forward - retr_forward_two_steps)
+        dretr = dretr / (6 * t)
         if self.m.rank == 2:
             err2 = tf.math.real(tf.linalg.norm(dretr - self.v1,
                                                axis=(-2, -1)))
@@ -229,8 +231,8 @@ testdata = [
     ('ChoiMatrix', 'euclidean', manifolds.ChoiMatrix(metric='euclidean'), (4, 4), 1.e-6),
     ('DensityMatrix', 'euclidean', manifolds.DensityMatrix(metric='euclidean'), (4, 4), 1.e-6),
     ('HermitianMatrix', 'euclidean', manifolds.HermitianMatrix(metric='euclidean'), (4, 4), 1.e-6),
-    ('PositiveCone', 'log_euclidean', manifolds.PositiveCone(metric='log_euclidean'), (4, 4), 1.e-5),
-    ('PositiveCone', 'log_cholesky', manifolds.PositiveCone(metric='log_cholesky'), (4, 4), 1.e-5),
+    ('PositiveCone', 'log_euclidean', manifolds.PositiveCone(metric='log_euclidean'), (4, 4), 1.e-6),
+    ('PositiveCone', 'log_cholesky', manifolds.PositiveCone(metric='log_cholesky'), (4, 4), 1.e-6),
     ('POVM', 'euclidean', manifolds.POVM(metric='euclidean'), (4, 2, 2), 1.e-6)
 ]
 
