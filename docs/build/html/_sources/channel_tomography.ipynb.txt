@@ -3,7 +3,6 @@
   {
    "cell_type": "markdown",
    "metadata": {
-    "colab_type": "text",
     "id": "yCpENKsOeRKt"
    },
    "source": [
@@ -13,67 +12,51 @@
     "\n",
     "[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/LuchnikovI/QGOpt/blob/master/docs/build/doctrees/nbsphinx/channel_tomography.ipynb)\n",
     "\n",
-    "In the given tutorial, we perform quantum channel tomography via the manifold of Choi matrices. First of all, let us import some libraries."
+    "In this tutorial, we perform quantum channel tomography via Riemannian optimization. First two blocks of code (1. Many-qubit, informationally complete, positive operator-valued measure (IC POVM) and 2. Data set generation (measurement outcomes simulation)) are refered to data generation, third bock dedicated to tomography of a channel. \n",
+    "\n",
+    "First, one needs to import all necessary libraries."
    ]
   },
   {
    "cell_type": "code",
-   "execution_count": 3,
+   "execution_count": 1,
    "metadata": {
-    "colab": {},
-    "colab_type": "code",
     "id": "gdotZMMLeOn6"
    },
    "outputs": [],
    "source": [
-    "import numpy as np\n",
-    "from math import sqrt\n",
     "import tensorflow as tf  # tf 2.x\n",
+    "import matplotlib.pyplot as plt\n",
+    "from math import sqrt\n",
     "\n",
     "try:\n",
     "    import QGOpt as qgo\n",
     "except ImportError:\n",
     "    !pip install git+https://github.com/LuchnikovI/QGOpt\n",
-    "    import QGOpt as qgo\n",
-    "\n",
-    "# TensorNetwork library\n",
-    "try:\n",
-    "    import tensornetwork as tn\n",
-    "except ImportError:\n",
-    "    !pip install tensornetwork\n",
-    "    import tensornetwork as tn\n",
-    "\n",
-    "import matplotlib.pyplot as plt\n",
-    "from tqdm import tqdm\n",
-    "tn.set_default_backend(\"tensorflow\")\n",
-    "\n",
-    "# Fix random seed to make results reproducable.\n",
-    "tf.random.set_seed(42)"
+    "    import QGOpt as qgo"
    ]
   },
   {
    "cell_type": "markdown",
    "metadata": {
-    "colab_type": "text",
     "id": "azpIZCm2d8Ou"
    },
    "source": [
-    "## Many-qubit, informationally complete, positive operator-valued measure (IC POVM)\n",
+    "## 1. Many-qubit, informationally complete, positive operator-valued measure (IC POVM)\n",
     "\n",
     "Before generating measurement outcomes and performing quantum tomography, one needs to introduce POVM describing quantum measurements. For simplicity, we use one-qubit tetrahedral POVM and generalize it on a many-qubit case by taking tensor product between POVM elements, i.e. $\\{M_\\alpha\\}_{\\alpha=1}^4$ is the one-qubit tetrahedral POVM, $\\{M_{\\alpha_1}\\otimes \\dots \\otimes M_{\\alpha_N}\\}_{\\alpha_1=1,\\dots,\\alpha_N=1}^4$ is the many-qubits tetrahedral POVM."
    ]
   },
   {
    "cell_type": "code",
-   "execution_count": 4,
+   "execution_count": 2,
    "metadata": {
-    "colab": {},
-    "colab_type": "code",
     "id": "OGPbEyFZd8Ov"
    },
    "outputs": [],
    "source": [
-    "# Auxiliary function that returns Kronecker product between POVM elements\n",
+    "# Auxiliary function that returns Kronecker product between two\n",
+    "# POVM elements A and B\n",
     "def kron(A, B):\n",
     "    \"\"\"Kronecker product of two POVM elements.\n",
     "\n",
@@ -92,10 +75,6 @@
     "                         shape[4] * shape[5]))\n",
     "    return AB\n",
     "\n",
-    "# Number of qubits in many-qubit POVMs, we perform generation of data set and\n",
-    "# channel tomography for each particular size of a system\n",
-    "num_of_qubits = [1, 2]\n",
-    "\n",
     "# Pauli matrices\n",
     "sigma_x = tf.constant([[0, 1], [1, 0]], dtype=tf.complex128)\n",
     "sigma_y = tf.constant([[0 + 0j, -1j], [1j, 0 + 0j]], dtype=tf.complex128)\n",
@@ -106,13 +85,13 @@
     "                   sigma_y[tf.newaxis],\n",
     "                   sigma_z[tf.newaxis]], axis=0)\n",
     "\n",
-    "# coordinates of thetrahedron peaks (is needed to build tetrahedral POVM)\n",
+    "# Coordinates of thetrahedron peaks (is needed to build tetrahedral POVM)\n",
     "s0 = tf.constant([0, 0, 1], dtype=tf.complex128)\n",
     "s1 = tf.constant([2 * sqrt(2) / 3, 0, -1/3], dtype=tf.complex128)\n",
     "s2 = tf.constant([-sqrt(2) / 3, sqrt(2 / 3), -1 / 3], dtype=tf.complex128)\n",
     "s3 = tf.constant([-sqrt(2) / 3, -sqrt(2 / 3), -1 / 3], dtype=tf.complex128)\n",
     "\n",
-    "# coordinates of thetrahedron peaks in one tensor\n",
+    "# Coordinates of thetrahedron peaks in one tensor of shape (4, 3)\n",
     "s = tf.concat([s0[tf.newaxis],\n",
     "               s1[tf.newaxis],\n",
     "               s2[tf.newaxis],\n",
@@ -121,208 +100,236 @@
     "# One qubit thetrahedral POVM\n",
     "M = 0.25 * (tf.eye(2, dtype=tf.complex128) + tf.tensordot(s, sigma, axes=1))\n",
     "\n",
-    "# Many qubits POVMs\n",
-    "# List is filled by a POVM tensor per size of a system (num_of_qubits)\n",
-    "povms = []\n",
-    "for n in num_of_qubits:\n",
-    "    Mmq = M\n",
-    "    for _ in range(n - 1):\n",
-    "        Mmq = kron(Mmq, M)\n",
-    "    povms.append(Mmq)"
+    "n = 2  # number of qubits we experiment with\n",
+    "\n",
+    "# M for many qubits\n",
+    "Mmq = M\n",
+    "for _ in range(n - 1):\n",
+    "    Mmq = kron(Mmq, M)"
    ]
   },
   {
    "cell_type": "markdown",
    "metadata": {
-    "colab_type": "text",
     "id": "s9e5LH3rd8Oy"
    },
    "source": [
-    "## Data set generation (measurement outcomes simulation).\n",
+    "## 2. Data set generation (measurement outcomes simulation).\n",
     "\n",
-    "Here we generate a set of measurements (training set). First of all, we generate a random quantum channel with Kraus rank  𝑘  by using the Stinespring representation of a quantum channel. Then we generate a set of random pure density matrices pass them trough the generated channel and simulate measurements of output states. Results of measurements and initial states we write in a data set."
+    "Here we generate a set of measurement outcomes (training set). First of all, we generate a random quantum channel with Kraus rank $k$ by using the quotient manifold of Choi matrices. This quantum channel will be a target unknown one, that we want to reconstruct. Then we generate a set of random pure density matrices, pass them through the generated channel, and simulate measurements of output states. Results of measurements and initial states we write in a data set."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {
+    "id": "jA5UUexod8Oz"
+   },
+   "outputs": [],
+   "source": [
+    "#=================Parameters===================#\n",
+    "num_of_meas = 600000  # number of measurements\n",
+    "k = 2  # Kraus rank (number of Kraus operators)\n",
+    "#==============================================#\n",
+    "\n",
+    "\n",
+    "# example of quotient manifold of Choi matrices\n",
+    "m = qgo.manifolds.ChoiMatrix()\n",
+    "\n",
+    "# random parametrization of Choi matrix of kraus rank k\n",
+    "A = m.random((2 ** (2 * n), k), dtype=tf.complex128)\n",
+    "\n",
+    "# corresponding Choi matrix\n",
+    "C = A @ tf.linalg.adjoint(A)\n",
+    "\n",
+    "# corresponding quantum channel\n",
+    "C_resh = tf.reshape(C, (2 ** n, 2 ** n, 2 ** n, 2 ** n))\n",
+    "Phi = tf.transpose(C_resh, (1, 3, 0, 2))\n",
+    "Phi = tf.reshape(Phi, (2 ** (2 * n), 2 ** (2 * n)))\n",
+    "\n",
+    "# random initial pure density matrices\n",
+    "psi_set = tf.random.normal((num_of_meas, 2 ** n, 2), dtype=tf.float64)\n",
+    "psi_set = qgo.manifolds.real_to_complex(psi_set)\n",
+    "psi_set = psi_set / tf.linalg.norm(psi_set, axis=-1, keepdims=True)\n",
+    "rho_in = psi_set[..., tf.newaxis] * tf.math.conj(psi_set[:, tf.newaxis])\n",
+    "\n",
+    "# reshaping density matrices to vectors\n",
+    "rho_in_resh = tf.reshape(rho_in, (-1, 2 ** (2 * n)))\n",
+    "\n",
+    "# output states (we pass initial density matrices trough a channel)\n",
+    "rho_out_resh = tf.tensordot(rho_in_resh, Phi, axes=[[1], [1]])\n",
+    "# reshaping output density matrices back to matrix form\n",
+    "rho_out = tf.reshape(rho_out_resh, (-1, 2 ** n, 2 ** n))\n",
+    "\n",
+    "# Measurements simulation (by using Gumbel trick for sampling from a\n",
+    "# discrete distribution)\n",
+    "P = tf.cast(tf.einsum('qjk,pkj->pq', Mmq, rho_out), dtype=tf.float64)\n",
+    "eps = tf.random.uniform((num_of_meas, 2 ** (2 * n)), dtype=tf.float64)\n",
+    "eps = -tf.math.log(-tf.math.log(eps))\n",
+    "ind_set = tf.math.argmax(eps + tf.math.log(P), axis=-1)\n",
+    "\n",
+    "# projectors that came true\n",
+    "M_set = tf.gather_nd(Mmq, ind_set[:, tf.newaxis])\n",
+    "\n",
+    "# resulting dataset\n",
+    "data_set = [rho_in, M_set]"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "Q9vpWNuGop_X"
+   },
+   "source": [
+    "## 3. Data processing (tomography)\n",
+    "\n",
+    "First, we define an example of the Choi matrices manifold:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {
+    "id": "geoLryb8pjol"
+   },
+   "outputs": [],
+   "source": [
+    "m = qgo.manifolds.ChoiMatrix()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "PC82UrkHpuTt"
+   },
+   "source": [
+    "The manifold of Choi matrices is represneted through the quadratic parametrization $C = AA^\\dagger$ with qn equivalence relation $A\\sim AQ$, where $Q$ is an arbitrary unitary matrix. Thus, we initialize a variable, that represents the parametrization of a Choi matrix:"
    ]
   },
   {
    "cell_type": "code",
    "execution_count": 5,
    "metadata": {
-    "colab": {},
-    "colab_type": "code",
-    "id": "jA5UUexod8Oz"
+    "id": "HM7lIvhVqooV"
    },
    "outputs": [],
    "source": [
-    "\n",
-    "#=================Parameters===================#\n",
-    "num_of_meas = 600000  # number of measurements\n",
-    "k = 2  # Kraus rank (number of Kraus operators)\n",
-    "#==============================================#\n",
-    "\n",
-    "data_sets = {}  # dict contains data sets\n",
-    "true_choi_matrices = {}  # dict contains true Choi matrices\n",
-    "\n",
-    "# Here we generate sets of random Kraus operators representing true\n",
-    "# quantum channels by using Stinespring representation\n",
-    "for i, n in enumerate(num_of_qubits):\n",
-    "\n",
-    "    # complex Stiefel manifold example\n",
-    "    m = qgo.manifolds.StiefelManifold()\n",
-    "\n",
-    "    # random isometry generated by using Stiefel manifold\n",
-    "    V = m.random((k * (2 * n), 2 * n), dtype=tf.complex128)\n",
-    "\n",
-    "    # reshape to Kraus operators (first index enumerates Kraus operators)\n",
-    "    V = tf.reshape(V, (k, 2 ** n, 2 ** n))\n",
-    "\n",
-    "    # Bell state (is needed to build Choi matrix of a channel)\n",
-    "    bell_psi = tf.eye(2 ** n, dtype=tf.complex128)\n",
-    "    bell_rho = tf.tensordot(bell_psi, tf.math.conj(bell_psi), axes=0)\n",
-    "\n",
-    "    # Choi matrix of a generated channel \n",
-    "    # (will be used to verify results of channel tomography tomography)\n",
-    "    choi_true = tf.einsum('qij,qkl,ajbl->aibk', V, tf.math.conj(V), bell_rho)\n",
-    "    choi_true = tf.reshape(choi_true, (2 ** (2 * n), 2 ** (2 * n)))\n",
-    "    true_choi_matrices[n] = choi_true\n",
-    "\n",
-    "    # random initial density matrices\n",
-    "    psi_set = m.random((num_of_meas, 2 * n), dtype=tf.complex128)\n",
-    "    rho_set = psi_set[..., tf.newaxis] * tf.math.conj(psi_set[:, tf.newaxis])\n",
-    "\n",
-    "    # output states (we pass initial density matrices trough a channel)\n",
-    "    out_rho = tf.einsum('kij,klm,qjm->qil', V, tf.math.conj(V), rho_set)\n",
-    "\n",
-    "    # Measurements simulation (by using Gumbel trick for sampling from a\n",
-    "    # discrete distribution)\n",
-    "    P = tf.cast(tf.einsum('qjk,pkj->pq', povms[i], out_rho), dtype=tf.float64)\n",
-    "    eps = tf.random.uniform((num_of_meas, 2 ** (2 * n)), dtype=tf.float64)\n",
-    "    eps = -tf.math.log(-tf.math.log(eps))\n",
-    "    ind_set = tf.math.argmax(eps + tf.math.log(P), axis=-1)\n",
-    "\n",
-    "    # projectors came true\n",
-    "    M_set = tf.gather_nd(povms[i], ind_set[:, tf.newaxis])\n",
-    "\n",
-    "    # resulting datasets\n",
-    "    data_sets[n] = [rho_set, M_set]"
+    "# random initial paramterization\n",
+    "a = m.random((2 ** (2 * n), 2 ** (2 * n)), dtype=tf.complex128)\n",
+    "# in order to make an optimizer works properly\n",
+    "# one need to turn a to real representation\n",
+    "a = qgo.manifolds.complex_to_real(a)\n",
+    "# variable\n",
+    "a = tf.Variable(a)"
    ]
   },
   {
    "cell_type": "markdown",
    "metadata": {
-    "colab_type": "text",
-    "id": "Pvbfxbpqd8O3"
+    "id": "LMwkoUKervtw"
    },
    "source": [
-    "## Optimization loop\n",
-    "\n",
-    "Here we perform maximization of the logarithmic likelihood. In order to preserve constraints of a quantum channel, we use the manifold of Choi matrices. The manifold of Choi matrices is imlemented through a special parametrization. Any Choi matrix $\\rho$ is represented by a matrix $A$, where $\\rho = AA^\\dagger$. Then Choi matrix is non-negative by construction. One also needs to require the corresponding quantum channel to be trace preserving, it is atchieved by imposing the additional constraint ${\\rm Tr}_2(\\rho) = {\\rm Tr}_2(AA^\\dagger) = I$, where ${\\rm Tr}_2$ is a partial trace and $I$ is the identity matrix. Since there is an equivalence $A\\sim AQ$, where $Q$ is an arbitrary unitary matrix, optimization is performed on the quotient manifold eliminating this simmetry. The corresponding quotient geometry is described in\n",
-    "\n",
-    "Yatawatta, S. (2013, May). Radio interferometric calibration using a Riemannian manifold. In 2013 IEEE International Conference on Acoustics, Speech and Signal Processing (pp. 3866-3870). IEEE."
+    "Then we initialize Riemannian Adam optimizer:"
    ]
   },
   {
    "cell_type": "code",
-   "execution_count": null,
+   "execution_count": 6,
    "metadata": {
-    "colab": {},
-    "colab_type": "code",
-    "id": "6MlYR2h7d8O3"
+    "id": "Sl7CzRPmr2AU"
    },
    "outputs": [],
    "source": [
-    "#=========================================#\n",
-    "lr = 0.07  # learning rate\n",
-    "num_of_iter = 400  # number of iterations\n",
-    "#=========================================#\n",
-    "\n",
-    "# example of Choi matrices manifold\n",
-    "m = qgo.manifolds.ChoiMatrix()\n",
-    "\n",
-    "distances = {}  # dict with validation dtat\n",
-    "\n",
-    "# loop over data sets\n",
-    "for n in num_of_qubits:\n",
-    "\n",
-    "    # initial parametrization\n",
-    "    A = m.random((2 ** (2 * n), 2 ** (2 * n)), dtype=tf.complex128)\n",
-    "    # real representation of the initial parametrization\n",
-    "    # variables should be real to make an optimizer works correctly\n",
-    "    A = qgo.manifolds.complex_to_real(A)\n",
-    "    # variable to optimize\n",
-    "    A = tf.Variable(A)\n",
-    "\n",
-    "    # optimizer initialization (riemannian Adam)\n",
-    "    opt = qgo.optimizers.RAdam(m, lr)\n",
-    "\n",
-    "    dist = []  # distance between Choi matrices vs iteration\n",
-    "\n",
-    "    # optimization loop\n",
-    "    for _ in tqdm(range(num_of_iter)):\n",
-    "        with tf.GradientTape() as tape:\n",
-    "            # complex representation of parametrization\n",
-    "            A_c = qgo.manifolds.real_to_complex(A)\n",
-    "\n",
-    "            # reshape parametrization \n",
-    "            # (2 ** 2n, 2 ** 2n) --> (2 ** n, 2 ** n 2 ** 2n)\n",
-    "            A_c = tf.reshape(A_c, (2 ** n, 2 ** n, 2 ** (2 * n)))\n",
-    "\n",
-    "            # Choi tensor (reshaped matrix) from its parametrization\n",
-    "            choi = tf.tensordot(A_c, tf.math.conj(A_c), [[2], [2]])\n",
-    "            # current Choi matrix, necessary to compare with the\n",
-    "            # corresponding true Choi matrix\n",
-    "            current_choi = tf.reshape(choi, (2 ** (2 * n), 2 ** (2 * n)))\n",
-    "\n",
-    "            # turning Choi matrix to the corresponding quantum channel\n",
-    "            phi = tf.transpose(choi, (1, 3, 0, 2))\n",
-    "            phi = tf.reshape(phi, (2 ** (2 * n), 2 ** (2 * n)))\n",
-    "\n",
-    "            # reshape initial density matrices to vectors\n",
-    "            rho_set_resh = tf.reshape(data_sets[n][0], (-1, 2 ** (2 * n)))\n",
-    "\n",
-    "            # passing density matrices trough a quantum channel\n",
-    "            rho_out_resh = tf.tensordot(phi, rho_set_resh, [[1], [1]])\n",
-    "            rho_out_resh = tf.transpose(rho_out_resh)\n",
-    "            rho_out = tf.reshape(rho_out_resh, (-1, 2 ** n, 2 ** n))\n",
-    "\n",
-    "            # probabilities of measurement outcomes\n",
-    "            p = tf.abs(tf.linalg.trace(data_sets[n][1] @ rho_out))\n",
-    "\n",
-    "            # mean negative log likelihood (to be minimized)\n",
-    "            loss = -tf.reduce_mean(tf.math.log(p))\n",
-    "\n",
-    "        grad = tape.gradient(loss, A)  # gradient\n",
-    "        opt.apply_gradients(zip([grad], [A]))  # optimization step\n",
-    "\n",
-    "        # collecting data for validation of tomography\n",
-    "        dist.append(tf.reduce_sum(tf.abs(tf.linalg.eigvalsh(current_choi -\\\n",
-    "                                    true_choi_matrices[n]))) / (2 * (2 ** n)))\n",
-    "\n",
-    "    distances[n] = dist  # filling dict with validation curves"
+    "lr = 0.07  # optimization step size\n",
+    "opt = qgo.optimizers.RAdam(m, lr)"
    ]
   },
   {
    "cell_type": "markdown",
    "metadata": {
-    "colab_type": "text",
-    "id": "KCToEbFhd8O7"
+    "id": "YCx2H9xZsBLj"
    },
    "source": [
-    "## Validation curves\n",
-    "\n",
-    "Here we plot validation curves. $d$ is the dimension of a Hilbert space."
+    "Finally, we ran part of code that calculate forward pass, gradients, and optimization step several times until convergence is reached:"
    ]
   },
   {
    "cell_type": "code",
    "execution_count": 7,
    "metadata": {
+    "id": "ld0FhrLFsN4z"
+   },
+   "outputs": [],
+   "source": [
+    "# the list will be filled by value of J distance per iteration\n",
+    "j_distance = []\n",
+    "\n",
+    "for _ in range(400):\n",
+    "    with tf.GradientTape() as tape:\n",
+    "        # complex representation of parametrization\n",
+    "        # shape=(2**2n, 2**2n)\n",
+    "        ac = qgo.manifolds.real_to_complex(a)\n",
+    "\n",
+    "        # reshape parametrization\n",
+    "        # (2**2n, 2**2n) --> (2**n, 2**n, 2**2n)\n",
+    "        ac = tf.reshape(ac, (2**n, 2**n, 2**(2*n)))\n",
+    "\n",
+    "        # Choi tensor (reshaped Choi matrix)\n",
+    "        c = tf.tensordot(ac, tf.math.conj(ac), [[2], [2]])\n",
+    "\n",
+    "        # turning Choi tensor to the\n",
+    "        # corresponding quantum channel\n",
+    "        phi = tf.transpose(c, (1, 3, 0, 2))\n",
+    "        phi = tf.reshape(phi, (2**(2*n), 2**(2*n)))\n",
+    "\n",
+    "        # reshape initial density\n",
+    "        # matrices to vectors\n",
+    "        rho_resh = tf.reshape(data_set[0], (num_of_meas, 2**(2*n)))\n",
+    "\n",
+    "        # passing density matrices\n",
+    "        # through a quantum channel\n",
+    "        rho_out = tf.tensordot(phi,\n",
+    "                            rho_resh,\n",
+    "                            [[1], [1]])\n",
+    "        rho_out = tf.transpose(rho_out)\n",
+    "        rho_out = tf.reshape(rho_out, (num_of_meas, 2**n, 2**n))\n",
+    "\n",
+    "        # probabilities of measurement outcomes\n",
+    "        # (povms is a set of POVM elements\n",
+    "        # came true of shape (N, 2**n, 2**n))\n",
+    "        p = tf.linalg.trace(data_set[1] @ rho_out)\n",
+    "\n",
+    "        # negative log likelihood (to be minimized)\n",
+    "        L = -tf.reduce_mean(tf.math.log(p))\n",
+    "\n",
+    "    # filling j_distance list (for further plotting)\n",
+    "    j_distance.append(tf.reduce_sum(tf.abs(tf.linalg.eigvalsh(tf.reshape(c,\n",
+    "    (2 ** (2 * n), 2 ** (2 * n))) - C))) / (2 * (2 ** n)))\n",
+    "    # gradient\n",
+    "    grad = tape.gradient(L, a)\n",
+    "    # optimization step\n",
+    "    opt.apply_gradients(zip([grad], [a]))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "id": "KCToEbFhd8O7"
+   },
+   "source": [
+    "Finally, we plot the dependance between $J$ distance and iteration."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 14,
+   "metadata": {
     "colab": {
      "base_uri": "https://localhost:8080/",
-     "height": 298
+     "height": 301
     },
-    "colab_type": "code",
     "id": "xbkSQUK6d8O8",
-    "outputId": "ae865365-49de-424e-a8dd-f2eff8c93c6f"
+    "outputId": "55a756f3-52bf-48ff-c051-9a3b027f0e4c"
    },
    "outputs": [
     {
@@ -331,7 +338,7 @@
        "Text(0.5, 0, '$iter$')"
       ]
      },
-     "execution_count": 7,
+     "execution_count": 14,
      "metadata": {
       "tags": []
      },
@@ -339,7 +346,7 @@
     },
     {
      "data": {
-      "image/png": "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\n",
+      "image/png": "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\n",
       "text/plain": [
        "<Figure size 432x288 with 1 Axes>"
       ]
@@ -352,11 +359,10 @@
     }
    ],
    "source": [
-    "for n in num_of_qubits:\n",
-    "    plt.plot(distances[n])\n",
-    "plt.legend([r'$n=$' + str(n) + r'$\\ qubits$' for n in num_of_qubits])\n",
+    "plt.plot(j_distance, 'b')\n",
+    "plt.legend([r'$n=$' + str(n) + r'$\\ qubits$'])\n",
     "plt.yscale('log')\n",
-    "plt.ylabel(r'$\\frac{1}{2d}\\|\\rho_{\\rm true} - \\rho_{\\rm recon}\\|_{\\rm tr}$')\n",
+    "plt.ylabel(r'$\\frac{1}{2d}||C_{\\rm true} - C_{\\rm recon}||_{\\rm tr}$')\n",
     "plt.xlabel(r'$iter$')"
    ]
   }
@@ -365,11 +371,11 @@
   "accelerator": "GPU",
   "colab": {
    "collapsed_sections": [],
-   "name": "Копия блокнота \"channel_tomography.ipynb\"",
+   "name": "Copy of Копия блокнота \"channel_tomography.ipynb\"",
    "provenance": []
   },
   "kernelspec": {
-   "display_name": "Python [default]",
+   "display_name": "Python 3",
    "language": "python",
    "name": "python3"
   },
