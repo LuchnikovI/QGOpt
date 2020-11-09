@@ -2,6 +2,7 @@ from QGOpt.manifolds import base_manifold
 import tensorflow as tf
 from QGOpt.manifolds.utils import adj
 from QGOpt.manifolds.utils import lyap_symmetric
+from QGOpt.manifolds.utils import shape_conc
 import math
 
 
@@ -55,6 +56,7 @@ class ChoiMatrix(base_manifold.Manifold):
 
         super(ChoiMatrix, self).__init__(retraction, metric)
 
+    @tf.function
     def inner(self, u, vec1, vec2):
         """Returns manifold wise inner product of vectors from
         a tangent space.
@@ -76,6 +78,7 @@ class ChoiMatrix(base_manifold.Manifold):
         prod = tf.cast(prod, dtype=u.dtype)[..., tf.newaxis, tf.newaxis]
         return prod
 
+    @tf.function
     def proj(self, u, vec):
         """Returns projection of vectors on a tangen space
         of the manifold.
@@ -90,26 +93,34 @@ class ChoiMatrix(base_manifold.Manifold):
             complex valued tensor of shape (..., n ** 2, k),
             a set of projected vectors."""
 
-        k = u.shape[-1]
-        n = int(math.sqrt(u.shape[-2]))
-        shape = u.shape[:-2]
+        k = tf.shape(u)[-1]
+        n = tf.cast(math.sqrt(tf.cast(tf.shape(u)[-2], dtype=tf.float32)),
+                    dtype=tf.int32)
+        shape = tf.shape(u)[:-2]
 
         # projection onto the tangent space of the Stiefel manifold
-        vec_mod = tf.reshape(vec, shape + (n, k * n))
+        vec_mod = tf.reshape(vec, shape_conc(shape,
+                                             n[tf.newaxis],
+                                             (k * n)[tf.newqxis]))
         vec_mod = tf.linalg.matrix_transpose(vec_mod)
 
-        u_mod = tf.reshape(u, shape + (n, k * n))
+        u_mod = tf.reshape(u, shape_conc(shape,
+                                         n[tf.newaxis],
+                                         (k * n)[tf.newaxis]))
         u_mod = tf.linalg.matrix_transpose(u_mod)
         vec_mod = vec_mod - 0.5 * u_mod @ (adj(u_mod) @ vec_mod +\
                                            adj(vec_mod) @ u_mod)
         vec_mod = tf.linalg.matrix_transpose(vec_mod)
-        vec_mod = tf.reshape(vec_mod, shape + (n ** 2, k))
+        vec_mod = tf.reshape(vec_mod, shape_conc(shape,
+                                                 (n ** 2)[tf.newaxis],
+                                                 k[tf.newaxis]))
 
         # projection onto the horizontal space
         uu = adj(u) @ u
         Omega = lyap_symmetric(uu, adj(u) @ vec_mod - adj(vec_mod) @ u)
         return vec_mod - u @ Omega
 
+    @tf.function
     def egrad_to_rgrad(self, u, egrad):
         """Returns the Riemannian gradient from an Euclidean gradient.
 
@@ -123,22 +134,30 @@ class ChoiMatrix(base_manifold.Manifold):
             complex valued tensor of shape (..., n ** 2, k),
             the set of Reimannian gradients."""
 
-        k = u.shape[-1]
-        n = int(math.sqrt(u.shape[-2]))
-        shape = u.shape[:-2]
+        k = tf.shape(u)[-1]
+        n = tf.cast(math.sqrt(tf.cast(tf.shape(u)[-2], dtype=tf.float32)),
+                    dtype=tf.int32)
+        shape = tf.shape(u)[:-2]
 
         # projection onto the tangent space of the Stiefel manifold
-        vec_mod = tf.reshape(egrad, shape + (n, k * n))
+        vec_mod = tf.reshape(egrad, shape_conc(shape, 
+                                               n[tf.newaxis],
+                                               (k * n)[tf.newaxis]))
         vec_mod = tf.linalg.matrix_transpose(vec_mod)
 
-        u_mod = tf.reshape(u, shape + (n, k * n))
+        u_mod = tf.reshape(u, shape_conc(shape, 
+                                         n[tf.newaxis],
+                                         (k * n)[tf.newaxis]))
         u_mod = tf.linalg.matrix_transpose(u_mod)
         vec_mod = vec_mod - 0.5 * u_mod @ (adj(u_mod) @ vec_mod +\
                                            adj(vec_mod) @ u_mod)
         vec_mod = tf.linalg.matrix_transpose(vec_mod)
-        vec_mod = tf.reshape(vec_mod, shape + (n ** 2, k))
+        vec_mod = tf.reshape(vec_mod, shape_conc(shape, 
+                                                 (n ** 2)[tf.newaxis],
+                                                 k[tf.newaxis]))
         return vec_mod
 
+    @tf.function
     def retraction(self, u, vec):
         """Transports a set of points from the manifold via a
         retraction map.
@@ -153,19 +172,25 @@ class ChoiMatrix(base_manifold.Manifold):
             complex valued tensor of shape (..., n ** 2, k),
             a set of transported points."""
 
-        k = u.shape[-1]
-        n = int(math.sqrt(u.shape[-2]))
-        shape = u.shape[:-2]
+        k = tf.shape(u)[-1]
+        n = tf.cast(math.sqrt(tf.cast(tf.shape(u)[-2], dtype=tf.float32)),
+                    dtype=tf.int32)
+        shape = tf.shape(u)[:-2]
 
         # svd based retraction
         u_new = u + vec
-        u_new = tf.reshape(u_new, shape + (n, n * k))
+        u_new = tf.reshape(u_new, shape_conc(shape, 
+                                             n[tf.newaxis],
+                                             (n * k)[tf.newaxis]))
         _, U, V = tf.linalg.svd(u_new)
 
         u_new = U @ adj(V)
-        u_new = tf.reshape(u_new, shape + (n ** 2, k))
+        u_new = tf.reshape(u_new, shape_conc(shape,
+                                             (n ** 2)[tf.newaxis],
+                                             k[tf.newaxis]))
         return u_new
 
+    @tf.function
     def vector_transport(self, u, vec1, vec2):
         """Returns a vector tranported along an another vector
         via vector transport.
@@ -185,6 +210,7 @@ class ChoiMatrix(base_manifold.Manifold):
         u_new = self.retraction(u, vec2)
         return self.proj(u_new, vec1)
 
+    @tf.function
     def retraction_transport(self, u, vec1, vec2):
         """Performs a retraction and a vector transport simultaneously.
 
@@ -203,6 +229,7 @@ class ChoiMatrix(base_manifold.Manifold):
         u_new = self.retraction(u, vec2)
         return u_new, self.proj(u_new, vec1)
 
+    @tf.function
     def random(self, shape, dtype=tf.complex64):
         """Returns a set of points from the manifold generated
         randomly.
@@ -226,17 +253,23 @@ class ChoiMatrix(base_manifold.Manifold):
         u = tf.complex(tf.random.normal(shape, dtype=real_dtype),
                        tf.random.normal(shape, dtype=real_dtype))
 
-        k = shape[-1]
-        n = int(math.sqrt(shape[-2]))
+        k = tf.shape(u)[-1]
+        n = tf.cast(math.sqrt(tf.cast(tf.shape(u)[-2], dtype=tf.float32)),
+                    dtype=tf.int32)
 
-        u = tf.reshape(u, shape[:-2] + (n, n * k))
+        u = tf.reshape(u, shape_conc(tf.constant(shape)[:-2],
+                                     n[tf.newaxis],
+                                     (n * k)[tf.newaxis]))
         u = tf.linalg.matrix_transpose(u)
         u, _ = tf.linalg.qr(u)
         u = tf.linalg.matrix_transpose(u)
-        u = tf.reshape(u, shape[:-2] + (n ** 2, k))
+        u = tf.reshape(u, shape_conc(tf.constant(shape)[:-2], 
+                                     (n ** 2)[tf.newaxis],
+                                     k[tf.newaxis]))
 
         return u
 
+    @tf.function
     def random_tangent(self, u):
         """Returns a set of random tangent vectors to points from
         the manifold.
@@ -248,11 +281,13 @@ class ChoiMatrix(base_manifold.Manifold):
         Returns:
             complex valued tensor, set of tangent vectors to u."""
 
-        vec = tf.complex(tf.random.normal(u.shape), tf.random.normal(u.shape))
+        u_shape = tf.shape(u)
+        vec = tf.complex(tf.random.normal(u_shape), tf.random.normal(u_shape))
         vec = tf.cast(vec, dtype=u.dtype)
         vec = self.proj(u, vec)
         return vec
 
+    @tf.function
     def is_in_manifold(self, u, tol=1e-5):
         """Checks if a point is in the manifold or not.
 
@@ -264,12 +299,15 @@ class ChoiMatrix(base_manifold.Manifold):
         Returns:
             bolean tensor of shape (...)."""
 
-        shape = u.shape[:-2]
-        n_sq, k = u.shape[-2], u.shape[-1]
-        n = int(tf.math.sqrt(tf.cast(n_sq, dtype=tf.float32)))
-        u_resh = tf.reshape(u, shape + (n, n * k))
+        k = tf.shape(u)[-1]
+        n = tf.cast(math.sqrt(tf.cast(tf.shape(u)[-2], dtype=tf.float32)),
+                    dtype=tf.int32)
+        shape = tf.shape(u)[:-2]
+        u_resh = tf.reshape(u, shape_conc(shape, 
+                                          n[tf.newaxis],
+                                          (n * k)[tf.newaxis]))
         uudag = u_resh @ adj(u_resh)
-        Id = tf.eye(uudag.shape[-1], dtype=u.dtype)
+        Id = tf.eye(tf.shape(uudag)[-1], dtype=u.dtype)
         diff = tf.linalg.norm(uudag - Id, axis=(-2, -1))
         uudag_norm = tf.linalg.norm(uudag, axis=(-2, -1))
         Id_norm = tf.linalg.norm(Id, axis=(-2, -1))

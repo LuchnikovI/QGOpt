@@ -47,6 +47,7 @@ class StiefelManifold(base_manifold.Manifold):
 
         super(StiefelManifold, self).__init__(retraction, metric)
 
+    @tf.function
     def inner(self, u, vec1, vec2):
         """Returns manifold wise inner product of vectors from
         a tangent space.
@@ -71,12 +72,14 @@ class StiefelManifold(base_manifold.Manifold):
                                                      tf.newaxis,
                                                      tf.newaxis]
         elif self._metric == 'canonical':
-            G = tf.eye(u.shape[-2], dtype=u.dtype) - u @ adj(u) / 2
+            u_shape = tf.shape(u)
+            G = tf.eye(u_shape[-2], dtype=u.dtype) - u @ adj(u) / 2
             s_sq = tf.linalg.trace(adj(vec1) @ G @ vec2)[...,
                                                          tf.newaxis,
                                                          tf.newaxis]
         return tf.cast(tf.math.real(s_sq), dtype=u.dtype)
 
+    @tf.function
     def proj(self, u, vec):
         """Returns projection of vectors on a tangen space
         of the complex Stiefel manifold.
@@ -91,11 +94,13 @@ class StiefelManifold(base_manifold.Manifold):
         Returns:
             complex valued tensor of shape (..., n, p),
             a set of projected vectors"""
-
+        
+        u_shape = tf.shape(u)
         return 0.5 * u @ (adj(u) @ vec - adj(vec) @ u) +\
-                         (tf.eye(u.shape[-2], dtype=u.dtype) -\
+                         (tf.eye(u_shape[-2], dtype=u.dtype) -\
                           u @ adj(u)) @ vec
 
+    @tf.function
     def egrad_to_rgrad(self, u, egrad):
         """Returns the Riemannian gradient from an Euclidean gradient.
 
@@ -111,13 +116,15 @@ class StiefelManifold(base_manifold.Manifold):
             the set of Reimannian gradients."""
 
         if self._metric == 'euclidean':
+            u_shape = tf.shape(u)
             return 0.5 * u @ (adj(u) @ egrad - adj(egrad) @ u) +\
-                             (tf.eye(u.shape[-2], dtype=u.dtype) -\
+                             (tf.eye(u_shape[-2], dtype=u.dtype) -\
                               u @ adj(u)) @ egrad
 
         elif self._metric == 'canonical':
             return egrad - u @ adj(egrad) @ u
 
+    @tf.function
     def retraction(self, u, vec):
         """Transports a set of points from the complex Stiefel
         manifold via a retraction map.
@@ -140,7 +147,8 @@ class StiefelManifold(base_manifold.Manifold):
         elif self._retraction == 'cayley':
             W = vec @ adj(u) - 0.5 * u @ (adj(u) @ vec @ adj(u))
             W = W - adj(W)
-            Id = tf.eye(W.shape[-1], dtype=W.dtype)
+            W_shape = tf.shape(W)
+            Id = tf.eye(W_shape[-1], dtype=W.dtype)
             return tf.linalg.inv(Id - W / 2) @ (Id + W / 2) @ u
 
         elif self._retraction == 'qr':
@@ -150,6 +158,7 @@ class StiefelManifold(base_manifold.Manifold):
             sign = tf.math.sign(diag)[..., tf.newaxis, :]
             return q * sign
 
+    @tf.function
     def vector_transport(self, u, vec1, vec2):
         """Returns a vector tranported along an another vector
         via vector transport.
@@ -170,6 +179,7 @@ class StiefelManifold(base_manifold.Manifold):
         new_u = self.retraction(u, vec2)
         return self.proj(new_u, vec1)
 
+    @tf.function
     def retraction_transport(self, u, vec1, vec2):
         """Performs a retraction and a vector transport simultaneously.
 
@@ -189,6 +199,7 @@ class StiefelManifold(base_manifold.Manifold):
         new_u = self.retraction(u, vec2)
         return new_u, self.proj(new_u, vec1)
 
+    @tf.function
     def random(self, shape, dtype=tf.complex64):
         """Returns a set of points from the complex Stiefel
         manifold generated randomly.
@@ -214,6 +225,7 @@ class StiefelManifold(base_manifold.Manifold):
         u, _ = tf.linalg.qr(u)
         return u
 
+    @tf.function
     def random_tangent(self, u):
         """Returns a set of random tangent vectors to points from
         the complex Stiefel manifold.
@@ -225,11 +237,13 @@ class StiefelManifold(base_manifold.Manifold):
         Returns:
             complex valued tensor, set of tangent vectors to u."""
 
-        vec = tf.complex(tf.random.normal(u.shape), tf.random.normal(u.shape))
+        u_shape = tf.shape(u)
+        vec = tf.complex(tf.random.normal(u_shape), tf.random.normal(u_shape))
         vec = tf.cast(vec, dtype=u.dtype)
         vec = self.proj(u, vec)
         return vec
 
+    @tf.function
     def is_in_manifold(self, u, tol=1e-5):
         """Checks if a point is in the Stiefel manifold or not.
 
@@ -241,7 +255,8 @@ class StiefelManifold(base_manifold.Manifold):
         Returns:
             bolean tensor of shape (...)."""
 
-        Id = tf.eye(u.shape[-1], dtype=u.dtype)
+        u_shape = tf.shape(u)
+        Id = tf.eye(u_shape[-1], dtype=u.dtype)
         udagu = adj(u) @ u
         diff = Id - udagu
         diff_norm = tf.linalg.norm(diff, axis=(-2, -1))

@@ -28,6 +28,7 @@ class HermitianMatrix(base_manifold.Manifold):
 
         super(HermitianMatrix, self).__init__(retraction, metric)
 
+    @tf.function
     def inner(self, u, vec1, vec2):
         """Returns manifold wise inner product of vectors from
         a tangent space.
@@ -49,6 +50,7 @@ class HermitianMatrix(base_manifold.Manifold):
         prod = tf.cast(tf.math.real(prod), dtype=u.dtype)
         return prod
 
+    @tf.function
     def proj(self, u, vec):
         """Returns projection of vectors on a tangen space
         of the manifold.
@@ -65,6 +67,7 @@ class HermitianMatrix(base_manifold.Manifold):
 
         return 0.5 * (vec + adj(vec))
 
+    @tf.function
     def egrad_to_rgrad(self, u, egrad):
         """Returns the Riemannian gradient from an Euclidean gradient.
 
@@ -80,6 +83,7 @@ class HermitianMatrix(base_manifold.Manifold):
 
         return self.proj(u, egrad)
 
+    @tf.function
     def retraction(self, u, vec):
         """Transports a set of points from the manifold via a
         retraction map.
@@ -96,6 +100,7 @@ class HermitianMatrix(base_manifold.Manifold):
 
         return u + vec
 
+    @tf.function
     def vector_transport(self, u, vec1, vec2):
         """Returns a vector tranported along an another vector
         via vector transport.
@@ -114,6 +119,7 @@ class HermitianMatrix(base_manifold.Manifold):
 
         return vec1
 
+    @tf.function
     def retraction_transport(self, u, vec1, vec2):
         """Performs a retraction and a vector transport simultaneously.
 
@@ -132,6 +138,7 @@ class HermitianMatrix(base_manifold.Manifold):
         new_u = self.retraction(u, vec2)
         return new_u, vec1
 
+    @tf.function
     def random(self, shape, dtype=tf.complex64):
         """Returns a set of points from the manifold generated
         randomly.
@@ -158,6 +165,7 @@ class HermitianMatrix(base_manifold.Manifold):
         u = 0.5 * (u + adj(u))
         return u
 
+    @tf.function
     def random_tangent(self, u):
         """Returns a set of random tangent vectors to points from
         the manifold.
@@ -169,11 +177,13 @@ class HermitianMatrix(base_manifold.Manifold):
         Returns:
             complex valued tensor, set of tangent vectors to u."""
 
-        vec = tf.complex(tf.random.normal(u.shape), tf.random.normal(u.shape))
+        u_shape = tf.shape(u)
+        vec = tf.complex(tf.random.normal(u_shape), tf.random.normal(u_shape))
         vec = tf.cast(vec, dtype=u.dtype)
         vec = self.proj(u, vec)
         return vec
 
+    @tf.function
     def is_in_manifold(self, u, tol=1e-5):
         """Checks if a point is in the manifold or not.
 
