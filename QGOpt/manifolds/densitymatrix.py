@@ -199,7 +199,8 @@ class DensityMatrix(base_manifold.Manifold):
         Returns:
             complex valued tensor, set of tangent vectors to u."""
 
-        vec = tf.complex(tf.random.normal(u.shape), tf.random.normal(u.shape))
+        u_shape = tf.shape(u)
+        vec = tf.complex(tf.random.normal(u_shape), tf.random.normal(u_shape))
         vec = tf.cast(vec, dtype=u.dtype)
         vec = self.proj(u, vec)
         return vec

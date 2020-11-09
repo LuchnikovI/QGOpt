@@ -25,7 +25,7 @@ def _lower(X):
         tensor of shape (..., m, m), a set of matrices without
         diagonal and upper triangular parts."""
 
-    dim = X.shape[-1]
+    dim = tf.shape(X)[-1]
     dtype = X.dtype
     lower = tf.ones((dim, dim), dtype=dtype) - tf.linalg.diag(tf.ones((dim,),
                                                               dtype))
@@ -45,7 +45,7 @@ def _half(X):
         tensor of shape (..., m, m), a set of matrices with half
         of diagonal and without upper triangular parts."""
 
-    dim = X.shape[-1]
+    dim = tf.shape(X)[-1]
     dtype = X.dtype
     half = tf.ones((dim, dim),
                    dtype=dtype) - 0.5 * tf.linalg.diag(tf.ones((dim,), dtype))
@@ -103,7 +103,7 @@ def _f_matrix(lmbd):
     Returns:
         tensor of shape (..., m, m), f matrix."""
 
-    n = lmbd.shape[-1]
+    n = tf.shape(lmbd)[-1]
     l_i = lmbd[..., tf.newaxis]
     l_j = lmbd[..., tf.newaxis, :]
     denom = tf.math.log(l_i / l_j) + tf.eye(n, dtype=lmbd.dtype)
@@ -170,3 +170,16 @@ def lyap_symmetric(A, C, eps=1e-9):
     uCu = adj(u) @ C @ u
     L = lmbd[..., tf.newaxis, :] + lmbd[..., tf.newaxis]
     return u @ (uCu * L / (L ** 2 + eps ** 2)) @ adj(u)
+
+
+def shape_conc(*shapes):
+    """Concatenates two shapes into one.
+    
+    Args:
+        one-dimensional int valued tensors representing
+        shapes.
+
+    Return:
+        one dimensional int tensor, concatenated shape."""
+        
+    return tf.concat(shapes, axis=0)

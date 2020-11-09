@@ -75,13 +75,14 @@ class PositiveCone(base_manifold.Manifold):
             return prod
 
         elif self._metric == 'log_cholesky':
+            u_shape = tf.shape(u)
             L = tf.linalg.cholesky(u)
             inv_L = tf.linalg.inv(L)
 
             W = _pull_back_chol(vec1, L, inv_L)
             V = _pull_back_chol(vec2, L, inv_L)
 
-            mask = tf.ones(u.shape[-2:], dtype=u.dtype)
+            mask = tf.ones(u_shape[-2:], dtype=u.dtype)
             mask = _lower(mask)
             G = mask + tf.linalg.diag(1 / (tf.linalg.diag_part(L) ** 2))
             prod = tf.reduce_sum(tf.math.conj(W) * G * V, axis=(-2, -1))
@@ -311,8 +312,9 @@ class PositiveCone(base_manifold.Manifold):
 
         Returns:
             complex valued tensor, set of tangent vectors to u."""
-
-        vec = tf.complex(tf.random.normal(u.shape), tf.random.normal(u.shape))
+        
+        u_shape = tf.shape(u)
+        vec = tf.complex(tf.random.normal(u_shape), tf.random.normal(u_shape))
         vec = tf.cast(vec, dtype=u.dtype)
         vec = self.proj(u, vec)
         return vec

@@ -2,6 +2,7 @@ from QGOpt.manifolds import base_manifold
 import tensorflow as tf
 from QGOpt.manifolds.utils import adj
 from QGOpt.manifolds.utils import lyap_symmetric
+from QGOpt.manifolds.utils import shape_conc
 
 
 class POVM(base_manifold.Manifold):
@@ -81,23 +82,39 @@ class POVM(base_manifold.Manifold):
             complex valued tensor of shape (..., m, n, n),
             a set of projected vectors."""
 
-        n = u.shape[-1]
-        m = u.shape[-3]
-        shape = u.shape[:-3]
-        size = len(shape)
-        idx = tuple(range(size))
+        n = tf.shape(u)[-1]
+        m = tf.shape(u)[-3]
+        shape = tf.shape(u)[:-3]
+        size = tf.size(shape)
+        idx = tf.range(size)
 
         # projection onto the tangent space of the Stiefel manifold
-        vec_mod = tf.transpose(vec, idx + (size + 2, size, size + 1))
-        vec_mod = tf.reshape(vec_mod, shape + (n * m, n))
+        vec_mod = tf.transpose(vec, shape_conc(idx, 
+                                               (size + 2)[tf.newaxis],
+                                               size[tf.newaxis],
+                                               (size + 1)[tf.newaxis]))
+        vec_mod = tf.reshape(vec_mod, shape_conc(shape,
+                                                 (n * m)[tf.newaxis],
+                                                 n[tf.newaxis]))
 
-        u_mod = tf.transpose(u, idx + (size + 2, size, size + 1))
-        u_mod = tf.reshape(u_mod, shape + (n * m, n))
+        u_mod = tf.transpose(u, shape_conc(idx, 
+                                           (size + 2)[tf.newaxis],
+                                           size[tf.newaxis],
+                                           (size + 1)[tf.newaxis]))
+        u_mod = tf.reshape(u_mod, shape_conc(shape, 
+                                             (n * m)[tf.newaxis],
+                                             n[tf.newaxis]))
 
         vec_mod = vec_mod - 0.5 * u_mod @ (adj(u_mod) @ vec_mod +\
                                            adj(vec_mod) @ u_mod)
-        vec_mod = tf.reshape(vec_mod, shape + (n, m, n))
-        vec_mod = tf.transpose(vec_mod, idx + (size + 1, size + 2, size))
+        vec_mod = tf.reshape(vec_mod, shape_conc(shape,
+                                                 n[tf.newaxis],
+                                                 m[tf.newaxis],
+                                                 n[tf.newaxis]))
+        vec_mod = tf.transpose(vec_mod, shape_conc(idx,
+                                                   (size + 1)[tf.newaxis],
+                                                   (size + 2)[tf.newaxis],
+                                                   size[tf.newaxis]))
 
         # projection onto the horizontal space (POVM element-wise)
         uu = adj(u) @ u
@@ -117,23 +134,39 @@ class POVM(base_manifold.Manifold):
             complex valued tensor of shape (..., m, n, n),
             the set of Reimannian gradients."""
 
-        n = u.shape[-1]
-        m = u.shape[-3]
-        shape = u.shape[:-3]
-        size = len(shape)
-        idx = tuple(range(size))
+        n = tf.shape(u)[-1]
+        m = tf.shape(u)[-3]
+        shape = tf.shape(u)[:-3]
+        size = tf.size(shape)
+        idx = tf.range(size)
 
         # projection onto the tangent space of the Stiefel manifold
-        vec_mod = tf.transpose(egrad, idx + (size + 2, size, size + 1))
-        vec_mod = tf.reshape(vec_mod, shape + (n * m, n))
+        vec_mod = tf.transpose(egrad, shape_conc(idx,
+                                                 (size + 2)[tf.newaxis],
+                                                 size[tf.newaxis],
+                                                 (size + 1)[tf.newaxis]))
+        vec_mod = tf.reshape(vec_mod, shape_conc(shape, 
+                                                 (n * m)[tf.newaxis],
+                                                 n[tf.newaxis]))
 
-        u_mod = tf.transpose(u, idx + (size + 2, size, size + 1))
-        u_mod = tf.reshape(u_mod, shape + (n * m, n))
+        u_mod = tf.transpose(u, shape_conc(idx,
+                                           (size + 2)[tf.newaxis],
+                                           size[tf.newaxis],
+                                           (size + 1)[tf.newaxis]))
+        u_mod = tf.reshape(u_mod, shape_conc(shape,
+                                             (n * m)[tf.newaxis],
+                                             n[tf.newaxis]))
 
         vec_mod = vec_mod - 0.5 * u_mod @ (adj(u_mod) @ vec_mod +\
                                            adj(vec_mod) @ u_mod)
-        vec_mod = tf.reshape(vec_mod, shape + (n, m, n))
-        vec_mod = tf.transpose(vec_mod, idx + (size + 1, size + 2, size))
+        vec_mod = tf.reshape(vec_mod, shape_conc(shape, 
+                                                 n[tf.newaxis],
+                                                 m[tf.newaxis],
+                                                 n[tf.newaxis]))
+        vec_mod = tf.transpose(vec_mod, shape_conc(idx, 
+                                                   (size + 1)[tf.newaxis],
+                                                   (size + 2)[tf.newaxis],
+                                                   size[tf.newaxis]))
 
         return vec_mod
 
@@ -151,21 +184,32 @@ class POVM(base_manifold.Manifold):
             complex valued tensor of shape (..., m, n, n),
             a set of transported points."""
 
-        n = u.shape[-1]
-        m = u.shape[-3]
-        shape = u.shape[:-3]
-        size = len(shape)
-        idx = tuple(range(size))
+        n = tf.shape(u)[-1]
+        m = tf.shape(u)[-3]
+        shape = tf.shape(u)[:-3]
+        size = tf.size(shape)
+        idx = tf.range(size)
 
         # svd based retraction
         u_new = u + vec
-        u_new = tf.transpose(u_new, idx + (size + 1, size + 2, size))
-        u_new = tf.reshape(u_new, shape + (n, n * m))
+        u_new = tf.transpose(u_new, shape_conc(idx,
+                                               (size + 1)[tf.newaxis],
+                                               (size + 2)[tf.newaxis],
+                                               size[tf.newaxis]))
+        u_new = tf.reshape(u_new, shape_conc(shape,
+                                             n[tf.newaxis],
+                                             (n * m)[tf.newaxis]))
         _, U, V = tf.linalg.svd(u_new)
 
         u_new = U @ adj(V)
-        u_new = tf.reshape(u_new, shape + (n, n, m))
-        u_new = tf.transpose(u_new, idx + (size + 2, size, size + 1))
+        u_new = tf.reshape(u_new, shape_conc(shape,
+                                             n[tf.newaxis],
+                                             n[tf.newaxis],
+                                             m[tf.newaxis]))
+        u_new = tf.transpose(u_new, shape_conc(idx,
+                                               (size + 2)[tf.newaxis],
+                                               size[tf.newaxis],
+                                               (size + 1)[tf.newaxis]))
         return u_new
 
     def vector_transport(self, u, vec1, vec2):
@@ -228,13 +272,18 @@ class POVM(base_manifold.Manifold):
         u = tf.complex(tf.random.normal(shape, dtype=real_dtype),
                        tf.random.normal(shape, dtype=real_dtype))
 
-        n = u.shape[-1]
-        m = u.shape[-3]
-        shape = u.shape[:-3]
+        n = tf.shape(u)[-1]
+        m = tf.shape(u)[-3]
+        shape = tf.shape(u)[:-3]
 
-        u = tf.reshape(u, shape + (n * m, n))
+        u = tf.reshape(u, shape_conc(shape,
+                                     (n * m)[tf.newaxis],
+                                     n[tf.newaxis]))
         u, _ = tf.linalg.qr(u)
-        u = tf.reshape(u, shape + (m, n, n))
+        u = tf.reshape(u, shape_conc(shape,
+                                     m[tf.newaxis],
+                                     n[tf.newaxis],
+                                     n[tf.newaxis]))
         u = tf.linalg.matrix_transpose(u)
 
         return u
@@ -250,7 +299,8 @@ class POVM(base_manifold.Manifold):
         Returns:
             complex valued tensor, set of tangent vectors to u."""
 
-        vec = tf.complex(tf.random.normal(u.shape), tf.random.normal(u.shape))
+        u_shape = tf.shape(u)
+        vec = tf.complex(tf.random.normal(u_shape), tf.random.normal(u_shape))
         vec = tf.cast(vec, dtype=u.dtype)
         vec = self.proj(u, vec)
         return vec
@@ -266,13 +316,16 @@ class POVM(base_manifold.Manifold):
         Returns:
             bolean tensor of shape (...)."""
 
-        shape = u.shape[:-3]
-        m, n = u.shape[-3], u.shape[-1]
+        n = tf.shape(u)[-1]
+        m = tf.shape(u)[-3]
+        shape = tf.shape(u)[:-3]
         u_resh = tf.linalg.matrix_transpose(u)
-        u_resh = tf.reshape(u_resh, shape + (m * n, n))
+        u_resh = tf.reshape(u_resh, shape_conc(shape,
+                                               (m * n)[tf.newaxis],
+                                               n[tf.newaxis]))
         u_resh = tf.linalg.matrix_transpose(u_resh)
         uudag = u_resh @ adj(u_resh)
-        Id = tf.eye(uudag.shape[-1], dtype=u.dtype)
+        Id = tf.eye(tf.shape(uudag)[-1], dtype=u.dtype)
         diff = tf.linalg.norm(uudag - Id, axis=(-2, -1))
         uudag_norm = tf.linalg.norm(uudag, axis=(-2, -1))
         Id_norm = tf.linalg.norm(Id, axis=(-2, -1))
