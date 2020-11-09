@@ -56,7 +56,6 @@ class ChoiMatrix(base_manifold.Manifold):
 
         super(ChoiMatrix, self).__init__(retraction, metric)
 
-    @tf.function
     def inner(self, u, vec1, vec2):
         """Returns manifold wise inner product of vectors from
         a tangent space.
@@ -78,7 +77,6 @@ class ChoiMatrix(base_manifold.Manifold):
         prod = tf.cast(prod, dtype=u.dtype)[..., tf.newaxis, tf.newaxis]
         return prod
 
-    @tf.function
     def proj(self, u, vec):
         """Returns projection of vectors on a tangen space
         of the manifold.
@@ -120,7 +118,6 @@ class ChoiMatrix(base_manifold.Manifold):
         Omega = lyap_symmetric(uu, adj(u) @ vec_mod - adj(vec_mod) @ u)
         return vec_mod - u @ Omega
 
-    @tf.function
     def egrad_to_rgrad(self, u, egrad):
         """Returns the Riemannian gradient from an Euclidean gradient.
 
@@ -157,7 +154,6 @@ class ChoiMatrix(base_manifold.Manifold):
                                                  k[tf.newaxis]))
         return vec_mod
 
-    @tf.function
     def retraction(self, u, vec):
         """Transports a set of points from the manifold via a
         retraction map.
@@ -190,7 +186,6 @@ class ChoiMatrix(base_manifold.Manifold):
                                              k[tf.newaxis]))
         return u_new
 
-    @tf.function
     def vector_transport(self, u, vec1, vec2):
         """Returns a vector tranported along an another vector
         via vector transport.
@@ -210,7 +205,6 @@ class ChoiMatrix(base_manifold.Manifold):
         u_new = self.retraction(u, vec2)
         return self.proj(u_new, vec1)
 
-    @tf.function
     def retraction_transport(self, u, vec1, vec2):
         """Performs a retraction and a vector transport simultaneously.
 
@@ -229,7 +223,6 @@ class ChoiMatrix(base_manifold.Manifold):
         u_new = self.retraction(u, vec2)
         return u_new, self.proj(u_new, vec1)
 
-    @tf.function
     def random(self, shape, dtype=tf.complex64):
         """Returns a set of points from the manifold generated
         randomly.
@@ -269,7 +262,6 @@ class ChoiMatrix(base_manifold.Manifold):
 
         return u
 
-    @tf.function
     def random_tangent(self, u):
         """Returns a set of random tangent vectors to points from
         the manifold.
@@ -287,7 +279,6 @@ class ChoiMatrix(base_manifold.Manifold):
         vec = self.proj(u, vec)
         return vec
 
-    @tf.function
     def is_in_manifold(self, u, tol=1e-5):
         """Checks if a point is in the manifold or not.
 

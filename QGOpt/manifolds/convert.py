@@ -1,7 +1,6 @@
 import tensorflow as tf
 
 
-@tf.function
 def complex_to_real(tensor):
     """Returns tensor converted from a complex dtype with shape
     (...,) to a real dtype with shape (..., 2), where last index
@@ -16,7 +15,6 @@ def complex_to_real(tensor):
                       tf.math.imag(tensor)[..., tf.newaxis]], axis=-1)
 
 
-@tf.function
 def real_to_complex(tensor):
     """Returns tensor converted from a real dtype with shape
     (..., 2) to complex dtype with shape (...,), where last index

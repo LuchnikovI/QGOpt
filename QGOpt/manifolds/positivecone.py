@@ -47,7 +47,6 @@ class PositiveCone(base_manifold.Manifold):
 
         super(PositiveCone, self).__init__(retraction, metric)
 
-    @tf.function
     def inner(self, u, vec1, vec2):
         """Returns manifold wise inner product of vectors from
         a tangent space.
@@ -93,7 +92,6 @@ class PositiveCone(base_manifold.Manifold):
 
             return prod
 
-    @tf.function
     def proj(self, u, vec):
         """Returns projection of vectors on a tangen space
         of the manifold.
@@ -109,7 +107,6 @@ class PositiveCone(base_manifold.Manifold):
             a set of projected vectors."""
         return (vec + adj(vec)) / 2
 
-    @tf.function
     def egrad_to_rgrad(self, u, egrad):
         """Returns the Riemannian gradient from an Euclidean gradient.
 
@@ -143,7 +140,6 @@ class PositiveCone(base_manifold.Manifold):
 
             return _push_forward_chol(R, L)
 
-    @tf.function
     def retraction(self, u, vec):
         """Transports a set of points from the manifold via a
         retraction map.
@@ -181,7 +177,6 @@ class PositiveCone(base_manifold.Manifold):
 
             return cholesky_retraction @ adj(cholesky_retraction)
 
-    @tf.function
     def vector_transport(self, u, vec1, vec2):
         """Returns a vector tranported along an another vector
         via vector transport.
@@ -231,7 +226,6 @@ class PositiveCone(base_manifold.Manifold):
 
             return K @ adj(L_transport) + L_transport @ adj(K)
 
-    @tf.function
     def retraction_transport(self, u, vec1, vec2):
         """Performs a retraction and a vector transport simultaneously.
 
@@ -283,7 +277,6 @@ class PositiveCone(base_manifold.Manifold):
 
             return v, K @ adj(L_transport) + L_transport @ adj(K)
 
-    @tf.function
     def random(self, shape, dtype=tf.complex64):
         """Returns a set of points from the manifold generated
         randomly.
@@ -309,7 +302,6 @@ class PositiveCone(base_manifold.Manifold):
         u = tf.linalg.adjoint(u) @ u
         return u
 
-    @tf.function
     def random_tangent(self, u):
         """Returns a set of random tangent vectors to points from
         the manifold.
@@ -327,7 +319,6 @@ class PositiveCone(base_manifold.Manifold):
         vec = self.proj(u, vec)
         return vec
 
-    @tf.function
     def is_in_manifold(self, u, tol=1e-5):
         """Checks if a point is in the manifold or not.
 

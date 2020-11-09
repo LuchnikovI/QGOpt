@@ -1,7 +1,6 @@
 import tensorflow as tf
 
 
-@tf.function
 def adj(A):
     """Batch conjugate transpose.
 
@@ -15,7 +14,6 @@ def adj(A):
     return tf.math.conj(tf.linalg.matrix_transpose(A))
 
 
-@tf.function
 def _lower(X):
     """Returns the lower triangular part of a matrix without the
     diagonal part.
@@ -36,7 +34,6 @@ def _lower(X):
     return lower * X
 
 
-@tf.function
 def _half(X):
     """Returns the lower triangular part of
     a matrix with half of diagonal part.
@@ -57,7 +54,6 @@ def _half(X):
     return half * X
 
 
-@tf.function
 def _pull_back_chol(W, L, inv_L):
     """Takes a tangent vector to a point from S++ and
     computes the corresponding tangent vector to the
@@ -79,7 +75,6 @@ def _pull_back_chol(W, L, inv_L):
     return X
 
 
-@tf.function
 def _push_forward_chol(X, L):
     """Takes a tangent vector to a point from L+ and
     computes the corresponding tangent vector to the
@@ -97,7 +92,6 @@ def _push_forward_chol(X, L):
     return L @ adj(X) + X @ adj(L)
 
 
-@tf.function
 def _f_matrix(lmbd):
     """Returns f matrix (an auxiliary matrix for _pull_back_log
     and _push_forward_log).
@@ -116,7 +110,6 @@ def _f_matrix(lmbd):
     return (l_i - l_j) / denom + tf.linalg.diag(lmbd)
 
 
-@tf.function
 def _pull_back_log(W, U, lmbd):
     """Takes a tangent vector to a point from S++ and
     computes the corresponding tangent vector to the
@@ -139,7 +132,6 @@ def _pull_back_log(W, U, lmbd):
     return U @ ((1 / f) * (adj(U) @ W @ U)) @ adj(U)
 
 
-@tf.function
 def _push_forward_log(W, U, lmbd):
     """Takes a tangent vector to a point from S and
     computes the corresponding tangent vector to the
@@ -162,7 +154,6 @@ def _push_forward_log(W, U, lmbd):
     return U @ (f * (adj(U) @ W @ U)) @ adj(U)
 
 
-@tf.function
 def lyap_symmetric(A, C, eps=1e-9):
     """Solves AX + XA = C when A = adj(A).
 
@@ -180,7 +171,7 @@ def lyap_symmetric(A, C, eps=1e-9):
     L = lmbd[..., tf.newaxis, :] + lmbd[..., tf.newaxis]
     return u @ (uCu * L / (L ** 2 + eps ** 2)) @ adj(u)
 
-@tf.function
+
 def shape_conc(*shapes):
     """Concatenates two shapes into one.
     
