@@ -101,7 +101,7 @@ class ChoiMatrix(base_manifold.Manifold):
         # projection onto the tangent space of the Stiefel manifold
         vec_mod = tf.reshape(vec, shape_conc(shape,
                                              n[tf.newaxis],
-                                             (k * n)[tf.newqxis]))
+                                             (k * n)[tf.newaxis]))
         vec_mod = tf.linalg.matrix_transpose(vec_mod)
 
         u_mod = tf.reshape(u, shape_conc(shape,
