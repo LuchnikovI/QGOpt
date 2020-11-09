@@ -76,12 +76,12 @@ or from pypi (might be different in comparison with the current state of master)
 ```pip install QGOpt```
 
 ## Paper
-We have a [paper](https://arxiv.org/abs/2007.01287) describing some use cases of Riemannian optimization on complex Stiefel manifold and cone of complex positive matrices in quantum mechanics. If you use QGOpt we kindly ask you to cite this paper
+We have a tutorial [paper](https://arxiv.org/abs/2011.01894). If you use QGOpt we kindly ask you to cite this paper
 ```
-@article{luchnikov2020riemannian,
-  title={Riemannian optimization and automatic differentiation for complex quantum architectures},
-  author={Luchnikov, I and Krechetov, M and Filippov, S},
-  journal={arXiv preprint arXiv:2007.01287},
+@article{luchnikov2020qgopt,
+  title={QGOpt: Riemannian optimization for quantum technologies},
+  author={Luchnikov, IA and Ryzhov, A and Filippov, SN and Ouerdane, H},
+  journal={arXiv preprint arXiv:2011.01894},
   year={2020}
 }
 ```
