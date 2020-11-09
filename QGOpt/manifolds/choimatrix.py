@@ -94,7 +94,7 @@ class ChoiMatrix(base_manifold.Manifold):
             a set of projected vectors."""
 
         k = tf.shape(u)[-1]
-        n = tf.cast(math.sqrt(tf.cast(tf.shape(u)[-2], dtype=tf.float32)),
+        n = tf.cast(tf.math.sqrt(tf.cast(tf.shape(u)[-2], dtype=tf.float32)),
                     dtype=tf.int32)
         shape = tf.shape(u)[:-2]
 
@@ -135,7 +135,7 @@ class ChoiMatrix(base_manifold.Manifold):
             the set of Reimannian gradients."""
 
         k = tf.shape(u)[-1]
-        n = tf.cast(math.sqrt(tf.cast(tf.shape(u)[-2], dtype=tf.float32)),
+        n = tf.cast(tf.math.sqrt(tf.cast(tf.shape(u)[-2], dtype=tf.float32)),
                     dtype=tf.int32)
         shape = tf.shape(u)[:-2]
 
@@ -173,7 +173,7 @@ class ChoiMatrix(base_manifold.Manifold):
             a set of transported points."""
 
         k = tf.shape(u)[-1]
-        n = tf.cast(math.sqrt(tf.cast(tf.shape(u)[-2], dtype=tf.float32)),
+        n = tf.cast(tf.math.sqrt(tf.cast(tf.shape(u)[-2], dtype=tf.float32)),
                     dtype=tf.int32)
         shape = tf.shape(u)[:-2]
 
@@ -254,7 +254,7 @@ class ChoiMatrix(base_manifold.Manifold):
                        tf.random.normal(shape, dtype=real_dtype))
 
         k = tf.shape(u)[-1]
-        n = tf.cast(math.sqrt(tf.cast(tf.shape(u)[-2], dtype=tf.float32)),
+        n = tf.cast(tf.math.sqrt(tf.cast(tf.shape(u)[-2], dtype=tf.float32)),
                     dtype=tf.int32)
 
         u = tf.reshape(u, shape_conc(tf.constant(shape)[:-2],
@@ -300,7 +300,7 @@ class ChoiMatrix(base_manifold.Manifold):
             bolean tensor of shape (...)."""
 
         k = tf.shape(u)[-1]
-        n = tf.cast(math.sqrt(tf.cast(tf.shape(u)[-2], dtype=tf.float32)),
+        n = tf.cast(tf.math.sqrt(tf.cast(tf.shape(u)[-2], dtype=tf.float32)),
                     dtype=tf.int32)
         shape = tf.shape(u)[:-2]
         u_resh = tf.reshape(u, shape_conc(shape, 
