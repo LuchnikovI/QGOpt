@@ -38,8 +38,8 @@
   <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Comparison of optimization methods on the complex Stiefel manifold" href="comparison.html" />
-    <link rel="prev" title="Auxiliary functions" href="auxiliary.html" /> 
+    <link rel="next" title="Quantum channel tomography" href="channel_tomography.html" />
+    <link rel="prev" title="Frequently asked questions" href="faq.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -88,16 +88,16 @@
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently asked questions</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Tutorials:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Entanglement renormalization</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#Renormalization-layer">Renormalization layer</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#TFI-hamiltonian-and-MERA-building-blocks">TFI hamiltonian and MERA building blocks</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#Optimization-loop">Optimization loop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#1.-Renormalization-layer">1. Renormalization layer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#2.-Transverse-field-Ising-(TFI)-model-hamiltonian-and-MERA-building-blocks">2. Transverse-field Ising (TFI) model hamiltonian and MERA building blocks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#3.-Optimization-of-MERA">3. Optimization of MERA</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="comparison.html">Comparison of optimization methods on the complex Stiefel manifold</a></li>
 <li class="toctree-l1"><a class="reference internal" href="channel_tomography.html">Quantum channel tomography</a></li>
 <li class="toctree-l1"><a class="reference internal" href="state_tomography.html">Quantum state tomography</a></li>
 <li class="toctree-l1"><a class="reference internal" href="optimal_povm.html">Optimal POVM</a></li>
@@ -424,7 +424,7 @@ div.rendered_html tbody tr:hover {
 <h1>Entanglement renormalization<a class="headerlink" href="#Entanglement-renormalization" title="Permalink to this headline">¶</a></h1>
 <p>One can open this notebook in Google Colab (is recommended)</p>
 <p><a class="reference external" href="https://colab.research.google.com/github/LuchnikovI/QGOpt/blob/master/docs/source/entanglement_renormalization.ipynb"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a></p>
-<p>In the given tutorial, we show how the Riemannian optimization on the complex Stiefel manifold can be used to perform entanglement renormalization and find the ground state energy of a many-body spin system in the point of phase transition. First of all, let us import some libraries.</p>
+<p>In the given tutorial, we show how the Riemannian optimization on the complex Stiefel manifold can be used to perform entanglement renormalization and find the ground state energy and the ground state itself of a many-body spin system at the point of quantum phase transition. First of all, let us import the necessary libraries.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
@@ -456,13 +456,15 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-<div class="section" id="Renormalization-layer">
-<h2>Renormalization layer<a class="headerlink" href="#Renormalization-layer" title="Permalink to this headline">¶</a></h2>
-<p>Here we define a renormalization layer by using TensorNetwork library. The function mera_layer takes unitary and isometric blocks and perform renormalization of a local Hamiltonian as it is shown on the tensor diagram below (if the diagram is not displayed here, please open the notebook in Google Colab). <img alt="renorm_layer.png" src="_images/renorm_layer.png" /> For more information please see</p>
+<div class="section" id="1.-Renormalization-layer">
+<h2>1. Renormalization layer<a class="headerlink" href="#1.-Renormalization-layer" title="Permalink to this headline">¶</a></h2>
+<p>First of all, one needs to define a renormalization (mera) layer. We use ncon API from TensorNetwork library for these purposes. The function mera_layer takes unitary and isometric tensors (building blocks) and performs renormalization of a local Hamiltonian as it is shown on the tensor diagram below (if the diagram is not displayed here, please open the notebook in Google Colab). <img alt="renorm_layer.png" src="https://github.com/LuchnikovI/QGOpt/blob/master/docs/source/images/renorm_layer.png?raw=1" /> For more information about entanglement renormalization please see</p>
 <p>Evenbly, G., &amp; Vidal, G. (2009). Algorithms for entanglement renormalization. Physical Review B, 79(14), 144108.</p>
 <p>Evenbly, G., &amp; Vidal, G. (2014). Algorithms for entanglement renormalization: boundaries, impurities and interfaces. Journal of Statistical Physics, 157(4-5), 931-978.</p>
+<p>For more information about ncon notation see for example</p>
+<p>Pfeifer, R. N., Evenbly, G., Singh, S., &amp; Vidal, G. (2014). NCON: A tensor network contractor for MATLAB. arXiv preprint arXiv:1402.0939.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -478,126 +480,66 @@ div.rendered_html tbody tr:hover {
 <span class="sd">    Renormalizes local Hamiltonian.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        H: complex valued tensor of shape (chi ** 2, chi ** 2),</span>
+<span class="sd">        H: complex valued tensor of shape (chi, chi, chi, chi),</span>
 <span class="sd">            input two-side Hamiltonian (a local term).</span>
 <span class="sd">        U: complex valued tensor of shape (chi ** 2, chi ** 2), disentangler</span>
 <span class="sd">        U_conj: complex valued tensor of shape (chi ** 2, chi ** 2),</span>
 <span class="sd">            conjugated disentangler.</span>
-<span class="sd">        Z_left: complex valued tf tensor of shape (chi ** 3, new_chi),</span>
+<span class="sd">        Z_left: complex valued tensor of shape (chi ** 3, new_chi),</span>
 <span class="sd">            left isometry.</span>
-<span class="sd">        Z_right: complex valued tf tensor of shape (chi ** 3, new_chi),</span>
+<span class="sd">        Z_right: complex valued tensor of shape (chi ** 3, new_chi),</span>
 <span class="sd">            right isometry.</span>
-<span class="sd">        Z_left_conj: complex valued tf tensor of shape (chi ** 3, new_chi),</span>
+<span class="sd">        Z_left_conj: complex valued tensor of shape (chi ** 3, new_chi),</span>
 <span class="sd">            left conjugated isometry.</span>
-<span class="sd">        Z_right_conj: complex valued tf tensor of shape (chi ** 3, new_chi),</span>
+<span class="sd">        Z_right_conj: complex valued tensor of shape (chi ** 3, new_chi),</span>
 <span class="sd">            right conjugated isometry.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        complex valued tensor of shape (new_chi ** 2, new_chi ** 2),</span>
+<span class="sd">        complex valued tensor of shape (new_chi, new_chi, new_chi, new_chi),</span>
 <span class="sd">        renormalized two side hamiltonian.</span>
 
 <span class="sd">    Notes:</span>
 <span class="sd">        chi is the dimension of an index. chi increases with the depth of mera, however,</span>
 <span class="sd">        at some point, chi is cut to prevent exponential growth of indices</span>
-<span class="sd">        dimensionality.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">        dimensionality.&quot;&quot;&quot;</span>
 
     <span class="c1"># index dimension before renormalization</span>
-    <span class="n">chi</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">U</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">)),</span>
+    <span class="n">chi</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">U</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">)),</span>
                   <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
 
     <span class="c1"># index dimension after renormalization</span>
-    <span class="n">chi_new</span> <span class="o">=</span> <span class="n">Z_left</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">chi_new</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">Z_left</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 
-    <span class="c1"># tn nodes</span>
-    <span class="c1"># here we build a tensor network that renormalizes a local Hamiltonian term</span>
-    <span class="c1"># one can skip this part and use it as a black box</span>
+    <span class="c1"># List of building blocks</span>
+    <span class="n">list_of_tensors</span> <span class="o">=</span> <span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">Z_left</span><span class="p">,</span> <span class="p">(</span><span class="n">chi</span><span class="p">,</span> <span class="n">chi</span><span class="p">,</span> <span class="n">chi</span><span class="p">,</span> <span class="n">chi_new</span><span class="p">)),</span>
+                       <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">Z_right</span><span class="p">,</span> <span class="p">(</span><span class="n">chi</span><span class="p">,</span> <span class="n">chi</span><span class="p">,</span> <span class="n">chi</span><span class="p">,</span> <span class="n">chi_new</span><span class="p">)),</span>
+                       <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">Z_left_conj</span><span class="p">,</span> <span class="p">(</span><span class="n">chi</span><span class="p">,</span> <span class="n">chi</span><span class="p">,</span> <span class="n">chi</span><span class="p">,</span> <span class="n">chi_new</span><span class="p">)),</span>
+                       <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">Z_right_conj</span><span class="p">,</span> <span class="p">(</span><span class="n">chi</span><span class="p">,</span> <span class="n">chi</span><span class="p">,</span> <span class="n">chi</span><span class="p">,</span> <span class="n">chi_new</span><span class="p">)),</span>
+                       <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="p">(</span><span class="n">chi</span><span class="p">,</span> <span class="n">chi</span><span class="p">,</span> <span class="n">chi</span><span class="p">,</span> <span class="n">chi</span><span class="p">)),</span>
+                       <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">U_conj</span><span class="p">,</span> <span class="p">(</span><span class="n">chi</span><span class="p">,</span> <span class="n">chi</span><span class="p">,</span> <span class="n">chi</span><span class="p">,</span> <span class="n">chi</span><span class="p">)),</span>
+                       <span class="n">H</span><span class="p">]</span>
 
-    <span class="c1"># Hamiltonian</span>
-    <span class="n">h</span> <span class="o">=</span> <span class="n">tn</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="p">(</span><span class="n">chi</span><span class="p">,</span> <span class="n">chi</span><span class="p">,</span> <span class="n">chi</span><span class="p">,</span> <span class="n">chi</span><span class="p">)))</span>
-    <span class="c1"># disentangler</span>
-    <span class="n">u</span> <span class="o">=</span> <span class="n">tn</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="p">(</span><span class="n">chi</span><span class="p">,</span> <span class="n">chi</span><span class="p">,</span> <span class="n">chi</span><span class="p">,</span> <span class="n">chi</span><span class="p">)))</span>
-    <span class="c1"># conj. disentangler</span>
-    <span class="n">u_conj</span> <span class="o">=</span> <span class="n">tn</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">U_conj</span><span class="p">,</span> <span class="p">(</span><span class="n">chi</span><span class="p">,</span> <span class="n">chi</span><span class="p">,</span> <span class="n">chi</span><span class="p">,</span> <span class="n">chi</span><span class="p">)))</span>
-    <span class="c1"># left isometry</span>
-    <span class="n">z_left</span> <span class="o">=</span> <span class="n">tn</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">Z_left</span><span class="p">,</span> <span class="p">(</span><span class="n">chi</span><span class="p">,</span> <span class="n">chi</span><span class="p">,</span> <span class="n">chi</span><span class="p">,</span> <span class="n">chi_new</span><span class="p">)))</span>
-    <span class="c1"># right isometry</span>
-    <span class="n">z_right</span> <span class="o">=</span> <span class="n">tn</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">Z_right</span><span class="p">,</span> <span class="p">(</span><span class="n">chi</span><span class="p">,</span> <span class="n">chi</span><span class="p">,</span> <span class="n">chi</span><span class="p">,</span> <span class="n">chi_new</span><span class="p">)))</span>
-    <span class="c1"># conj. left isometry</span>
-    <span class="n">z_left_conj</span> <span class="o">=</span> <span class="n">tn</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">Z_left_conj</span><span class="p">,</span> <span class="p">(</span><span class="n">chi</span><span class="p">,</span> <span class="n">chi</span><span class="p">,</span> <span class="n">chi</span><span class="p">,</span> <span class="n">chi_new</span><span class="p">)))</span>
-    <span class="c1"># conj. right isometry</span>
-    <span class="n">z_right_conj</span> <span class="o">=</span> <span class="n">tn</span><span class="o">.</span><span class="n">Node</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">Z_right_conj</span><span class="p">,</span> <span class="p">(</span><span class="n">chi</span><span class="p">,</span> <span class="n">chi</span><span class="p">,</span> <span class="n">chi</span><span class="p">,</span> <span class="n">chi_new</span><span class="p">)))</span>
+    <span class="c1"># structures (ncon notation) of three terms of ascending super operator</span>
+    <span class="n">net_struc_1</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">9</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="o">-</span><span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                   <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">],</span> <span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">8</span><span class="p">],</span> <span class="p">[</span><span class="mi">6</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">]]</span>
+    <span class="n">net_struc_2</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">9</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="o">-</span><span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                   <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">7</span><span class="p">],</span> <span class="p">[</span><span class="mi">6</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">8</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">7</span><span class="p">]]</span>
+    <span class="n">net_struc_3</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">9</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="o">-</span><span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                   <span class="p">[</span><span class="mi">8</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">7</span><span class="p">],</span> <span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">10</span><span class="p">]]</span>
 
-    <span class="c1"># standard for all three diagrams environment</span>
-    <span class="n">z_left</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">^</span><span class="n">z_left_conj</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">z_right</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">^</span><span class="n">z_right_conj</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
-    <span class="n">u</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">^</span><span class="n">z_left</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
-    <span class="n">u</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">^</span><span class="n">z_right</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">u_conj</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">^</span><span class="n">z_left_conj</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
-    <span class="n">u_conj</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">^</span><span class="n">z_right_conj</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="c1"># sub-optimal contraction orders for three terms of ascending super operator</span>
+    <span class="n">con_ord_1</span> <span class="o">=</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">10</span><span class="p">]</span>
+    <span class="n">con_ord_2</span> <span class="o">=</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">10</span><span class="p">]</span>
+    <span class="n">con_ord_3</span> <span class="o">=</span> <span class="p">[</span><span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span>
 
-    <span class="c1"># first diagram</span>
-    <span class="n">z_left</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">^</span><span class="n">h</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
-    <span class="n">z_left_conj</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">^</span><span class="n">h</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">u</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">^</span><span class="n">h</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
-    <span class="n">u_conj</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">^</span><span class="n">h</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="n">u</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">^</span><span class="n">u_conj</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="n">z_right</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">^</span><span class="n">z_right_conj</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="n">nodes</span> <span class="o">=</span> <span class="n">tn</span><span class="o">.</span><span class="n">reachable</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
-    <span class="n">renorm_first</span> <span class="o">=</span> <span class="n">tn</span><span class="o">.</span><span class="n">contractors</span><span class="o">.</span><span class="n">optimal</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="p">[</span><span class="n">z_left_conj</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
-                                                  <span class="n">z_right_conj</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
-                                                  <span class="n">z_left</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
-                                                  <span class="n">z_right</span><span class="p">[</span><span class="mi">3</span><span class="p">]])</span>
+    <span class="c1"># ncon</span>
+    <span class="n">term_1</span> <span class="o">=</span> <span class="n">tn</span><span class="o">.</span><span class="n">ncon</span><span class="p">(</span><span class="n">list_of_tensors</span><span class="p">,</span> <span class="n">net_struc_1</span><span class="p">,</span> <span class="n">con_ord_1</span><span class="p">)</span>
+    <span class="n">term_2</span> <span class="o">=</span> <span class="n">tn</span><span class="o">.</span><span class="n">ncon</span><span class="p">(</span><span class="n">list_of_tensors</span><span class="p">,</span> <span class="n">net_struc_2</span><span class="p">,</span> <span class="n">con_ord_2</span><span class="p">)</span>
+    <span class="n">term_3</span> <span class="o">=</span> <span class="n">tn</span><span class="o">.</span><span class="n">ncon</span><span class="p">(</span><span class="n">list_of_tensors</span><span class="p">,</span> <span class="n">net_struc_3</span><span class="p">,</span> <span class="n">con_ord_3</span><span class="p">)</span>
 
-    <span class="c1"># standard for all three diagrams environment</span>
-    <span class="n">z_left</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">^</span><span class="n">z_left_conj</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">z_right</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">^</span><span class="n">z_right_conj</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
-    <span class="n">u</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">^</span><span class="n">z_left</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
-    <span class="n">u</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">^</span><span class="n">z_right</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">u_conj</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">^</span><span class="n">z_left_conj</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
-    <span class="n">u_conj</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">^</span><span class="n">z_right_conj</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">term_1</span> <span class="o">+</span> <span class="n">term_2</span> <span class="o">+</span> <span class="n">term_3</span><span class="p">)</span> <span class="o">/</span> <span class="mi">3</span>  <span class="c1"># renormalized hamiltonian</span>
 
-    <span class="c1"># second diagram</span>
-    <span class="n">z_left</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">^</span><span class="n">z_left_conj</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="n">z_right</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">^</span><span class="n">z_right_conj</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="n">u</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">^</span><span class="n">h</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
-    <span class="n">u</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">^</span><span class="n">h</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
-    <span class="n">u_conj</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">^</span><span class="n">h</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">u_conj</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">^</span><span class="n">h</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="n">nodes</span> <span class="o">=</span> <span class="n">tn</span><span class="o">.</span><span class="n">reachable</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
-    <span class="n">renorm_second</span> <span class="o">=</span> <span class="n">tn</span><span class="o">.</span><span class="n">contractors</span><span class="o">.</span><span class="n">optimal</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="p">[</span><span class="n">z_left_conj</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
-                                                  <span class="n">z_right_conj</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
-                                                  <span class="n">z_left</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
-                                                  <span class="n">z_right</span><span class="p">[</span><span class="mi">3</span><span class="p">]])</span>
-
-    <span class="c1"># standard for all three diagrams environment</span>
-    <span class="n">z_left</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">^</span><span class="n">z_left_conj</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">z_right</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">^</span><span class="n">z_right_conj</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
-    <span class="n">u</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">^</span><span class="n">z_left</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
-    <span class="n">u</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">^</span><span class="n">z_right</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">u_conj</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">^</span><span class="n">z_left_conj</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
-    <span class="n">u_conj</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">^</span><span class="n">z_right_conj</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-
-    <span class="c1"># third diagram</span>
-    <span class="n">z_left</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">^</span><span class="n">z_left_conj</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="n">u</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">^</span><span class="n">u_conj</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">u</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">^</span><span class="n">h</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
-    <span class="n">u_conj</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">^</span><span class="n">h</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">z_right</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">^</span><span class="n">h</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
-    <span class="n">z_right_conj</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">^</span><span class="n">h</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="n">nodes</span> <span class="o">=</span> <span class="n">tn</span><span class="o">.</span><span class="n">reachable</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
-    <span class="n">renorm_third</span> <span class="o">=</span> <span class="n">tn</span><span class="o">.</span><span class="n">contractors</span><span class="o">.</span><span class="n">optimal</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="p">[</span><span class="n">z_left_conj</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
-                                                  <span class="n">z_right_conj</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
-                                                  <span class="n">z_left</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
-                                                  <span class="n">z_right</span><span class="p">[</span><span class="mi">3</span><span class="p">]])</span>
-    <span class="c1"># sum of all three diagrams</span>
-    <span class="n">h_renorm</span> <span class="o">=</span> <span class="p">(</span><span class="n">renorm_first</span><span class="o">.</span><span class="n">tensor</span> <span class="o">+</span>\
-                <span class="n">renorm_second</span><span class="o">.</span><span class="n">tensor</span> <span class="o">+</span>\
-                <span class="n">renorm_third</span><span class="o">.</span><span class="n">tensor</span><span class="p">)</span> <span class="o">/</span> <span class="mi">3</span>
-
-    <span class="k">return</span> <span class="n">h_renorm</span>
-
-
+<span class="c1"># auxiliary functions that return initial isometries and disentanglers</span>
 <span class="nd">@tf</span><span class="o">.</span><span class="n">function</span>
 <span class="k">def</span> <span class="nf">z_gen</span><span class="p">(</span><span class="n">chi</span><span class="p">,</span> <span class="n">new_chi</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Returns random isometry.</span>
@@ -611,8 +553,7 @@ div.rendered_html tbody tr:hover {
 
     <span class="c1"># one can use the complex Stiefel manfiold to generate a random isometry</span>
     <span class="n">m</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">StiefelManifold</span><span class="p">()</span>
-    <span class="n">Z</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="n">chi</span> <span class="o">**</span> <span class="mi">3</span><span class="p">,</span> <span class="n">new_chi</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">Z</span>
+    <span class="k">return</span> <span class="n">m</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="n">chi</span> <span class="o">**</span> <span class="mi">3</span><span class="p">,</span> <span class="n">new_chi</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
 
 
 <span class="nd">@tf</span><span class="o">.</span><span class="n">function</span>
@@ -625,94 +566,127 @@ div.rendered_html tbody tr:hover {
 <span class="sd">    Returns:</span>
 <span class="sd">        complex valued tensor of shape (chi ** 2, chi ** 2).&quot;&quot;&quot;</span>
 
-    <span class="n">U</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">chi</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">U</span>
+    <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">chi</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 </div>
-<div class="section" id="TFI-hamiltonian-and-MERA-building-blocks">
-<h2>TFI hamiltonian and MERA building blocks<a class="headerlink" href="#TFI-hamiltonian-and-MERA-building-blocks" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="2.-Transverse-field-Ising-(TFI)-model-hamiltonian-and-MERA-building-blocks">
+<h2>2. Transverse-field Ising (TFI) model hamiltonian and MERA building blocks<a class="headerlink" href="#2.-Transverse-field-Ising-(TFI)-model-hamiltonian-and-MERA-building-blocks" title="Permalink to this headline">¶</a></h2>
 <p>Here we define the Transverse-field Ising model Hamiltonian and building blocks (disentanglers and isometries) of MERA network that will be optimized.</p>
+<p>First of all we initialize hyper parameters of MERA and TFI hamiltonian.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1">#===========================================================================#</span>
-<span class="n">max_chi</span> <span class="o">=</span> <span class="mi">4</span> <span class="c1"># max bond dim</span>
+<span></span><span class="n">max_chi</span> <span class="o">=</span> <span class="mi">4</span> <span class="c1"># max bond dim</span>
 <span class="n">num_of_layers</span> <span class="o">=</span> <span class="mi">5</span> <span class="c1"># number of MERA layers (corresponds to 2*3^5 = 486 spins)</span>
-<span class="n">h_x</span> <span class="o">=</span> <span class="mf">1.</span> <span class="c1"># transvers field (h_x=1 is the critical field)</span>
-<span class="c1">#===========================================================================#</span>
-
-<span class="c1"># Pauli matrices</span>
-<span class="n">sigma</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">([[[</span><span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="o">*</span><span class="mi">1</span><span class="n">j</span><span class="p">]],</span>
+<span class="n">h_x</span> <span class="o">=</span> <span class="mi">1</span> <span class="c1"># value of transverse field in TFI model (h_x=1 is the critical field)</span>
+</pre></div>
+</div>
+</div>
+<p>One needs to define Pauli matrices. Here all Pauli matrices are represented as one tensor of size <span class="math notranslate nohighlight">\(3\times 2 \times 2\)</span>, where the first index enumerates a particular Pauli matrix, and the remaining two indices are matrix indices.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">sigma</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">([[[</span><span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="o">*</span><span class="mi">1</span><span class="n">j</span><span class="p">]],</span>
                     <span class="p">[[</span><span class="mi">0</span><span class="o">*</span><span class="mi">1</span><span class="n">j</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="n">j</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="o">*</span><span class="mi">1</span><span class="n">j</span><span class="p">]],</span>
                     <span class="p">[[</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">0</span><span class="o">*</span><span class="mi">1</span><span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="o">*</span><span class="mi">1</span><span class="n">j</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="o">*</span><span class="mi">1</span><span class="n">j</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">0</span><span class="o">*</span><span class="mi">1</span><span class="n">j</span><span class="p">]]],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
-
-<span class="c1"># Hamiltonian (Transverse-field Ising model, local term)</span>
-<span class="n">h</span> <span class="o">=</span> <span class="o">-</span><span class="n">tf</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ij,kl-&gt;ikjl&#39;</span><span class="p">,</span> <span class="n">sigma</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">sigma</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span>\
-<span class="n">tf</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ij,kl-&gt;ikjl&#39;</span><span class="p">,</span> <span class="o">-</span><span class="n">h_x</span> <span class="o">*</span> <span class="n">sigma</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">tf</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">))</span>
-
-<span class="c1"># initial building blocks (disentanglers and isometries)</span>
-
-<span class="c1"># first layer</span>
+</pre></div>
+</div>
+</div>
+<p>Here we define local term of the TFI hamiltonian.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">zz_term</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ij,kl-&gt;ikjl&#39;</span><span class="p">,</span> <span class="n">sigma</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">sigma</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+<span class="n">x_term</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ij,kl-&gt;ikjl&#39;</span><span class="p">,</span> <span class="n">sigma</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">tf</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">))</span>
+<span class="n">h</span> <span class="o">=</span> <span class="o">-</span><span class="n">zz_term</span> <span class="o">-</span> <span class="n">h_x</span> <span class="o">*</span> <span class="n">x_term</span>
+</pre></div>
+</div>
+</div>
+<p>Here we define initial disentanglers, isometries, and state in the renormalized space.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1"># disentangler U and isometry Z in the first MERA layer</span>
 <span class="n">U</span> <span class="o">=</span> <span class="n">u_gen</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
 <span class="n">Z</span> <span class="o">=</span> <span class="n">z_gen</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">max_chi</span><span class="p">)</span>
 
-<span class="c1"># the rest layers</span>
+<span class="c1"># lists with disentanglers and isometries in the rest of the layers</span>
 <span class="n">U_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">u_gen</span><span class="p">(</span><span class="n">max_chi</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_of_layers</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span>
 <span class="n">Z_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">z_gen</span><span class="p">(</span><span class="n">max_chi</span><span class="p">,</span> <span class="n">max_chi</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_of_layers</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span>
 
-<span class="c1"># all building blocks of mera packed in two lists</span>
+<span class="c1"># lists with all disentanglers and isometries</span>
 <span class="n">U_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">U</span><span class="p">]</span> <span class="o">+</span> <span class="n">U_list</span>
 <span class="n">Z_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">Z</span><span class="p">]</span> <span class="o">+</span> <span class="n">Z_list</span>
 
-<span class="c1"># trial state in the renormalized space (low dimensional in comparison</span>
+<span class="c1"># initial state in the renormalized space (low dimensional in comparison</span>
 <span class="c1"># with the dimensionality of the initial problem)</span>
-<span class="n">psi</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">real_to_complex</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">((</span><span class="n">max_chi</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
-                                                     <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">))</span>
-<span class="n">psi</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">qr</span><span class="p">(</span><span class="n">psi</span><span class="p">)</span>
+<span class="n">psi</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">max_chi</span> <span class="o">**</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+<span class="n">psi</span> <span class="o">=</span> <span class="n">psi</span> <span class="o">/</span> <span class="n">tf</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">psi</span><span class="p">)</span>
 
-<span class="c1"># converting building blocks of mera to real representation (necessary for an optimizer)</span>
-<span class="n">U_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">complex_to_real</span><span class="p">(</span><span class="n">U_list</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">U_list</span><span class="p">))]</span>
-<span class="n">Z_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">complex_to_real</span><span class="p">(</span><span class="n">Z_list</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">Z_list</span><span class="p">))]</span>
+<span class="c1"># converting disentanglers, isometries, and initial state to real</span>
+<span class="c1"># representation (necessary for the further optimizer)</span>
+<span class="n">U_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">complex_to_real</span><span class="p">,</span> <span class="n">U_list</span><span class="p">))</span>
+<span class="n">Z_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">complex_to_real</span><span class="p">,</span> <span class="n">Z_list</span><span class="p">))</span>
 <span class="n">psi</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">complex_to_real</span><span class="p">(</span><span class="n">psi</span><span class="p">)</span>
+
+<span class="c1"># wrapping disentanglers, isometries, and initial state into</span>
+<span class="c1"># tf.Variable (necessary for the further optimizer)</span>
+<span class="n">U_var</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">,</span> <span class="n">U_list</span><span class="p">))</span>
+<span class="n">Z_var</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">,</span> <span class="n">Z_list</span><span class="p">))</span>
+<span class="n">psi_var</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">psi</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 </div>
-<div class="section" id="Optimization-loop">
-<h2>Optimization loop<a class="headerlink" href="#Optimization-loop" title="Permalink to this headline">¶</a></h2>
-<p>MERA parametrizes quantum state <span class="math notranslate nohighlight">\(\Psi(\{U\}, \{Z\}, \psi)\)</span> of a spin system, where <span class="math notranslate nohighlight">\(\{U\}\)</span> is a set of disentanglers, <span class="math notranslate nohighlight">\(\{Z\}\)</span> is a set of isometries, <span class="math notranslate nohighlight">\(\psi\)</span> is a state in the renormalized space. In order to find the ground state and its energy, we perform optimization of variational energy</p>
+<div class="section" id="3.-Optimization-of-MERA">
+<h2>3. Optimization of MERA<a class="headerlink" href="#3.-Optimization-of-MERA" title="Permalink to this headline">¶</a></h2>
+<p>MERA parametrizes quantum state <span class="math notranslate nohighlight">\(\Psi(U, Z, \psi)\)</span> of a spin system, where <span class="math notranslate nohighlight">\(U\)</span> is a set of disentanglers, <span class="math notranslate nohighlight">\(Z\)</span> is a set of isometries, and <span class="math notranslate nohighlight">\(\psi\)</span> is a state in the renormalized space. In order to find the ground state and its energy, we perform optimization of variational energy</p>
 <div class="math notranslate nohighlight">
-\[\langle\Psi(\{U\}, \{Z\}, \psi)|H_{\rm TFI}|\Psi(\{U\}, \{Z\}, \psi)\rangle\rightarrow \min_{\{U\}, \{Z\}, \psi\in {\rm Stiefel \ manifold}}\]</div>
+\[\langle\Psi(U, Z, \psi)|H_{\rm TFI}|\Psi(U, Z, \psi)\rangle\rightarrow \min_{U, \ Z, \ \psi \in {\rm Stiefel \ manifold}}\]</div>
+<p>First of all, we define the parameters of optimization. In order to achieve better convergence, we decrease the learning rate with the number of iteration according to the exponential law.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1">#==================================#</span>
-<span class="n">iters</span> <span class="o">=</span> <span class="mi">3000</span> <span class="c1"># number of iterations</span>
+<span></span><span class="n">iters</span> <span class="o">=</span> <span class="mi">3000</span> <span class="c1"># number of iterations</span>
 <span class="n">lr_i</span> <span class="o">=</span> <span class="mf">0.6</span> <span class="c1"># initial learning rate</span>
-<span class="n">lr_f</span> <span class="o">=</span> <span class="mf">0.1</span> <span class="c1"># final learning rate</span>
-<span class="c1">#==================================#</span>
+<span class="n">lr_f</span> <span class="o">=</span> <span class="mf">0.05</span> <span class="c1"># final learning rate</span>
 
-<span class="c1"># learning rate decay coefficient</span>
+<span class="c1"># learning rate is multiplied by this coefficient each iteration</span>
 <span class="n">decay</span> <span class="o">=</span> <span class="p">(</span><span class="n">lr_f</span> <span class="o">/</span> <span class="n">lr_i</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">iters</span><span class="p">)</span>
-
-<span class="c1"># optimizer</span>
-<span class="n">m</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">StiefelManifold</span><span class="p">()</span>  <span class="c1"># Stiefel manifold</span>
+</pre></div>
+</div>
+</div>
+<p>Here we define an example of the complex Stiefel manifold necessary for Riemannian optimization and Riemannian Adam optimizer.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">m</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">StiefelManifold</span><span class="p">()</span>  <span class="c1"># complex Stiefel manifold</span>
 <span class="n">opt</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">RAdam</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">lr_i</span><span class="p">)</span>  <span class="c1"># Riemannian Adam</span>
-
-
-<span class="n">E_list</span> <span class="o">=</span> <span class="p">[]</span> <span class="c1"># will be filled by energy per iteration</span>
-
-<span class="c1"># Variables to be optimized</span>
-<span class="n">varU</span> <span class="o">=</span> <span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">U_re</span><span class="p">)</span> <span class="k">for</span> <span class="n">U_re</span> <span class="ow">in</span> <span class="n">U_list</span><span class="p">]</span> <span class="c1"># disentanglers vars</span>
-<span class="n">varZ</span> <span class="o">=</span> <span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">Z_re</span><span class="p">)</span> <span class="k">for</span> <span class="n">Z_re</span> <span class="ow">in</span> <span class="n">Z_list</span><span class="p">]</span> <span class="c1"># isometries vars</span>
-<span class="n">varpsi</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">psi</span><span class="p">)</span> <span class="c1"># psi var</span>
-<span class="n">all_vars</span> <span class="o">=</span> <span class="n">varU</span> <span class="o">+</span> <span class="n">varZ</span> <span class="o">+</span> <span class="p">[</span><span class="n">varpsi</span><span class="p">]</span> <span class="c1"># all variables in one list</span>
+</pre></div>
+</div>
+</div>
+<p>Finally, we perform an optimization loop.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1"># this list will be filled by the value of variational energy per iteration</span>
+<span class="n">E_list</span> <span class="o">=</span> <span class="p">[]</span>
 
 <span class="c1"># optimization loop</span>
 <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">iters</span><span class="p">)):</span>
@@ -720,55 +694,63 @@ div.rendered_html tbody tr:hover {
     <span class="c1"># gradient calculation</span>
     <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">GradientTape</span><span class="p">()</span> <span class="k">as</span> <span class="n">tape</span><span class="p">:</span>
 
-        <span class="c1"># convert real valued variables to complex valued tensors</span>
-        <span class="n">varU_c</span> <span class="o">=</span> <span class="p">[</span><span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">real_to_complex</span><span class="p">(</span><span class="n">varU</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">varU</span><span class="p">))]</span>
-        <span class="n">varZ_c</span> <span class="o">=</span> <span class="p">[</span><span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">real_to_complex</span><span class="p">(</span><span class="n">varZ</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">varZ</span><span class="p">))]</span>
-        <span class="n">varpsi_c</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">real_to_complex</span><span class="p">(</span><span class="n">varpsi</span><span class="p">)</span>
+        <span class="c1"># convert real valued variables back to complex valued tensors</span>
+        <span class="n">U_var_c</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">real_to_complex</span><span class="p">,</span> <span class="n">U_var</span><span class="p">))</span>
+        <span class="n">Z_var_c</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">real_to_complex</span><span class="p">,</span> <span class="n">Z_var</span><span class="p">))</span>
+        <span class="n">psi_var_c</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">real_to_complex</span><span class="p">(</span><span class="n">psi_var</span><span class="p">)</span>
 
         <span class="c1"># initial local Hamiltonian term</span>
         <span class="n">h_renorm</span> <span class="o">=</span> <span class="n">h</span>
 
         <span class="c1"># renormalization of a local Hamiltonian term</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">varU</span><span class="p">)):</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">U_var</span><span class="p">)):</span>
             <span class="n">h_renorm</span> <span class="o">=</span> <span class="n">mera_layer</span><span class="p">(</span><span class="n">h_renorm</span><span class="p">,</span>
-                                  <span class="n">varU_c</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
-                                  <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">varU_c</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span>
-                                  <span class="n">varZ_c</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
-                                  <span class="n">varZ_c</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
-                                  <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">varZ_c</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span>
-                                  <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">varZ_c</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+                                  <span class="n">U_var_c</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                                  <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">U_var_c</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span>
+                                  <span class="n">Z_var_c</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                                  <span class="n">Z_var_c</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                                  <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">Z_var_c</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span>
+                                  <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">Z_var_c</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
 
         <span class="c1"># renormalizad Hamiltonian (low dimensional)</span>
         <span class="n">h_renorm</span> <span class="o">=</span> <span class="p">(</span><span class="n">h_renorm</span> <span class="o">+</span> <span class="n">tf</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">h_renorm</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">)))</span> <span class="o">/</span> <span class="mi">2</span>
         <span class="n">h_renorm</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">h_renorm</span><span class="p">,</span> <span class="p">(</span><span class="n">max_chi</span> <span class="o">*</span> <span class="n">max_chi</span><span class="p">,</span> <span class="n">max_chi</span> <span class="o">*</span> <span class="n">max_chi</span><span class="p">))</span>
 
         <span class="c1"># energy</span>
-        <span class="n">E</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">((</span><span class="n">tf</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">varpsi_c</span><span class="p">))</span> <span class="o">@</span> <span class="n">h_renorm</span> <span class="o">@</span> <span class="n">varpsi_c</span><span class="p">),</span>
+        <span class="n">E</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">((</span><span class="n">tf</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">adjoint</span><span class="p">(</span><span class="n">psi_var_c</span><span class="p">)</span> <span class="o">@</span> <span class="n">h_renorm</span> <span class="o">@</span> <span class="n">psi_var_c</span><span class="p">),</span>
                     <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">)[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
 
-        <span class="c1"># adding information for validation</span>
-        <span class="n">E_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">E</span><span class="p">)</span>
+    <span class="c1"># adding current variational energy to the list</span>
+    <span class="n">E_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">E</span><span class="p">)</span>
 
     <span class="c1"># gradients</span>
-    <span class="n">grad</span> <span class="o">=</span> <span class="n">tape</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">E</span><span class="p">,</span> <span class="n">all_vars</span><span class="p">)</span>
+    <span class="n">grad</span> <span class="o">=</span> <span class="n">tape</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">E</span><span class="p">,</span> <span class="n">U_var</span> <span class="o">+</span> <span class="n">Z_var</span> <span class="o">+</span> <span class="p">[</span><span class="n">psi_var</span><span class="p">])</span>
 
     <span class="c1"># optimization step</span>
-    <span class="n">opt</span><span class="o">.</span><span class="n">apply_gradients</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">grad</span><span class="p">,</span> <span class="n">all_vars</span><span class="p">))</span>
+    <span class="n">opt</span><span class="o">.</span><span class="n">apply_gradients</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">grad</span><span class="p">,</span> <span class="n">U_var</span> <span class="o">+</span> <span class="n">Z_var</span> <span class="o">+</span> <span class="p">[</span><span class="n">psi_var</span><span class="p">]))</span>
 
     <span class="c1"># learning rate update</span>
     <span class="n">opt</span><span class="o">.</span><span class="n">_set_hyper</span><span class="p">(</span><span class="s2">&quot;learning_rate&quot;</span><span class="p">,</span> <span class="n">opt</span><span class="o">.</span><span class="n">_get_hyper</span><span class="p">(</span><span class="s2">&quot;learning_rate&quot;</span><span class="p">)</span> <span class="o">*</span> <span class="n">decay</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
-<p>Plotting difference between the exact value of energy and value found by entanglement renormalization.</p>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+100%|██████████| 3000/3000 [06:21&lt;00:00,  7.87it/s]
+</pre></div></div>
+</div>
+<p>Here we compare exact ground state energy with MERA based value. We also plot how the difference between exact ground state energy and MERA-based energy evolves with the number of iteration.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># exact value of energy in the critical point</span>
+<span></span><span class="c1"># exact value of ground state energy in the critical point</span>
 <span class="n">N</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="mi">3</span> <span class="o">**</span> <span class="n">num_of_layers</span><span class="p">)</span> <span class="c1"># number of spins (for 5 layers one has 486 spins)</span>
-<span class="n">E0_exact_fin</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">N</span><span class="p">)))</span> <span class="o">/</span> <span class="n">N</span> <span class="c1"># exact energy</span>
+<span class="n">E0_exact_fin</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">N</span><span class="p">)))</span> <span class="o">/</span> <span class="n">N</span> <span class="c1"># exact energy per spin</span>
 
 <span class="n">plt</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;iter&#39;</span><span class="p">)</span>
@@ -784,7 +766,7 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-MERA energy: -1.2731158867108772
+MERA energy: -1.2731094185716914
 Exact energy: -1.2732417615356748
 </pre></div></div>
 </div>
@@ -792,7 +774,7 @@ Exact energy: -1.2732417615356748
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="_images/entanglement_renormalization_9_1.png" src="_images/entanglement_renormalization_9_1.png" />
+<img alt="_images/entanglement_renormalization_19_1.png" src="_images/entanglement_renormalization_19_1.png" />
 </div>
 </div>
 </div>
@@ -806,10 +788,10 @@ Exact energy: -1.2732417615356748
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="comparison.html" class="btn btn-neutral float-right" title="Comparison of optimization methods on the complex Stiefel manifold" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="channel_tomography.html" class="btn btn-neutral float-right" title="Quantum channel tomography" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="auxiliary.html" class="btn btn-neutral float-left" title="Auxiliary functions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="faq.html" class="btn btn-neutral float-left" title="Frequently asked questions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
