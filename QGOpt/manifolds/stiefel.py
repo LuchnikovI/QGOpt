@@ -64,12 +64,15 @@ class StiefelManifold(base_manifold.Manifold):
 
         Returns:
             complex valued tensor of shape (..., 1, 1),
-            manifold wise inner product"""
+            manifold wise inner product
+
+        Note:
+            The complexity for the 'euclidean' metric is O(pn),
+            the complexity for the 'canonical' metric is O(pn^2)"""
 
         if self._metric == 'euclidean':
-            s_sq = tf.linalg.trace(adj(vec1) @ vec2)[...,
-                                                     tf.newaxis,
-                                                     tf.newaxis]
+            s_sq = tf.reduce_sum(tf.math.conj(vec1) * vec2, axis=(-2, -1))
+            s_sq = s_sq[..., tf.newaxis, tf.newaxis]
         elif self._metric == 'canonical':
             u_shape = tf.shape(u)
             G = tf.eye(u_shape[-2], dtype=u.dtype) - u @ adj(u) / 2
