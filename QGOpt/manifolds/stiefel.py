@@ -94,12 +94,14 @@ class StiefelManifold(base_manifold.Manifold):
 
         Returns:
             complex valued tensor of shape (..., n, p),
-            a set of projected vectors"""
-        
+            a set of projected vectors
+
+        Note:
+            the complexity is O(np^2)"""
+
         u_shape = tf.shape(u)
         return 0.5 * u @ (adj(u) @ vec - adj(vec) @ u) +\
-                         (tf.eye(u_shape[-2], dtype=u.dtype) -\
-                          u @ adj(u)) @ vec
+                         vec - u @ (adj(u) @ vec)
 
     def egrad_to_rgrad(self, u, egrad):
         """Returns the Riemannian gradient from an Euclidean gradient.
@@ -113,16 +115,18 @@ class StiefelManifold(base_manifold.Manifold):
 
         Returns:
             complex valued tensor of shape (..., n, p),
-            the set of Reimannian gradients."""
+            the set of Reimannian gradients.
+
+        Note:
+            The complexity is O(np^2)"""
 
         if self._metric == 'euclidean':
             u_shape = tf.shape(u)
             return 0.5 * u @ (adj(u) @ egrad - adj(egrad) @ u) +\
-                             (tf.eye(u_shape[-2], dtype=u.dtype) -\
-                              u @ adj(u)) @ egrad
+                             egrad - u @ (adj(u) @ egrad)
 
         elif self._metric == 'canonical':
-            return egrad - u @ adj(egrad) @ u
+            return egrad - u @ (adj(egrad) @ u)
 
     def retraction(self, u, vec):
         """Transports a set of points from the complex Stiefel
