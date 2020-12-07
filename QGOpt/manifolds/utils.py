@@ -164,7 +164,10 @@ def lyap_symmetric(A, C, eps=1e-9):
 
     Return:
         complex valued tensor of shape (..., m, m),
-        solution of the equation."""
+        solution of the equation.
+
+    Note:
+        The complexity O(m^3)"""
 
     lmbd, u = tf.linalg.eigh(A)
     uCu = adj(u) @ C @ u
