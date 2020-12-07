@@ -212,7 +212,10 @@ class ChoiMatrix(base_manifold.Manifold):
 
         Returns:
             complex valued tensor of shape (..., n ** 2, k),
-            a set of transported vectors."""
+            a set of transported vectors.
+
+        Note:
+            The complexity O(kn^4)"""
 
         u_new = self.retraction(u, vec2)
         return self.proj(u_new, vec1)
