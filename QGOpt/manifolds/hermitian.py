@@ -42,7 +42,10 @@ class HermitianMatrix(base_manifold.Manifold):
 
         Returns:
             complex valued tensor of shape (..., 1, 1),
-            manifold wise inner product"""
+            manifold wise inner product.
+
+        Note:
+            The complexity is O(n^2)."""
 
         prod = tf.reduce_sum(tf.math.conj(vec1) * vec2, axis=(-2, -1),
                              keepdims=True)
@@ -61,7 +64,10 @@ class HermitianMatrix(base_manifold.Manifold):
 
         Returns:
             complex valued tensor of shape (..., n, n),
-            a set of projected vectors"""
+            a set of projected vectors.
+
+        Note:
+            The complexity is O(n^2)."""
 
         return 0.5 * (vec + adj(vec))
 
@@ -76,7 +82,10 @@ class HermitianMatrix(base_manifold.Manifold):
 
         Returns:
             complex valued tensor of shape (..., n, n),
-            the set of Reimannian gradients."""
+            the set of Reimannian gradients.
+
+        Note:
+            The complexity is O(n^2)."""
 
         return self.proj(u, egrad)
 
@@ -92,7 +101,10 @@ class HermitianMatrix(base_manifold.Manifold):
 
         Returns:
             complex valued tensor of shape (..., n, n),
-            a set of transported points."""
+            a set of transported points.
+
+        Note:
+            The complexity is O(n^2)."""
 
         return u + vec
 
@@ -110,7 +122,10 @@ class HermitianMatrix(base_manifold.Manifold):
 
         Returns:
             complex valued tensor of shape (..., n, n),
-            a set of transported vectors."""
+            a set of transported vectors.
+
+        Note:
+            The complexity is O(n^2)."""
 
         return vec1
 
