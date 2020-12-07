@@ -59,7 +59,10 @@ class DensityMatrix(base_manifold.Manifold):
 
         Returns:
             complex valued tensor of shape (..., 1, 1),
-            manifold wise inner product"""
+            manifold wise inner product.
+
+        Note:
+            The complexity is O(n^2)."""
 
         prod = tf.reduce_sum(tf.math.conj(vec1) * vec2, axis=(-2, -1))
         prod = tf.math.real(prod)
@@ -78,10 +81,13 @@ class DensityMatrix(base_manifold.Manifold):
 
         Returns:
             complex valued tensor of shape (..., n, n),
-            a set of projected vectors"""
+            a set of projected vectors.
+
+        Note:
+            The complexity is O(n^3)."""
 
         # projection onto the tangent space of ||u||_F = 1
-        vec_proj = vec - u * tf.linalg.trace(adj(u) @ vec)[...,
+        vec_proj = vec - u * tf.reduce_sum(tf.math.conj(u) * vec, axis=(-2, -1))[...,
                                             tf.newaxis, tf.newaxis]
 
         # projection onto the horizontal space
@@ -100,9 +106,12 @@ class DensityMatrix(base_manifold.Manifold):
 
         Returns:
             complex valued tensor of shape (..., n, n),
-            the set of Reimannian gradients."""
+            the set of Reimannian gradients.
 
-        rgrad = egrad - u * tf.linalg.trace(adj(u) @ egrad)[...,
+        Note:
+            The complexity is O(n^2)."""
+
+        rgrad = egrad - u * tf.reduce_sum(tf.math.conj(u) * egrad, axis=(-2, -1))[...,
                                            tf.newaxis, tf.newaxis]
         return rgrad
 
@@ -118,7 +127,10 @@ class DensityMatrix(base_manifold.Manifold):
 
         Returns:
             complex valued tensor of shape (..., n, n),
-            a set of transported points."""
+            a set of transported points.
+
+        Note:
+            The complexity is O(n^2)."""
 
         u_new = (u + vec)
         u_new = u_new / tf.linalg.norm(u_new)
@@ -138,7 +150,10 @@ class DensityMatrix(base_manifold.Manifold):
 
         Returns:
             complex valued tensor of shape (..., n, n),
-            a set of transported vectors."""
+            a set of transported vectors.
+
+        Note:
+            The complexity is O(n^3)."""
 
         u_new = (u + vec2)
         u_new = u_new / tf.linalg.norm(u_new)
