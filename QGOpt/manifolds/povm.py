@@ -58,7 +58,10 @@ class POVM(base_manifold.Manifold):
 
         Returns:
             complex valued tensor of shape (..., 1, 1, 1),
-            manifold wise inner product"""
+            manifold wise inner product.
+
+        Note:
+            The complexity is O(mn^2)"""
 
         prod = tf.reduce_sum(tf.math.conj(vec1) * vec2, axis=(-3, -2, -1))
         prod = tf.math.real(prod)
@@ -80,7 +83,10 @@ class POVM(base_manifold.Manifold):
 
         Returns:
             complex valued tensor of shape (..., m, n, n),
-            a set of projected vectors."""
+            a set of projected vectors.
+
+        Note:
+            The complexity is O(mn^3)."""
 
         n = tf.shape(u)[-1]
         m = tf.shape(u)[-3]
@@ -132,7 +138,10 @@ class POVM(base_manifold.Manifold):
 
         Returns:
             complex valued tensor of shape (..., m, n, n),
-            the set of Reimannian gradients."""
+            the set of Reimannian gradients.
+
+        Note:
+            The complexity is O(mn^3)."""
 
         n = tf.shape(u)[-1]
         m = tf.shape(u)[-3]
@@ -182,7 +191,10 @@ class POVM(base_manifold.Manifold):
 
         Returns:
             complex valued tensor of shape (..., m, n, n),
-            a set of transported points."""
+            a set of transported points.
+
+        Note:
+            The complexity is O(mn^3)."""
 
         n = tf.shape(u)[-1]
         m = tf.shape(u)[-3]
@@ -226,7 +238,10 @@ class POVM(base_manifold.Manifold):
 
         Returns:
             complex valued tensor of shape (..., m, n, n),
-            a set of transported vectors."""
+            a set of transported vectors.
+
+        Note:
+            The complexity is O(mn^3)."""
 
         u_new = self.retraction(u, vec2)
         return self.proj(u_new, vec1)
