@@ -70,7 +70,10 @@ class ChoiMatrix(base_manifold.Manifold):
 
         Returns:
             complex valued tensor of shape (..., 1, 1),
-            manifold wise inner product"""
+            manifold wise inner product
+ 
+        Note:
+            The complexity O(kn^2)"""
 
         prod = tf.reduce_sum(tf.math.conj(vec1) * vec2, axis=(-2, -1))
         prod = tf.math.real(prod)
@@ -89,7 +92,10 @@ class ChoiMatrix(base_manifold.Manifold):
 
         Returns:
             complex valued tensor of shape (..., n ** 2, k),
-            a set of projected vectors."""
+            a set of projected vectors.
+
+        Note:
+            The complexity O(kn^4)"""
 
         k = tf.shape(u)[-1]
         n = tf.cast(tf.math.sqrt(tf.cast(tf.shape(u)[-2], dtype=tf.float32)),
