@@ -135,7 +135,10 @@ class ChoiMatrix(base_manifold.Manifold):
 
         Returns:
             complex valued tensor of shape (..., n ** 2, k),
-            the set of Reimannian gradients."""
+            the set of Reimannian gradients.
+
+        Note:
+            The complexity O(kn^3)"""
 
         k = tf.shape(u)[-1]
         n = tf.cast(tf.math.sqrt(tf.cast(tf.shape(u)[-2], dtype=tf.float32)),
