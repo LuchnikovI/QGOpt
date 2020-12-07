@@ -106,8 +106,8 @@ class ChoiMatrix(base_manifold.Manifold):
                                          n[tf.newaxis],
                                          (k * n)[tf.newaxis]))
         u_mod = tf.linalg.matrix_transpose(u_mod)
-        vec_mod = vec_mod - 0.5 * u_mod @ (adj(u_mod) @ vec_mod +\
-                                           adj(vec_mod) @ u_mod)
+        vec_mod = vec_mod - 0.5 * (u_mod @ adj(u_mod)) @ vec_mod -\
+                                           0.5 * (u_mod @ adj(vec_mod)) @ u_mod
         vec_mod = tf.linalg.matrix_transpose(vec_mod)
         vec_mod = tf.reshape(vec_mod, shape_conc(shape,
                                                  (n ** 2)[tf.newaxis],
