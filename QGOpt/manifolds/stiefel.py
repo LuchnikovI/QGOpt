@@ -140,7 +140,12 @@ class StiefelManifold(base_manifold.Manifold):
 
         Returns:
             complex valued tensor of shape (..., n, p),
-            a set of transported points."""
+            a set of transported points.
+
+        Note:
+            The complexity for the 'svd' retraction is O(np^2),
+            the complexity for the 'cayley' retraction is O(n^3),
+            the complexity for the 'qr' retraction is O(np^2)"""
 
         if self._retraction == 'svd':
             new_u = u + vec
@@ -176,7 +181,12 @@ class StiefelManifold(base_manifold.Manifold):
 
         Returns:
             complex valued tensor of shape (..., n, p),
-            a set of transported vectors."""
+            a set of transported vectors.
+
+        Note:
+            The complexity for the 'svd' retraction is O(np^2),
+            the complexity for the 'cayley' retraction is O(n^3),
+            the complexity for the 'qr' retraction is O(np^2)"""
 
         new_u = self.retraction(u, vec2)
         return self.proj(new_u, vec1)
