@@ -95,7 +95,7 @@ class ChoiMatrix(base_manifold.Manifold):
             a set of projected vectors.
 
         Note:
-            The complexity O(kn^4)"""
+            The complexity O(kn^3+k^2n^2)"""
 
         k = tf.shape(u)[-1]
         n = tf.cast(tf.math.sqrt(tf.cast(tf.shape(u)[-2], dtype=tf.float32)),
@@ -215,7 +215,7 @@ class ChoiMatrix(base_manifold.Manifold):
             a set of transported vectors.
 
         Note:
-            The complexity O(kn^4)"""
+            The complexity O(kn^3+k^2n^2)"""
 
         u_new = self.retraction(u, vec2)
         return self.proj(u_new, vec1)
