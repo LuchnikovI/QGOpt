@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.5, 3.8]
+        python-version: 3.8
 
     steps:
     - uses: actions/checkout@v2
@@ -40,4 +40,4 @@ jobs:
         pytest
     - name: Examples tests with nbval
       run: |
-        pytest --nbval Stiefel_1_toy_quadratic_optimization.ipynb
+        py.test --nbval Stiefel_1_toy_quadratic_optimization.ipynb
