@@ -41,4 +41,4 @@ jobs:
         pytest
     - name: Examples tests with nbval
       run: |
-        py.test --nbval Stiefel_1_toy_quadratic_optimization.ipynb
+        py.test --nbval examples/Stiefel_1_toy_quadratic_optimization.ipynb
