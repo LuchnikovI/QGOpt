@@ -29,6 +29,7 @@ jobs:
         pip install --upgrade tensorflow
         pip install flake8 pytest
         pip install nbval
+        pip install matplotlib
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Lint with flake8
       run: |
