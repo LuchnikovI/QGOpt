@@ -61,15 +61,17 @@ class PositiveCone(base_manifold.Manifold):
 
         Returns:
             complex valued tensor of shape (..., 1, 1),
-            manifold wise inner product."""
+            manifold wise inner product.
+
+        Note:
+            The complexity O(n^3) for both inner products."""
 
         if self._metric == 'log_euclidean':
             lmbd, U = tf.linalg.eigh(u)
             W = _pull_back_log(vec1, U, lmbd)
             V = _pull_back_log(vec2, U, lmbd)
 
-            prod = tf.math.real(tf.linalg.trace(adj(W) @ V))
-            prod = prod[..., tf.newaxis, tf.newaxis]
+            prod = tf.math.real(tf.reduce_sum(tf.math.conj(W) * V, axis=(-2, -1), keepdims=True))
             prod = tf.cast(prod, dtype=u.dtype)
 
             return prod
@@ -104,7 +106,10 @@ class PositiveCone(base_manifold.Manifold):
 
         Returns:
             complex valued tensor of shape (..., n, n),
-            a set of projected vectors."""
+            a set of projected vectors.
+
+        Note:
+            The complexity O(n^2)."""
         return (vec + adj(vec)) / 2
 
     def egrad_to_rgrad(self, u, egrad):
@@ -118,7 +123,10 @@ class PositiveCone(base_manifold.Manifold):
 
         Returns:
             complex valued tensor of shape (..., n, n),
-            the set of Reimannian gradients."""
+            the set of Reimannian gradients.
+
+        Note:
+            The complexity O(n^3)."""
 
         if self._metric == 'log_euclidean':
             lmbd, U = tf.linalg.eigh(u)
@@ -152,7 +160,10 @@ class PositiveCone(base_manifold.Manifold):
 
         Returns:
             complex valued tensor of shape (..., n, n),
-            a set of transported points."""
+            a set of transported points.
+
+        Note:
+            The complexity O(n^3)."""
 
         if self._metric == 'log_euclidean':
             lmbd, U = tf.linalg.eigh(u)
@@ -191,7 +202,10 @@ class PositiveCone(base_manifold.Manifold):
 
         Returns:
             complex valued tensor of shape (..., n, n),
-            a set of transported vectors."""
+            a set of transported vectors.
+
+        Note:
+            The complexity O(n^3)."""
 
         if self._metric == 'log_euclidean':
             lmbd, U = tf.linalg.eigh(u)
