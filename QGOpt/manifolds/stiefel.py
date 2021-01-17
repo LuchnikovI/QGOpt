@@ -68,17 +68,16 @@ class StiefelManifold(base_manifold.Manifold):
 
         Note:
             The complexity for the 'euclidean' metric is O(pn),
-            the complexity for the 'canonical' metric is O(pn^2)"""
+            the complexity for the 'canonical' metric is O(np^2)"""
 
         if self._metric == 'euclidean':
-            s_sq = tf.reduce_sum(tf.math.conj(vec1) * vec2, axis=(-2, -1))
-            s_sq = s_sq[..., tf.newaxis, tf.newaxis]
+            s_sq = tf.reduce_sum(tf.math.conj(vec1) * vec2, axis=(-2, -1), keepdims=True)
         elif self._metric == 'canonical':
-            u_shape = tf.shape(u)
-            G = tf.eye(u_shape[-2], dtype=u.dtype) - u @ adj(u) / 2
-            s_sq = tf.linalg.trace(adj(vec1) @ G @ vec2)[...,
-                                                         tf.newaxis,
-                                                         tf.newaxis]
+            s_sq_1 = tf.reduce_sum(tf.math.conj(vec1) * vec2, axis=(-2, -1), keepdims=True)
+            vec1_dag_u = adj(vec1) @ u
+            u_dag_vec2 = adj(u) @ vec2
+            s_sq_2 = tf.reduce_sum(u_dag_vec2, tf.linalg.matrix_transpose(vec1_dag_u), axis=(-2, -1), keepdims=True)
+            s_sq = s_sq_1 - 0.5 * s_sq_2
         return tf.cast(tf.math.real(s_sq), dtype=u.dtype)
 
     def proj(self, u, vec):
