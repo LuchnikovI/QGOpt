@@ -5,13 +5,13 @@ from QGOpt.manifolds.utils import lyap_symmetric
 
 
 class DensityMatrix(base_manifold.Manifold):
-    """The manifold of density matrices (rho(n) the positive definite hermitian
-    matrices of size nxn with unit trace). An element of the manifold is
-    represented by a complex matrix A that parametrizes density matrix
-    rho = A @ adj(A)  (positive by construction). Notice that for any unitary
-    matrix Q of size nxn the transformation A --> AQ leaves resulting matrix
-    the same. This fact is taken into account by consideration of quotient
-    manifold from
+    """The manifold of density matrices of fixed rank (rho(n, r) the positive
+    definite hermitian matrices of size nxn with unit trace and rank r).
+    An element of the manifold is represented by a complex matrix A that
+    parametrizes density matrix rho = A @ adj(A)  (positive by construction).
+    Notice that for any unitary matrix Q of size nxn the transformation A --> AQ
+    leaves resulting matrix the same. This fact is taken into account by
+    consideration of quotient manifold from
 
     Yatawatta, S. (2013, May). Radio interferometric calibration using a
     Riemannian manifold. In 2013 IEEE International Conference on Acoustics,
@@ -26,8 +26,8 @@ class DensityMatrix(base_manifold.Manifold):
             Types of metrics are available: 'projection'.
 
     Notes:
-        All methods of this class operates with tensors of shape (..., n, n),
-        where (...) enumerates manifold (can be any shaped), (n, n)
+        All methods of this class operates with tensors of shape (..., n, r),
+        where (...) enumerates manifold (can be any shaped), (n, r)
         is the shape of a particular matrix (e.g. an element of the manifold
         or its tangent vector)."""
 
@@ -50,11 +50,11 @@ class DensityMatrix(base_manifold.Manifold):
         a tangent space.
 
         Args:
-            u: complex valued tensor of shape (..., n, n),
+            u: complex valued tensor of shape (..., n, r),
                 a set of points from the manifold.
-            vec1: complex valued tensor of shape (..., n, n),
+            vec1: complex valued tensor of shape (..., n, r),
                 a set of tangent vectors from the manifold.
-            vec2: complex valued tensor of shape (..., n, n),
+            vec2: complex valued tensor of shape (..., n, r),
                 a set of tangent vectors from the manifold.
 
         Returns:
@@ -62,7 +62,7 @@ class DensityMatrix(base_manifold.Manifold):
             manifold wise inner product.
 
         Note:
-            The complexity is O(n^2)."""
+            The complexity is O(nr)."""
 
         prod = tf.reduce_sum(tf.math.conj(vec1) * vec2, axis=(-2, -1))
         prod = tf.math.real(prod)
@@ -74,17 +74,17 @@ class DensityMatrix(base_manifold.Manifold):
         of the manifold.
 
         Args:
-            u: complex valued tensor of shape (..., n, n),
+            u: complex valued tensor of shape (..., n, r),
                 a set of points from the manifold.
-            vec: complex valued tensor of shape (..., n, n),
+            vec: complex valued tensor of shape (..., n, r),
                 a set of vectors to be projected.
 
         Returns:
-            complex valued tensor of shape (..., n, n),
+            complex valued tensor of shape (..., n, r),
             a set of projected vectors.
 
         Note:
-            The complexity is O(n^3)."""
+            The complexity is O(nr^2)."""
 
         # projection onto the tangent space of ||u||_F = 1
         vec_proj = vec - u * tf.reduce_sum(tf.math.conj(u) * vec, axis=(-2, -1))[...,
@@ -99,17 +99,17 @@ class DensityMatrix(base_manifold.Manifold):
         """Returns the Riemannian gradient from an Euclidean gradient.
 
         Args:
-            u: complex valued tensor of shape (..., n, n),
+            u: complex valued tensor of shape (..., n, r),
                 a set of points from the manifold.
-            egrad: complex valued tensor of shape (..., n, n),
+            egrad: complex valued tensor of shape (..., n, r),
                 a set of Euclidean gradients.
 
         Returns:
-            complex valued tensor of shape (..., n, n),
+            complex valued tensor of shape (..., n, r),
             the set of Reimannian gradients.
 
         Note:
-            The complexity is O(n^2)."""
+            The complexity is O(nr)."""
 
         rgrad = egrad - u * tf.reduce_sum(tf.math.conj(u) * egrad, axis=(-2, -1))[...,
                                            tf.newaxis, tf.newaxis]
@@ -120,20 +120,20 @@ class DensityMatrix(base_manifold.Manifold):
         retraction map.
 
         Args:
-            u: complex valued tensor of shape (..., n, n), a set
+            u: complex valued tensor of shape (..., n, r), a set
                 of points to be transported.
-            vec: complex valued tensor of shape (..., n, n),
+            vec: complex valued tensor of shape (..., n, r),
                 a set of direction vectors.
 
         Returns:
-            complex valued tensor of shape (..., n, n),
+            complex valued tensor of shape (..., n, r),
             a set of transported points.
 
         Note:
-            The complexity is O(n^2)."""
+            The complexity is O(nr)."""
 
         u_new = (u + vec)
-        u_new = u_new / tf.linalg.norm(u_new)
+        u_new = u_new / tf.linalg.norm(u_new, axis=(-2, -1), keepdims=True)
         return u_new
 
     def vector_transport(self, u, vec1, vec2):
@@ -141,41 +141,41 @@ class DensityMatrix(base_manifold.Manifold):
         via vector transport.
 
         Args:
-            u: complex valued tensor of shape (..., n, n),
+            u: complex valued tensor of shape (..., n, r),
                 a set of points from the manifold, starting points.
-            vec1: complex valued tensor of shape (..., n, n),
+            vec1: complex valued tensor of shape (..., n, r),
                 a set of vectors to be transported.
-            vec2: complex valued tensor of shape (..., n, n),
+            vec2: complex valued tensor of shape (..., n, r),
                 a set of direction vectors.
 
         Returns:
-            complex valued tensor of shape (..., n, n),
+            complex valued tensor of shape (..., n, r),
             a set of transported vectors.
 
         Note:
-            The complexity is O(n^3)."""
+            The complexity is O(nr^2)."""
 
         u_new = (u + vec2)
-        u_new = u_new / tf.linalg.norm(u_new)
+        u_new = u_new / tf.linalg.norm(u_new, axis=(-2, -1), keepdims=True)
         return self.proj(u_new, vec1)
 
     def retraction_transport(self, u, vec1, vec2):
         """Performs a retraction and a vector transport simultaneously.
 
         Args:
-            u: complex valued tensor of shape (..., n, n),
+            u: complex valued tensor of shape (..., n, r),
                 a set of points from the manifold, starting points.
-            vec1: complex valued tensor of shape (..., n, n),
+            vec1: complex valued tensor of shape (..., n, r),
                 a set of vectors to be transported.
-            vec2: complex valued tensor of shape (..., n, n),
+            vec2: complex valued tensor of shape (..., n, r),
                 a set of direction vectors.
 
         Returns:
-            two complex valued tensors of shape (..., n, n),
+            two complex valued tensors of shape (..., n, r),
             a set of transported points and vectors."""
 
         u_new = (u + vec2)
-        u_new = u_new / tf.linalg.norm(u_new)
+        u_new = u_new / tf.linalg.norm(u_new, axis=(-2, -1), keepdims=True)
         return u_new, self.proj(u_new, vec1)
 
     def random(self, shape, dtype=tf.complex64):
@@ -183,13 +183,13 @@ class DensityMatrix(base_manifold.Manifold):
         randomly.
 
         Args:
-            shape: tuple of integer numbers (..., n, n),
+            shape: tuple of integer numbers (..., n, r),
                 shape of a generated matrix.
             dtype: type of an output tensor, can be
                 either tf.complex64 or tf.complex128.
 
         Returns:
-            complex valued tensor of shape (..., n, n),
+            complex valued tensor of shape (..., n, r),
             a generated matrix."""
 
         list_of_dtypes = [tf.complex64, tf.complex128]
@@ -208,7 +208,7 @@ class DensityMatrix(base_manifold.Manifold):
         the manifold.
 
         Args:
-            u: complex valued tensor of shape (..., n, n), points
+            u: complex valued tensor of shape (..., n, r), points
                 from the manifold.
 
         Returns:
