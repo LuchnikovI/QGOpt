@@ -76,7 +76,7 @@ class StiefelManifold(base_manifold.Manifold):
             s_sq_1 = tf.reduce_sum(tf.math.conj(vec1) * vec2, axis=(-2, -1), keepdims=True)
             vec1_dag_u = adj(vec1) @ u
             u_dag_vec2 = adj(u) @ vec2
-            s_sq_2 = tf.reduce_sum(u_dag_vec2, tf.linalg.matrix_transpose(vec1_dag_u), axis=(-2, -1), keepdims=True)
+            s_sq_2 = tf.reduce_sum(u_dag_vec2 * tf.linalg.matrix_transpose(vec1_dag_u), axis=(-2, -1), keepdims=True)
             s_sq = s_sq_1 - 0.5 * s_sq_2
         return tf.cast(tf.math.real(s_sq), dtype=u.dtype)
 
