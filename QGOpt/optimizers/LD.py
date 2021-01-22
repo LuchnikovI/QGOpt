@@ -5,7 +5,9 @@ import math
 
 
 class LangevinDynamics(opt.OptimizerV2):
-    """Riemannian langevin dynamics algorithm.
+    """
+    This is unstable experimental stuff!!!
+    Riemannian langevin dynamics algorithm.
 
     Args:
         manifold: object of the class Manifold, marks a particular manifold.
