@@ -85,8 +85,9 @@
               <p class="caption"><span class="caption-text">Getting started:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start: Quantum Gate decomposition</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently asked questions</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Tutorials:</span></p>
 <ul class="current">
@@ -94,9 +95,9 @@
 <li class="toctree-l1"><a class="reference internal" href="channel_tomography.html">Quantum channel tomography</a></li>
 <li class="toctree-l1"><a class="reference internal" href="state_tomography.html">Quantum state tomography</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Optimal POVM</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#Prior-information-about-a-quantum-state">Prior information about a quantum state</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#POVM-optimization">POVM optimization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#Validation">Validation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#1.-Prior-information-about-a-quantum-state">1. Prior information about a quantum state</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#2.-Search-for-the-optimal-POVM-with-given-prior-information-about-a-state">2. Search for the optimal POVM with given prior information about a state</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#3.-Verification">3. Verification</a></li>
 </ul>
 </li>
 </ul>
@@ -422,9 +423,9 @@ div.rendered_html tbody tr:hover {
 <h1>Optimal POVM<a class="headerlink" href="#Optimal-POVM" title="Permalink to this headline">¶</a></h1>
 <p>One can open this tutorial in Google Colab (is recommended)</p>
 <p><a class="reference external" href="https://colab.research.google.com/github/LuchnikovI/QGOpt/blob/master/docs/source/optimal_povm.ipynb"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a></p>
-<p>In the following tutorial, we show how to perform optimization over the manifold of different POVMs by using QGOpt library. It is known that measurements of a qubit induced by tetrahedral POVM allow reconstructing unknown qubit state with a minimal variance if there is no prior information about a qubit state. Let us show it using numerical optimization over the manifold of different POVMs. In the beginning, let us import some libraries.</p>
+<p>In the following tutorial, we show how to perform optimization over the manifold of POVMs by using the QGOpt library. It is known that measurements of a qubit induced by tetrahedral POVM allow reconstructing an unknown qubit state with a minimal variance if there is no prior information about a qubit state. Let us check this fact numerically using optimization over the manifold of POVMs. In the beginning, let us import some libraries.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -443,17 +444,17 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-<div class="section" id="Prior-information-about-a-quantum-state">
-<h2>Prior information about a quantum state<a class="headerlink" href="#Prior-information-about-a-quantum-state" title="Permalink to this headline">¶</a></h2>
-<p>Here we generate prior information about a quantum state. We represent a prior probability distribution over a quantum state approximately, by using a set of samples from a distribution. Since tetrahedral POVM is optimal when there is no prior information about a state, we consider uniform distribution across the Bloch ball.</p>
+<div class="section" id="1.-Prior-information-about-a-quantum-state">
+<h2>1. Prior information about a quantum state<a class="headerlink" href="#1.-Prior-information-about-a-quantum-state" title="Permalink to this headline">¶</a></h2>
+<p>We represent a prior probability distribution over a quantum state approximately, by using a set of samples from a prior distribution. Since tetrahedral POVM is optimal when there is no prior information about a state, we consider uniform distribution across the Bloch ball.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1">#=========================================================================#</span>
+<span></span><span class="c1">#-------------------------------------------------------------------------#</span>
 <span class="n">num_of_samples</span> <span class="o">=</span> <span class="mi">10000</span>  <span class="c1"># number of samples representing prior information</span>
-<span class="c1">#=========================================================================#</span>
+<span class="c1">#-------------------------------------------------------------------------#</span>
 
 <span class="c1"># Pauli matrices</span>
 <span class="n">sigma_x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
@@ -481,35 +482,51 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 </div>
-<div class="section" id="POVM-optimization">
-<h2>POVM optimization<a class="headerlink" href="#POVM-optimization" title="Permalink to this headline">¶</a></h2>
-<p>Here we search optimal POVM via minimizing the variance of a posterior distribution over density matrices.</p>
-<p>The POVMs is implemented via a quadratic parameterization. Any POVM <span class="math notranslate nohighlight">\(\{M_\alpha\}_{\alpha=1}^N\)</span> is represented by a set of matrices <span class="math notranslate nohighlight">\(\{A_\alpha\}_{\alpha=1}^N\)</span>, where <span class="math notranslate nohighlight">\(M_\alpha = A_\alpha A^\dagger_\alpha\)</span>. <span class="math notranslate nohighlight">\(M_\alpha\)</span> is non-negative and hermitian by construction. One also has <span class="math notranslate nohighlight">\(\sum_\alpha A_\alpha A_\alpha^\dagger = I\)</span>. Since there is an equivalence relation <span class="math notranslate nohighlight">\(A_\alpha \sim A_\alpha Q_\alpha\)</span>, where <span class="math notranslate nohighlight">\(\{Q_\alpha\}_{\alpha=1}^N\)</span> is a set of arbitrary
-unitary matrices, optimization is performed on the quotient manifold eliminating this simmetry. The corresponding quotient geometry is described in</p>
-<p>Yatawatta, S. (2013, May). Radio interferometric calibration using a Riemannian manifold. In 2013 IEEE International Conference on Acoustics, Speech and Signal Processing (pp. 3866-3870). IEEE.</p>
+<div class="section" id="2.-Search-for-the-optimal-POVM-with-given-prior-information-about-a-state">
+<h2>2. Search for the optimal POVM with given prior information about a state<a class="headerlink" href="#2.-Search-for-the-optimal-POVM-with-given-prior-information-about-a-state" title="Permalink to this headline">¶</a></h2>
+<p>Here we search for the optimal POVM via minimizing the variance of a posterior distribution over density matrices. First, we define an example of the POVMs manifold:</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1">#=========================#</span>
-<span class="n">lr</span> <span class="o">=</span> <span class="mf">0.03</span>  <span class="c1"># learning rate</span>
-<span class="c1">#=========================#</span>
-
-<span class="c1">#  Manifold of POVMs</span>
-<span class="n">m</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">POVM</span><span class="p">()</span>
-<span class="c1"># Initial parametrization of POVM</span>
+<span></span><span class="n">m</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">POVM</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<p>The manifolds of POVMs is represented through the quadratic parametrization <span class="math notranslate nohighlight">\(M_i = A_iA_i^\dagger\)</span> with an equivalence relation <span class="math notranslate nohighlight">\(A_i\sim A_iQ_i\)</span>, where <span class="math notranslate nohighlight">\(Q_i\)</span> is an arbitrary unitary matrix. Here, we initialize a variable that represents the parametrization of each element of POVM:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1"># randon initial parametrization of POVM</span>
 <span class="n">A</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
-<span class="c1"># Real representtion of A</span>
+<span class="c1"># real representtion of A</span>
 <span class="n">A</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">complex_to_real</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
 <span class="c1"># tf.Variable to be tuned</span>
 <span class="n">A</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
-
-<span class="c1"># Riemannian Adam optimizer</span>
+</pre></div>
+</div>
+</div>
+<p>Then we initialize Riemannian Adam optimizer:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">lr</span> <span class="o">=</span> <span class="mf">0.03</span>
 <span class="n">opt</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">RAdam</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">lr</span><span class="p">)</span>
-
-<span class="c1"># Optimization loop</span>
-<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1000</span><span class="p">):</span>
+</pre></div>
+</div>
+</div>
+<p>Finally, we ran the part of code that calculates forward pass, gradients, and optimization step several times until convergence to the optimal point is reached:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1000</span><span class="p">):</span>
     <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">GradientTape</span><span class="p">()</span> <span class="k">as</span> <span class="n">tape</span><span class="p">:</span>
 
         <span class="c1"># Complex representation of A</span>
@@ -549,11 +566,11 @@ unitary matrices, optimization is performed on the quotient manifold eliminating
 </div>
 </div>
 </div>
-<div class="section" id="Validation">
-<h2>Validation<a class="headerlink" href="#Validation" title="Permalink to this headline">¶</a></h2>
-<p>Here we check a resulting POVM. For tetrahedral POVM one has the following relation <span class="math notranslate nohighlight">\({\rm Tr}\left(M^\alpha M^\beta\right) = \frac{2\delta_{\alpha\beta} + 1}{12}\)</span>. One can see, that this relation is almost true for a resulting POVM. The small error appears due to the approximate monte carlo averaging of a covariance matric by using a set of samples from the prior distribution.</p>
+<div class="section" id="3.-Verification">
+<h2>3. Verification<a class="headerlink" href="#3.-Verification" title="Permalink to this headline">¶</a></h2>
+<p>Here we check the resulting optimal POVM. For tetrahedral POVM one has the following relation <span class="math notranslate nohighlight">\({\rm Tr}\left(M^\alpha M^\beta\right) = \frac{2\delta_{\alpha\beta} + 1}{12}\)</span>. One can see, that this relation is almost true for a resulting POVM. The small error appears due to the approximate Monte-Carlo averaging of a covariance matric by using a set of samples from the prior distribution.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -562,28 +579,27 @@ unitary matrices, optimization is performed on the quotient manifold eliminating
 <span class="n">cross</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">cross</span><span class="p">)</span>
 <span class="n">cross</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">cross</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">matshow</span><span class="p">(</span><span class="n">cross</span><span class="p">)</span>
-<span class="n">cross</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">cross</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
-</pre></div>
+<div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;tf.Tensor: shape=(4, 4), dtype=float64, numpy=
-array([[0.25003257, 0.08331541, 0.08331288, 0.08337171],
-       [0.08331541, 0.25074221, 0.08337179, 0.08331225],
-       [0.08331288, 0.08337179, 0.25007641, 0.08331532],
-       [0.08337171, 0.08331225, 0.08331532, 0.24915009]])&gt;
+tf.Tensor(
+[[0.24927765 0.08337808 0.08333673 0.08328467]
+ [0.08337808 0.24939711 0.08328523 0.08333633]
+ [0.08333673 0.08328523 0.25029829 0.08337795]
+ [0.08328467 0.08333633 0.08337795 0.25102899]], shape=(4, 4), dtype=float64)
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="_images/optimal_povm_7_1.png" src="_images/optimal_povm_7_1.png" />
+<img alt="_images/optimal_povm_13_1.png" src="_images/optimal_povm_13_1.png" />
 </div>
 </div>
 </div>

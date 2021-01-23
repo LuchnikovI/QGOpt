@@ -18,6 +18,10 @@ Manifolds
     :members:
     :undoc-members:
 
+.. autoclass:: QGOpt.manifolds.POVM
+    :members:
+    :undoc-members:
+
 .. autoclass:: QGOpt.manifolds.HermitianMatrix
     :members:
     :undoc-members:
