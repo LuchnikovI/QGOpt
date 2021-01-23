@@ -86,18 +86,18 @@
               <p class="caption"><span class="caption-text">Getting started:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start: Quantum Gate decomposition</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently asked questions</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Tutorials:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="entanglement_renormalization.html">Entanglement renormalization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="channel_tomography.html">Quantum channel tomography</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Quantum state tomography</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#Many-qubit,-informationally-complete,-positive-operator-valued-measure-(IC-POVM)">Many-qubit, informationally complete, positive operator-valued measure (IC POVM)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#Data-set-generation-(measurement-outcomes-simulation).">Data set generation (measurement outcomes simulation).</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#Optimization-loop">Optimization loop</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#Validation-curves">Validation curves</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#1.-Many-qubit,-informationally-complete,-positive-operator-valued-measure-(IC-POVM)">1. Many-qubit, informationally complete, positive operator-valued measure (IC POVM)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#2.-Data-set-generation-(measurement-outcomes-simulation).">2. Data set generation (measurement outcomes simulation).</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#3.-Data-processing-(tomography)">3. Data processing (tomography)</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="optimal_povm.html">Optimal POVM</a></li>
@@ -424,15 +424,15 @@ div.rendered_html tbody tr:hover {
 <h1>Quantum state tomography<a class="headerlink" href="#Quantum-state-tomography" title="Permalink to this headline">¶</a></h1>
 <p>One can open this notebook in Google Colab (is recommended)</p>
 <p><a class="reference external" href="https://colab.research.google.com/github/LuchnikovI/QGOpt/blob/master/docs/source/state_tomography.ipynb"><img alt="Open In Colab" src="https://colab.research.google.com/assets/colab-badge.svg" /></a></p>
-<p>In the given tutorial, we perform quantum state tomography via the manifold of density matrices. First of all, let us import some libraries.</p>
+<p>In this tutorial, we perform quantum state tomography via Riemannian optimization. First two blocks of a code (1. Many-qubit, informationally complete, positive operator-valued measure (IC POVM) and 2. Data set generation (measurement outcomes simulation)) are refered to data generation, third bock dedicated to tomography of a state.</p>
+<p>First, one needs to import all necessary libraries.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span></span><span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>  <span class="c1"># tf 2.x</span>
 <span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">sqrt</span>
-<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>  <span class="c1"># tf 2.x</span>
 
 <span class="k">try</span><span class="p">:</span>
     <span class="kn">import</span> <span class="nn">QGOpt</span> <span class="k">as</span> <span class="nn">qgo</span>
@@ -440,31 +440,24 @@ div.rendered_html tbody tr:hover {
     <span class="o">!</span>pip install git+https://github.com/LuchnikovI/QGOpt
     <span class="kn">import</span> <span class="nn">QGOpt</span> <span class="k">as</span> <span class="nn">qgo</span>
 
-<span class="c1"># TensorNetwork library</span>
-<span class="k">try</span><span class="p">:</span>
-    <span class="kn">import</span> <span class="nn">tensornetwork</span> <span class="k">as</span> <span class="nn">tn</span>
-<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="o">!</span>pip install tensornetwork
-    <span class="kn">import</span> <span class="nn">tensornetwork</span> <span class="k">as</span> <span class="nn">tn</span>
-
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
-<span class="n">tn</span><span class="o">.</span><span class="n">set_default_backend</span><span class="p">(</span><span class="s2">&quot;tensorflow&quot;</span><span class="p">)</span>
 
 <span class="c1"># Fix random seed to make results reproducable.</span>
 <span class="n">tf</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">set_seed</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
-<div class="section" id="Many-qubit,-informationally-complete,-positive-operator-valued-measure-(IC-POVM)">
-<h2>Many-qubit, informationally complete, positive operator-valued measure (IC POVM)<a class="headerlink" href="#Many-qubit,-informationally-complete,-positive-operator-valued-measure-(IC-POVM)" title="Permalink to this headline">¶</a></h2>
-<p>Before generating measurement outcomes (data set) and performing a quantum state tomography, one needs to introduce POVM describing quantum measurements. For simplicity, we use one-qubit tetrahedral POVM and generalize it on a many-qubit case by taking tensor products between POVM elements, i.e. <span class="math notranslate nohighlight">\(\{M_\alpha\}_{\alpha=1}^4\)</span> is the one-qubit tetrahedral POVM, <span class="math notranslate nohighlight">\(\{M_{\alpha_1}\otimes \dots \otimes M_{\alpha_N}\}_{\alpha_1=1,\dots,\alpha_N=1}^4\)</span> is the many-qubit tetrahedral POVM.</p>
+<div class="section" id="1.-Many-qubit,-informationally-complete,-positive-operator-valued-measure-(IC-POVM)">
+<h2>1. Many-qubit, informationally complete, positive operator-valued measure (IC POVM)<a class="headerlink" href="#1.-Many-qubit,-informationally-complete,-positive-operator-valued-measure-(IC-POVM)" title="Permalink to this headline">¶</a></h2>
+<p>Before generating measurement outcomes and performing quantum tomography, one needs to introduce POVM describing quantum measurements. For simplicity, we use one-qubit tetrahedral POVM and generalize it on a many-qubit case by taking tensor product between POVM elements, i.e. <span class="math notranslate nohighlight">\(\{M_\alpha\}_{\alpha=1}^4\)</span> is the one-qubit tetrahedral POVM, <span class="math notranslate nohighlight">\(\{M_{\alpha_1}\otimes \dots \otimes M_{\alpha_N}\}_{\alpha_1=1,\dots,\alpha_N=1}^4\)</span> is the many-qubits tetrahedral POVM.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># auxiliary function that returns Kronecker product between POVM elements</span>
+<span></span><span class="c1"># Auxiliary function that returns Kronecker product between two</span>
+<span class="c1"># POVM elements A and B</span>
 <span class="k">def</span> <span class="nf">kron</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Kronecker product of two POVM elements.</span>
 
@@ -483,9 +476,6 @@ div.rendered_html tbody tr:hover {
                          <span class="n">shape</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">*</span> <span class="n">shape</span><span class="p">[</span><span class="mi">5</span><span class="p">]))</span>
     <span class="k">return</span> <span class="n">AB</span>
 
-<span class="c1"># list with sizes of a quantum system</span>
-<span class="n">num_of_qubits</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>  <span class="c1"># number of qubits</span>
-
 <span class="c1"># Pauli matrices</span>
 <span class="n">sigma_x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
 <span class="n">sigma_y</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">([[</span><span class="mi">0</span> <span class="o">+</span> <span class="mi">0</span><span class="n">j</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="n">j</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="n">j</span><span class="p">,</span> <span class="mi">0</span> <span class="o">+</span> <span class="mi">0</span><span class="n">j</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
@@ -496,13 +486,13 @@ div.rendered_html tbody tr:hover {
                    <span class="n">sigma_y</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">newaxis</span><span class="p">],</span>
                    <span class="n">sigma_z</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
-<span class="c1"># coordinates of thetrahedron peaks (is needed to build tetr. POVM)</span>
+<span class="c1"># Coordinates of thetrahedron peaks (is needed to build tetrahedral POVM)</span>
 <span class="n">s0</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
 <span class="n">s1</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">([</span><span class="mi">2</span> <span class="o">*</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="o">/</span><span class="mi">3</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
 <span class="n">s2</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">([</span><span class="o">-</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">/</span> <span class="mi">3</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
 <span class="n">s3</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">constant</span><span class="p">([</span><span class="o">-</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">/</span> <span class="mi">3</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span> <span class="o">/</span> <span class="mi">3</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
 
-<span class="c1"># coordinates of thetrahedron peaks in one tensor</span>
+<span class="c1"># Coordinates of thetrahedron peaks in one tensor of shape (4, 3)</span>
 <span class="n">s</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">s0</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">newaxis</span><span class="p">],</span>
                <span class="n">s1</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">newaxis</span><span class="p">],</span>
                <span class="n">s2</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">newaxis</span><span class="p">],</span>
@@ -511,163 +501,147 @@ div.rendered_html tbody tr:hover {
 <span class="c1"># One qubit thetrahedral POVM</span>
 <span class="n">M</span> <span class="o">=</span> <span class="mf">0.25</span> <span class="o">*</span> <span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span> <span class="o">+</span> <span class="n">tf</span><span class="o">.</span><span class="n">tensordot</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
 
-<span class="c1"># Many qubits POVMs</span>
-<span class="n">povms</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">num_of_qubits</span><span class="p">:</span>
-    <span class="n">Mmq</span> <span class="o">=</span> <span class="n">M</span>
-    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
-        <span class="n">Mmq</span> <span class="o">=</span> <span class="n">kron</span><span class="p">(</span><span class="n">Mmq</span><span class="p">,</span> <span class="n">M</span><span class="p">)</span>
-    <span class="n">povms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Mmq</span><span class="p">)</span>
+<span class="n">n</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># number of qubits we experiment with</span>
+
+<span class="c1"># M for n qubits (Mmq)</span>
+<span class="n">Mmq</span> <span class="o">=</span> <span class="n">M</span>
+<span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+    <span class="n">Mmq</span> <span class="o">=</span> <span class="n">kron</span><span class="p">(</span><span class="n">Mmq</span><span class="p">,</span> <span class="n">M</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 </div>
-<div class="section" id="Data-set-generation-(measurement-outcomes-simulation).">
-<h2>Data set generation (measurement outcomes simulation).<a class="headerlink" href="#Data-set-generation-(measurement-outcomes-simulation)." title="Permalink to this headline">¶</a></h2>
-<p>Here we generate a set of measurement outcomes (training set). First of all, we generate a random density matrix that is the target state we want to reconstruct. Then, we simulate measurement outcomes over the target state driven by tetrahedral POVM.</p>
+<div class="section" id="2.-Data-set-generation-(measurement-outcomes-simulation).">
+<h2>2. Data set generation (measurement outcomes simulation).<a class="headerlink" href="#2.-Data-set-generation-(measurement-outcomes-simulation)." title="Permalink to this headline">¶</a></h2>
+<p>Here we generate a set of measurement outcomes (training set). First of all, we generate a random density matrix that is a target state we want to reconstruct. Then, we simulate measurement outcomes over the target state driven by many-qubits tetrahedral POVM introduced in the previous cell.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">num_of_meas</span> <span class="o">=</span> <span class="mi">600000</span>  <span class="c1"># number of measurement outcomes</span>
+<span></span><span class="c1">#-----------------------------------------------------#</span>
+<span class="n">num_of_meas</span> <span class="o">=</span> <span class="mi">600000</span>  <span class="c1"># number of measurement outcomes</span>
+<span class="c1">#-----------------------------------------------------#</span>
 
-<span class="c1"># dicts with validation information</span>
-<span class="n">data_sets</span> <span class="o">=</span> <span class="p">{}</span>
-<span class="n">true_states</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="c1"># random target density matrix (to be reconstructed)</span>
+<span class="n">m</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">DensityMatrix</span><span class="p">()</span>
+<span class="n">A</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">2</span> <span class="o">**</span> <span class="n">n</span><span class="p">,</span> <span class="mi">2</span> <span class="o">**</span> <span class="n">n</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+<span class="n">rho_true</span> <span class="o">=</span> <span class="n">A</span> <span class="o">@</span> <span class="n">tf</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">adjoint</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
 
-<span class="c1"># loop over different system sizes</span>
-<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">num_of_qubits</span><span class="p">):</span>
+<span class="c1"># measurements simulation (by using Gumbel trick for sampling from a</span>
+<span class="c1"># discrete distribution)</span>
+<span class="n">P</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">tensordot</span><span class="p">(</span><span class="n">Mmq</span><span class="p">,</span> <span class="n">rho_true</span><span class="p">,</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]]),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+<span class="n">eps</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">((</span><span class="n">num_of_meas</span><span class="p">,</span> <span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">n</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+<span class="n">eps</span> <span class="o">=</span> <span class="o">-</span><span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="o">-</span><span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">eps</span><span class="p">))</span>
+<span class="n">ind_set</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">eps</span> <span class="o">+</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">P</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
 
-    <span class="c1"># random (target) density matrix</span>
-    <span class="n">m</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">DensityMatrix</span><span class="p">()</span>
-    <span class="n">A</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">2</span> <span class="o">**</span> <span class="n">n</span><span class="p">,</span> <span class="mi">2</span> <span class="o">**</span> <span class="n">n</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
-    <span class="n">rho</span> <span class="o">=</span> <span class="n">A</span> <span class="o">@</span> <span class="n">tf</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">adjoint</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
-
-    <span class="c1"># filling validation information</span>
-    <span class="n">true_states</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">rho</span>
-
-    <span class="c1"># Measurements simulation (by using Gumbel trick for sampling from a</span>
-    <span class="c1"># discrete distribution)</span>
-    <span class="n">P</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;qjk,kj-&gt;q&#39;</span><span class="p">,</span> <span class="n">povms</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">rho</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
-    <span class="n">eps</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">((</span><span class="n">num_of_meas</span><span class="p">,</span> <span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">n</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
-    <span class="n">eps</span> <span class="o">=</span> <span class="o">-</span><span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="o">-</span><span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">eps</span><span class="p">))</span>
-    <span class="n">ind_set</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">eps</span> <span class="o">+</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">P</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
-
-    <span class="c1"># projectors came true (data set)</span>
-    <span class="n">M_set</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">gather_nd</span><span class="p">(</span><span class="n">povms</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">ind_set</span><span class="p">[:,</span> <span class="n">tf</span><span class="o">.</span><span class="n">newaxis</span><span class="p">])</span>
-    <span class="n">data_sets</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">M_set</span>
+<span class="c1"># POVM elements came true (data set)</span>
+<span class="n">data_set</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">gather_nd</span><span class="p">(</span><span class="n">Mmq</span><span class="p">,</span> <span class="n">ind_set</span><span class="p">[:,</span> <span class="n">tf</span><span class="o">.</span><span class="n">newaxis</span><span class="p">])</span>
 </pre></div>
 </div>
 </div>
 </div>
-<div class="section" id="Optimization-loop">
-<h2>Optimization loop<a class="headerlink" href="#Optimization-loop" title="Permalink to this headline">¶</a></h2>
-<p>Here we perform maximization of the logarithmic likelihood function. In order to preserve constraints of a density matrix, we use the manifold of density matrices. The manifold of density matrices is imlemented via a quadratic parameterization. Any density matrix <span class="math notranslate nohighlight">\(\rho\)</span> is represented by a matrix <span class="math notranslate nohighlight">\(A\)</span>, where <span class="math notranslate nohighlight">\(\rho = AA^\dagger\)</span>, <span class="math notranslate nohighlight">\(\rho\)</span> is non-negative by construction. One also has a unit trace constraint <span class="math notranslate nohighlight">\({\rm Tr}(AA^\dagger) = 1\)</span>. Since there is an equivalence
-relation <span class="math notranslate nohighlight">\(A\sim AQ\)</span>, where <span class="math notranslate nohighlight">\(Q\)</span> is an arbitrary unitary matrix, optimization is performed on the quotient manifold eliminating this simmetry. The corresponding quotient geometry is described in</p>
-<p>Yatawatta, S. (2013, May). Radio interferometric calibration using a Riemannian manifold. In 2013 IEEE International Conference on Acoustics, Speech and Signal Processing (pp. 3866-3870). IEEE.</p>
-<div class="nbinput docutils container">
+<div class="section" id="3.-Data-processing-(tomography)">
+<h2>3. Data processing (tomography)<a class="headerlink" href="#3.-Data-processing-(tomography)" title="Permalink to this headline">¶</a></h2>
+<p>First, we define an example of the density matrices manifold:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">m</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">DensityMatrix</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<p>The manifold of density matrices is represneted through the quadratic parametrization <span class="math notranslate nohighlight">\(\varrho = AA^\dagger\)</span> with an equivalence relation <span class="math notranslate nohighlight">\(A\sim AQ\)</span>, where <span class="math notranslate nohighlight">\(Q\)</span> is an arbitrary unitary matrix. Thus, we initialize a variable, that represents the parametrization of a density matrix:</p>
+<div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># Parameters of learning</span>
-<span class="c1">#=========================================#</span>
-<span class="n">lr</span> <span class="o">=</span> <span class="mf">0.07</span>  <span class="c1"># learning rate</span>
-<span class="n">num_of_iter</span> <span class="o">=</span> <span class="mi">400</span>  <span class="c1"># number of iterations</span>
-<span class="c1">#=========================================#</span>
-
-<span class="c1"># manifold of density matrices</span>
-<span class="n">m</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">DensityMatrix</span><span class="p">()</span>
-
-<span class="c1"># dict with validation information</span>
-<span class="n">distances</span> <span class="o">=</span> <span class="p">{}</span>
-
-<span class="c1"># loop over different system sizes</span>
-<span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">num_of_qubits</span><span class="p">:</span>
-
-    <span class="c1"># initial parametrization of a density matrix</span>
-    <span class="n">A</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">2</span> <span class="o">**</span> <span class="n">n</span><span class="p">,</span> <span class="mi">2</span> <span class="o">**</span> <span class="n">n</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
-
-    <span class="c1"># real representation of the initial parametrization of a density matrix</span>
-    <span class="n">A</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">complex_to_real</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
-
-    <span class="c1"># variable to optimize</span>
-    <span class="n">A</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
-
-    <span class="c1"># Riemannian Adam optimizer</span>
-    <span class="n">opt</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">RAdam</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">lr</span><span class="p">)</span> <span class="c1"># riemannian optimizer</span>
-
-    <span class="c1"># dict with validation information</span>
-    <span class="n">dist</span> <span class="o">=</span> <span class="p">[]</span>
-
-    <span class="c1"># optimization loop</span>
-    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">num_of_iter</span><span class="p">)):</span>
-        <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">GradientTape</span><span class="p">()</span> <span class="k">as</span> <span class="n">tape</span><span class="p">:</span>
-            <span class="c1"># complex representation of a parametrization</span>
-            <span class="n">A_c</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">real_to_complex</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
-
-            <span class="c1"># density matrix</span>
-            <span class="n">rho</span> <span class="o">=</span> <span class="n">A_c</span> <span class="o">@</span> <span class="n">tf</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">adjoint</span><span class="p">(</span><span class="n">A_c</span><span class="p">)</span>
-
-            <span class="c1"># probabilities of measurement outcomes</span>
-            <span class="n">p</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">data_sets</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">@</span> <span class="n">rho</span><span class="p">))</span>
-
-            <span class="c1"># mean negative log likelihood (to be optimized)</span>
-            <span class="n">loss</span> <span class="o">=</span> <span class="o">-</span><span class="n">tf</span><span class="o">.</span><span class="n">reduce_mean</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
-
-        <span class="n">grad</span> <span class="o">=</span> <span class="n">tape</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">loss</span><span class="p">,</span> <span class="n">A</span><span class="p">)</span>  <span class="c1"># gradient</span>
-        <span class="n">opt</span><span class="o">.</span><span class="n">apply_gradients</span><span class="p">(</span><span class="nb">zip</span><span class="p">([</span><span class="n">grad</span><span class="p">],</span> <span class="p">[</span><span class="n">A</span><span class="p">]))</span>  <span class="c1"># optimization step</span>
-
-
-        <span class="n">dist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigvalsh</span><span class="p">(</span><span class="n">rho</span> <span class="o">-</span>\
-                                    <span class="n">true_states</span><span class="p">[</span><span class="n">n</span><span class="p">]))))</span>
-    <span class="n">distances</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">dist</span>
+<span></span><span class="c1"># random initial paramterization</span>
+<span class="n">a</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">2</span> <span class="o">**</span> <span class="n">n</span><span class="p">,</span> <span class="mi">2</span> <span class="o">**</span> <span class="n">n</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+<span class="c1"># in order to make an optimizer works properly</span>
+<span class="c1"># one need to turn a to real representation</span>
+<span class="n">a</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">complex_to_real</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="c1"># variable</span>
+<span class="n">a</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
+<p>Then we initialize Riemannian Adam optimizer:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
 </div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-100%|██████████| 400/400 [03:57&lt;00:00,  1.69it/s]
-100%|██████████| 400/400 [03:57&lt;00:00,  1.68it/s]
-100%|██████████| 400/400 [04:00&lt;00:00,  1.66it/s]
-</pre></div></div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">lr</span> <span class="o">=</span> <span class="mf">0.07</span>  <span class="c1"># optimization step size</span>
+<span class="n">opt</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">RAdam</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">lr</span><span class="p">)</span>
+</pre></div>
 </div>
 </div>
-<div class="section" id="Validation-curves">
-<h2>Validation curves<a class="headerlink" href="#Validation-curves" title="Permalink to this headline">¶</a></h2>
-<p>Here we plot validation curves (trace distance between true density matrix and current density matrix vs the number of iterations).</p>
-<div class="nbinput docutils container">
+<p>Finally, we ran part of code that calculate forward pass, gradients, and optimization step several times until convergence is reached:</p>
+<div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">num_of_qubits</span><span class="p">:</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">distances</span><span class="p">[</span><span class="n">n</span><span class="p">])</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="sa">r</span><span class="s1">&#39;$n=$&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">+</span> <span class="sa">r</span><span class="s1">&#39;$\ qubits$&#39;</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">num_of_qubits</span><span class="p">])</span>
+<span></span><span class="c1"># the list will be filled by value of trace distance per iteration</span>
+<span class="n">trace_distance</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">400</span><span class="p">):</span>
+    <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">GradientTape</span><span class="p">()</span> <span class="k">as</span> <span class="n">tape</span><span class="p">:</span>
+        <span class="c1"># complex representation of parametrization</span>
+        <span class="c1"># shape=(2**n, 2**n)</span>
+        <span class="n">ac</span> <span class="o">=</span> <span class="n">qgo</span><span class="o">.</span><span class="n">manifolds</span><span class="o">.</span><span class="n">real_to_complex</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+
+        <span class="c1"># density matrix</span>
+        <span class="n">rho_trial</span> <span class="o">=</span> <span class="n">ac</span> <span class="o">@</span> <span class="n">tf</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">adjoint</span><span class="p">(</span><span class="n">ac</span><span class="p">)</span>
+
+        <span class="c1"># probabilities of measurement outcomes</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">tensordot</span><span class="p">(</span><span class="n">rho_trial</span><span class="p">,</span> <span class="n">data_set</span><span class="p">,</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+        <span class="c1"># negative log likelihood (to be minimized)</span>
+        <span class="n">L</span> <span class="o">=</span> <span class="o">-</span><span class="n">tf</span><span class="o">.</span><span class="n">reduce_mean</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
+
+    <span class="c1"># filling trace_distance list (for further plotting)</span>
+    <span class="n">trace_distance</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">math</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigvalsh</span><span class="p">(</span><span class="n">rho_trial</span> <span class="o">-</span> <span class="n">rho_true</span><span class="p">))))</span>
+    <span class="c1"># gradient</span>
+    <span class="n">grad</span> <span class="o">=</span> <span class="n">tape</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+    <span class="c1"># optimization step</span>
+    <span class="n">opt</span><span class="o">.</span><span class="n">apply_gradients</span><span class="p">(</span><span class="nb">zip</span><span class="p">([</span><span class="n">grad</span><span class="p">],</span> <span class="p">[</span><span class="n">a</span><span class="p">]))</span>
+</pre></div>
+</div>
+</div>
+<p>Here we plot trace distance vs number of iteration to validate the result</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">trace_distance</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">([</span><span class="sa">r</span><span class="s1">&#39;$n=$&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">+</span> <span class="sa">r</span><span class="s1">&#39;$\ qubits$&#39;</span><span class="p">])</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">yscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\frac</span><span class="si">{1}{2}</span><span class="s1">\|\rho_{\rm true} - \rho_{\rm recon}\|_{\rm tr}$&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$||\varrho_{\rm true} - \varrho_{\rm trial}||_{\rm tr}$&#39;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$iter$&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Text(0.5, 0, &#39;$iter$&#39;)
+Text(0.5,0,&#39;$iter$&#39;)
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="_images/state_tomography_9_1.png" src="_images/state_tomography_9_1.png" />
+<img alt="_images/state_tomography_15_1.png" src="_images/state_tomography_15_1.png" />
 </div>
 </div>
 </div>
