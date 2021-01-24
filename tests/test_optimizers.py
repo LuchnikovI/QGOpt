@@ -48,10 +48,16 @@ def optimize(q, h, number_of_steps, opt):
     return loss
 
 # optimization loops
-def test_opts(q, h, number_of_steps, exact_solution, opt):
+testdata = [
+    (q, h, number_of_steps, exact_solution, optimizers.RSGD(stiefel, 0.05), 1.e-6),
+    (q, h, number_of_steps, exact_solution, optimizers.RSGD(stiefel, 0.1, 0.9), 1.e-6),
+    (q, h, number_of_steps, exact_solution, optimizers.RSGD(stiefel, 0.1, 0.9, use_nesterov=True), 1.e-6),
+    (q, h, number_of_steps, exact_solution, optimizers.RAdam(stiefel, 0.2), 1.e-6),
+    (q, h, number_of_steps, exact_solution, optimizers.RAdam(stiefel, 0.2, ams=True), 1.e-6)
+]
+
+@pytest.mark.parametrize("q,h,number_of_steps,exact_solution,opt,tol", testdata)
+def test_opts(q, h, number_of_steps, exact_solution, opt, tol):
     loss = optimize(q, h, number_of_steps, opt)
     loss = tf.math.abs(loss - exact_solution)
-    assert loss < 1.0e-6, "Optimizer error."
-
-for key, opt in opts.items():
-    test_opts(q, h, number_of_steps, exact_solution, opt)
+    assert loss < tol, "Optimizer error."
