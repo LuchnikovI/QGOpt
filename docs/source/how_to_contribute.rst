@@ -7,7 +7,7 @@ All contributions should be formated according to the PEP8 standard. Slightly mo
 
 Dependencies
 ------------
-Make sure that you use Python >= 3.0 and have TensorFlow >= 2.0 installed.
+Make sure that you use Python >= 3.5 and have TensorFlow >= 2.0 installed.
 
 Unit tests
 ----------
