@@ -36,6 +36,4 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Unit tests with pytest
       run: |
-        pytest tests/test_manifolds.py
-        pytest tests/test_stiefel.py
-        pytest tests/test_optimizers.py
+        pytest
