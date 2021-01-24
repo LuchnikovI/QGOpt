@@ -48,10 +48,10 @@ def optimize(q, h, number_of_steps, opt):
     return loss
 
 # optimization loops
-err_dict = {}
-for key, opt in opts.items():
+def test_opts(q, h, number_of_steps, exact_solution, opt):
     loss = optimize(q, h, number_of_steps, opt)
     loss = tf.math.abs(loss - exact_solution)
     assert loss < 1.0e-6, "Optimizer error."
 
-assert 2.<3., ";lk;lk"
+for key, opt in opts.items():
+    test_opts(q, h, number_of_steps, exact_solution, opt)
