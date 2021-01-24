@@ -39,3 +39,10 @@ One can use this library to perform quantum tomography of states and channels, t
    channel_tomography
    state_tomography
    optimal_povm
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Development & Contributing:
+
+   
+   how_to_contribute

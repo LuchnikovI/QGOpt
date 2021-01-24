@@ -86,7 +86,7 @@
               <p class="caption"><span class="caption-text">Getting started:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start: Quantum Gate decomposition</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="api.html">API</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Manifolds</a></li>
 <li class="toctree-l2"><a class="reference internal" href="optimizers.html">Optimizers</a></li>
@@ -101,6 +101,10 @@
 <li class="toctree-l1"><a class="reference internal" href="channel_tomography.html">Quantum channel tomography</a></li>
 <li class="toctree-l1"><a class="reference internal" href="state_tomography.html">Quantum state tomography</a></li>
 <li class="toctree-l1"><a class="reference internal" href="optimal_povm.html">Optimal POVM</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Development &amp; Contributing:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="how_to_contribute.html">How to Contribute</a></li>
 </ul>
 
             
@@ -926,6 +930,241 @@ a set of transported vectors.</p>
 </dd></dl>
 
 <dl class="py class">
+<dt id="QGOpt.manifolds.POVM">
+<em class="property">class </em><code class="sig-prename descclassname">QGOpt.manifolds.</code><code class="sig-name descname">POVM</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">retraction</span><span class="o">=</span><span class="default_value">'svd'</span></em>, <em class="sig-param"><span class="n">metric</span><span class="o">=</span><span class="default_value">'euclidean'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#QGOpt.manifolds.POVM" title="Permalink to this definition">¶</a></dt>
+<dd><p>The manifold of all POVMs of size m.
+POVM is a set of complex positive semi-definite matrices {E_i} for which
+sum_i(E_i) = I, where I is the identity matrix. We use quadratic
+parametrization to represent a particular POVM: E_i = A_i &#64; adj(A_i).
+Notice that for any unitary matrix Q of size nxn the transformation
+A_i –&gt; A_iQ_i leaves resulting matrix the same. This fact is taken into
+account by consideration of quotient manifold from</p>
+<p>Yatawatta, S. (2013, May). Radio interferometric calibration using a
+Riemannian manifold. In 2013 IEEE International Conference on Acoustics,
+Speech and Signal Processing (pp. 3866-3870). IEEE.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>metric</strong> – string specifies type of metric, Defaults to ‘euclidean’.
+Types of metrics are available: ‘euclidean’.</p></li>
+<li><p><strong>retraction</strong> – string specifies type of retraction, Defaults to ‘svd’.
+Types of metrics are available: ‘svd’.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>All methods of this class operates with tensors of shape (…, m, n, n),
+where (…) enumerates manifold (can be any shaped), (m, n, n)
+is the shape of a particular matrix (e.g. an element of the manifold
+or its tangent vector).</p>
+<dl class="py method">
+<dt id="QGOpt.manifolds.POVM.egrad_to_rgrad">
+<code class="sig-name descname">egrad_to_rgrad</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">egrad</span></em><span class="sig-paren">)</span><a class="headerlink" href="#QGOpt.manifolds.POVM.egrad_to_rgrad" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the Riemannian gradient from an Euclidean gradient.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> – complex valued tensor of shape (…, m, n, n),
+a set of points from the manifold.</p></li>
+<li><p><strong>egrad</strong> – complex valued tensor of shape (…, m, n, n),
+a set of Euclidean gradients.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>complex valued tensor of shape (…, m, n, n),
+the set of Reimannian gradients.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The complexity is O(mn^3).</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="QGOpt.manifolds.POVM.inner">
+<code class="sig-name descname">inner</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">vec1</span></em>, <em class="sig-param"><span class="n">vec2</span></em><span class="sig-paren">)</span><a class="headerlink" href="#QGOpt.manifolds.POVM.inner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns manifold wise inner product of vectors from
+a tangent space.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> – complex valued tensor of shape (…, m, n, n),
+a set of points from the manifold.</p></li>
+<li><p><strong>vec1</strong> – complex valued tensor of shape (…, m, n, n),
+a set of tangent vectors from the manifold.</p></li>
+<li><p><strong>vec2</strong> – complex valued tensor of shape (…, m, n, n),
+a set of tangent vectors from the manifold.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>complex valued tensor of shape (…, 1, 1, 1),
+manifold wise inner product.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The complexity is O(mn^2)</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="QGOpt.manifolds.POVM.is_in_manifold">
+<code class="sig-name descname">is_in_manifold</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">1e-05</span></em><span class="sig-paren">)</span><a class="headerlink" href="#QGOpt.manifolds.POVM.is_in_manifold" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if a point is in the manifold or not.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> – complex valued tensor of shape (…, m, n, n),
+a point to be checked.</p></li>
+<li><p><strong>tol</strong> – small real value showing tolerance.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>bolean tensor of shape (…).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="QGOpt.manifolds.POVM.proj">
+<code class="sig-name descname">proj</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">vec</span></em><span class="sig-paren">)</span><a class="headerlink" href="#QGOpt.manifolds.POVM.proj" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns projection of vectors on a tangen space
+of the manifold.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> – complex valued tensor of shape (…, m, n, n),
+a set of points from the manifold.</p></li>
+<li><p><strong>vec</strong> – complex valued tensor of shape (…, m, n, n),
+a set of vectors to be projected.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>complex valued tensor of shape (…, m, n, n),
+a set of projected vectors.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The complexity is O(mn^3).</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="QGOpt.manifolds.POVM.random">
+<code class="sig-name descname">random</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">shape</span></em>, <em class="sig-param"><span class="n">dtype</span><span class="o">=</span><span class="default_value">tf.complex64</span></em><span class="sig-paren">)</span><a class="headerlink" href="#QGOpt.manifolds.POVM.random" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a set of points from the manifold generated
+randomly.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>shape</strong> – tuple of integer numbers (…, m, n, n),
+shape of a generated matrix.</p></li>
+<li><p><strong>dtype</strong> – type of an output tensor, can be
+either tf.complex64 or tf.complex128.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>complex valued tensor of shape (…, m, n, n),
+a generated matrix.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="QGOpt.manifolds.POVM.random_tangent">
+<code class="sig-name descname">random_tangent</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">u</span></em><span class="sig-paren">)</span><a class="headerlink" href="#QGOpt.manifolds.POVM.random_tangent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a set of random tangent vectors to points from
+the manifold.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>u</strong> – complex valued tensor of shape (…, m, n, n), points
+from the manifold.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>complex valued tensor, set of tangent vectors to u.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="QGOpt.manifolds.POVM.retraction">
+<code class="sig-name descname">retraction</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">vec</span></em><span class="sig-paren">)</span><a class="headerlink" href="#QGOpt.manifolds.POVM.retraction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transports a set of points from the manifold via a
+retraction map.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> – complex valued tensor of shape (…, m, n, n), a set
+of points to be transported.</p></li>
+<li><p><strong>vec</strong> – complex valued tensor of shape (…, m, n, n),
+a set of direction vectors.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>complex valued tensor of shape (…, m, n, n),
+a set of transported points.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The complexity is O(mn^3).</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="QGOpt.manifolds.POVM.retraction_transport">
+<code class="sig-name descname">retraction_transport</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">vec1</span></em>, <em class="sig-param"><span class="n">vec2</span></em><span class="sig-paren">)</span><a class="headerlink" href="#QGOpt.manifolds.POVM.retraction_transport" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs a retraction and a vector transport simultaneously.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> – complex valued tensor of shape (…, m, n, n),
+a set of points from the manifold, starting points.</p></li>
+<li><p><strong>vec1</strong> – complex valued tensor of shape (…, m, n, n),
+a set of vectors to be transported.</p></li>
+<li><p><strong>vec2</strong> – complex valued tensor of shape (…, m, n, n),
+a set of direction vectors.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>two complex valued tensors of shape (…, m, n, n),
+a set of transported points and vectors.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="QGOpt.manifolds.POVM.vector_transport">
+<code class="sig-name descname">vector_transport</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">vec1</span></em>, <em class="sig-param"><span class="n">vec2</span></em><span class="sig-paren">)</span><a class="headerlink" href="#QGOpt.manifolds.POVM.vector_transport" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a vector tranported along an another vector
+via vector transport.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> – complex valued tensor of shape (…, m, n, n),
+a set of points from the manifold, starting points.</p></li>
+<li><p><strong>vec1</strong> – complex valued tensor of shape (…, m, n, n),
+a set of vectors to be transported.</p></li>
+<li><p><strong>vec2</strong> – complex valued tensor of shape (…, m, n, n),
+a set of direction vectors.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>complex valued tensor of shape (…, m, n, n),
+a set of transported vectors.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The complexity is O(mn^3).</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt id="QGOpt.manifolds.HermitianMatrix">
 <em class="property">class </em><code class="sig-prename descclassname">QGOpt.manifolds.</code><code class="sig-name descname">HermitianMatrix</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">retraction</span><span class="o">=</span><span class="default_value">'expmap'</span></em>, <em class="sig-param"><span class="n">metric</span><span class="o">=</span><span class="default_value">'euclidean'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#QGOpt.manifolds.HermitianMatrix" title="Permalink to this definition">¶</a></dt>
 <dd><p>The manifold of Hermitian matrices (the set of complex matrices
@@ -1375,241 +1614,6 @@ a set of transported vectors.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The complexity O(n^3).</p>
-</div>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt id="QGOpt.manifolds.POVM">
-<em class="property">class </em><code class="sig-prename descclassname">QGOpt.manifolds.</code><code class="sig-name descname">POVM</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">retraction</span><span class="o">=</span><span class="default_value">'svd'</span></em>, <em class="sig-param"><span class="n">metric</span><span class="o">=</span><span class="default_value">'euclidean'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#QGOpt.manifolds.POVM" title="Permalink to this definition">¶</a></dt>
-<dd><p>The manifold of all POVMs of size m.
-POVM is a set of complex positive semi-definite matrices {E_i} for which
-sum_i(E_i) = I, where I is the identity matrix. We use quadratic
-parametrization to represent a particular POVM: E_i = A_i &#64; adj(A_i).
-Notice that for any unitary matrix Q of size nxn the transformation
-A_i –&gt; A_iQ_i leaves resulting matrix the same. This fact is taken into
-account by consideration of quotient manifold from</p>
-<p>Yatawatta, S. (2013, May). Radio interferometric calibration using a
-Riemannian manifold. In 2013 IEEE International Conference on Acoustics,
-Speech and Signal Processing (pp. 3866-3870). IEEE.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>metric</strong> – string specifies type of metric, Defaults to ‘euclidean’.
-Types of metrics are available: ‘euclidean’.</p></li>
-<li><p><strong>retraction</strong> – string specifies type of retraction, Defaults to ‘svd’.
-Types of metrics are available: ‘svd’.</p></li>
-</ul>
-</dd>
-</dl>
-<p class="rubric">Notes</p>
-<p>All methods of this class operates with tensors of shape (…, m, n, n),
-where (…) enumerates manifold (can be any shaped), (m, n, n)
-is the shape of a particular matrix (e.g. an element of the manifold
-or its tangent vector).</p>
-<dl class="py method">
-<dt id="QGOpt.manifolds.POVM.egrad_to_rgrad">
-<code class="sig-name descname">egrad_to_rgrad</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">egrad</span></em><span class="sig-paren">)</span><a class="headerlink" href="#QGOpt.manifolds.POVM.egrad_to_rgrad" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the Riemannian gradient from an Euclidean gradient.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>u</strong> – complex valued tensor of shape (…, m, n, n),
-a set of points from the manifold.</p></li>
-<li><p><strong>egrad</strong> – complex valued tensor of shape (…, m, n, n),
-a set of Euclidean gradients.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>complex valued tensor of shape (…, m, n, n),
-the set of Reimannian gradients.</p>
-</dd>
-</dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The complexity is O(mn^3).</p>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt id="QGOpt.manifolds.POVM.inner">
-<code class="sig-name descname">inner</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">vec1</span></em>, <em class="sig-param"><span class="n">vec2</span></em><span class="sig-paren">)</span><a class="headerlink" href="#QGOpt.manifolds.POVM.inner" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns manifold wise inner product of vectors from
-a tangent space.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>u</strong> – complex valued tensor of shape (…, m, n, n),
-a set of points from the manifold.</p></li>
-<li><p><strong>vec1</strong> – complex valued tensor of shape (…, m, n, n),
-a set of tangent vectors from the manifold.</p></li>
-<li><p><strong>vec2</strong> – complex valued tensor of shape (…, m, n, n),
-a set of tangent vectors from the manifold.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>complex valued tensor of shape (…, 1, 1, 1),
-manifold wise inner product.</p>
-</dd>
-</dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The complexity is O(mn^2)</p>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt id="QGOpt.manifolds.POVM.is_in_manifold">
-<code class="sig-name descname">is_in_manifold</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">1e-05</span></em><span class="sig-paren">)</span><a class="headerlink" href="#QGOpt.manifolds.POVM.is_in_manifold" title="Permalink to this definition">¶</a></dt>
-<dd><p>Checks if a point is in the manifold or not.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>u</strong> – complex valued tensor of shape (…, m, n, n),
-a point to be checked.</p></li>
-<li><p><strong>tol</strong> – small real value showing tolerance.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>bolean tensor of shape (…).</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="QGOpt.manifolds.POVM.proj">
-<code class="sig-name descname">proj</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">vec</span></em><span class="sig-paren">)</span><a class="headerlink" href="#QGOpt.manifolds.POVM.proj" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns projection of vectors on a tangen space
-of the manifold.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>u</strong> – complex valued tensor of shape (…, m, n, n),
-a set of points from the manifold.</p></li>
-<li><p><strong>vec</strong> – complex valued tensor of shape (…, m, n, n),
-a set of vectors to be projected.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>complex valued tensor of shape (…, m, n, n),
-a set of projected vectors.</p>
-</dd>
-</dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The complexity is O(mn^3).</p>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt id="QGOpt.manifolds.POVM.random">
-<code class="sig-name descname">random</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">shape</span></em>, <em class="sig-param"><span class="n">dtype</span><span class="o">=</span><span class="default_value">tf.complex64</span></em><span class="sig-paren">)</span><a class="headerlink" href="#QGOpt.manifolds.POVM.random" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a set of points from the manifold generated
-randomly.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>shape</strong> – tuple of integer numbers (…, m, n, n),
-shape of a generated matrix.</p></li>
-<li><p><strong>dtype</strong> – type of an output tensor, can be
-either tf.complex64 or tf.complex128.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>complex valued tensor of shape (…, m, n, n),
-a generated matrix.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="QGOpt.manifolds.POVM.random_tangent">
-<code class="sig-name descname">random_tangent</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">u</span></em><span class="sig-paren">)</span><a class="headerlink" href="#QGOpt.manifolds.POVM.random_tangent" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a set of random tangent vectors to points from
-the manifold.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>u</strong> – complex valued tensor of shape (…, m, n, n), points
-from the manifold.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>complex valued tensor, set of tangent vectors to u.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="QGOpt.manifolds.POVM.retraction">
-<code class="sig-name descname">retraction</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">vec</span></em><span class="sig-paren">)</span><a class="headerlink" href="#QGOpt.manifolds.POVM.retraction" title="Permalink to this definition">¶</a></dt>
-<dd><p>Transports a set of points from the manifold via a
-retraction map.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>u</strong> – complex valued tensor of shape (…, m, n, n), a set
-of points to be transported.</p></li>
-<li><p><strong>vec</strong> – complex valued tensor of shape (…, m, n, n),
-a set of direction vectors.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>complex valued tensor of shape (…, m, n, n),
-a set of transported points.</p>
-</dd>
-</dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The complexity is O(mn^3).</p>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt id="QGOpt.manifolds.POVM.retraction_transport">
-<code class="sig-name descname">retraction_transport</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">vec1</span></em>, <em class="sig-param"><span class="n">vec2</span></em><span class="sig-paren">)</span><a class="headerlink" href="#QGOpt.manifolds.POVM.retraction_transport" title="Permalink to this definition">¶</a></dt>
-<dd><p>Performs a retraction and a vector transport simultaneously.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>u</strong> – complex valued tensor of shape (…, m, n, n),
-a set of points from the manifold, starting points.</p></li>
-<li><p><strong>vec1</strong> – complex valued tensor of shape (…, m, n, n),
-a set of vectors to be transported.</p></li>
-<li><p><strong>vec2</strong> – complex valued tensor of shape (…, m, n, n),
-a set of direction vectors.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>two complex valued tensors of shape (…, m, n, n),
-a set of transported points and vectors.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="QGOpt.manifolds.POVM.vector_transport">
-<code class="sig-name descname">vector_transport</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">vec1</span></em>, <em class="sig-param"><span class="n">vec2</span></em><span class="sig-paren">)</span><a class="headerlink" href="#QGOpt.manifolds.POVM.vector_transport" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a vector tranported along an another vector
-via vector transport.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>u</strong> – complex valued tensor of shape (…, m, n, n),
-a set of points from the manifold, starting points.</p></li>
-<li><p><strong>vec1</strong> – complex valued tensor of shape (…, m, n, n),
-a set of vectors to be transported.</p></li>
-<li><p><strong>vec2</strong> – complex valued tensor of shape (…, m, n, n),
-a set of direction vectors.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>complex valued tensor of shape (…, m, n, n),
-a set of transported vectors.</p>
-</dd>
-</dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The complexity is O(mn^3).</p>
 </div>
 </dd></dl>
 

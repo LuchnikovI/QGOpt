@@ -1,0 +1,13 @@
+Metadata-Version: 1.1
+Name: QGOpt
+Version: 0.3
+Summary: Riemannian optimization for quantum mechanics
+Home-page: https://github.com/LuchnikovI/QGOpt
+Author: I. Luchnikov, A. Ryzhov, M. Krechetov
+Author-email: luchnikovilya@gmail.com
+License: UNKNOWN
+Description: UNKNOWN
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: Apache License 2.0
+Classifier: Operating System :: OS Independent
