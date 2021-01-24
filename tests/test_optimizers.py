@@ -1,6 +1,6 @@
 import tensorflow as tf
 import QGOpt.manifolds as manifolds
-impotr QGOpt.optimizers as optimizers
+import QGOpt.optimizers as optimizers
 import math
 
 #---------------------------------------------------------------------------------#
