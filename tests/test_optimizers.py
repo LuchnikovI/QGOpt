@@ -42,11 +42,11 @@ def optimize(q, h, number_of_steps, opt):
 
 # optimization loops
 testdata = [
-    (q, h, number_of_steps, exact_solution, 'GD', optimizers.RSGD(stiefel, 0.05), 1.e-6),
-    (q, h, number_of_steps, exact_solution, 'MGD', optimizers.RSGD(stiefel, 0.1, 0.9), 1.e-6),
-    (q, h, number_of_steps, exact_solution, 'NMGD', optimizers.RSGD(stiefel, 0.1, 0.9, use_nesterov=True), 1.e-6),
-    (q, h, number_of_steps, exact_solution, 'Adam', optimizers.RAdam(stiefel, 0.2), 1.e-6),
-    (q, h, number_of_steps, exact_solution, 'AG', optimizers.RAdam(stiefel, 0.2, ams=True), 1.e-6)
+    (q, h, number_of_steps, exact_solution, 'GD', optimizers.RSGD(stiefel, 0.05), 1.e-5),
+    (q, h, number_of_steps, exact_solution, 'MGD', optimizers.RSGD(stiefel, 0.1, 0.9), 1.e-5),
+    (q, h, number_of_steps, exact_solution, 'NMGD', optimizers.RSGD(stiefel, 0.1, 0.9, use_nesterov=True), 1.e-5),
+    (q, h, number_of_steps, exact_solution, 'Adam', optimizers.RAdam(stiefel, 0.2), 1.e-5),
+    (q, h, number_of_steps, exact_solution, 'AG', optimizers.RAdam(stiefel, 0.2, ams=True), 1.e-5)
 ]
 
 @pytest.mark.parametrize("q,h,number_of_steps,exact_solution,key, opt,tol", testdata)
