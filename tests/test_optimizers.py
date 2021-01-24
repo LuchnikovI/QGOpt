@@ -47,7 +47,6 @@ def optimize(q, h, number_of_steps):
     return loss
 
 # optimization loops
-err_dict = {}
 for key, opt in opts.items():
     loss = optimize(q, h, number_of_steps)
     assert loss < 1.e-6, "Optimizer fails:".format(opt)
