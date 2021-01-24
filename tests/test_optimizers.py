@@ -1,32 +1,52 @@
-import pytest
-from QGOpt import manifolds
-from tests.test_manifolds import CheckManifolds
+import tensorflow as tf
+from QGOpt import manifolds, optimizers
+import math
 
-@pytest.fixture(params=['StiefelManifold'])
-def stiefel_name(request):
-    return request.param
+#---------------------------------------------------------------------------------#
+ham_dim = 20  # dimension of a hamiltonian
+renorm_ham_dim = 10  # dimension of a renormalized hamiltonian
+number_of_steps = tf.constant(200, dtype=tf.int32)  # number of optimization steps
+#---------------------------------------------------------------------------------#
 
-@pytest.fixture(params=[(8, 4)])
-def stiefel_shape(request):
-    return request.param
+# hamiltonian generation
+herm = manifolds.HermitianMatrix()
+h = herm.random((ham_dim, ham_dim), dtype=tf.complex128)
 
-@pytest.fixture(params=[1.e-6])
-def stiefel_tol(request):
-    return request.param
+# complex Stiefel manifold
+stiefel = manifolds.StiefelManifold()
 
-@pytest.fixture(params=['euclidean', 'canonical'])
-def stiefel_metric(request):
-    return request.param
+# initial random isometric matrix
+q = stiefel.random((ham_dim, renorm_ham_dim), dtype=tf.complex128)
+q = manifolds.complex_to_real(q)
+q = tf.Variable(q)
 
-@pytest.fixture(params=['svd', 'cayley', 'qr'])
-def stiefel_retraction(request):
-    return request.param
+# optimizers
+opts = {'GD':optimizers.RSGD(stiefel, 0.05),
+        'momentum_GD':optimizers.RSGD(stiefel, 0.1, 0.9),
+        'Nesterov_momentum_GD':optimizers.RSGD(stiefel, 0.1, 0.9, use_nesterov=True),
+        'Adam':optimizers.RAdam(stiefel, 0.2),
+        'AmsGrad':optimizers.RAdam(stiefel, 0.2, ams=True)}
 
-def test_stiefel_manifold(stiefel_name, stiefel_metric, stiefel_retraction, stiefel_shape, stiefel_tol):
-    Test = CheckManifolds(
-        manifolds.StiefelManifold(metric=stiefel_metric, retraction=stiefel_retraction),
-        (stiefel_name, stiefel_metric),
-        stiefel_shape,
-        stiefel_tol
-    )
-    Test.checks()
+# exact solution of the problem
+exact_solution = tf.math.real(tf.reduce_sum(tf.linalg.eigvalsh(h)[:renorm_ham_dim]))
+
+# optimization function
+def optimize(q, h, number_of_steps, opt):
+    i = tf.constant(0, dtype=tf.int32)
+    loss = tf.constant(0, dtype=tf.float64)
+    def body(i, loss):
+        with tf.GradientTape() as tape:
+            qc = manifolds.real_to_complex(q)
+            loss = tf.math.real(tf.linalg.trace(tf.linalg.adjoint(qc) @ h @ qc))
+        grad = tape.gradient(loss, q)
+        opt.apply_gradients(zip([grad], [q]))
+        return i + 1, loss
+    cond = lambda i, loss: i < number_of_steps
+    _, loss = tf.while_loop(cond, body, [i, loss])
+    return loss
+
+# optimization loops
+err_dict = {}
+for key, opt in opts.items():
+    loss = optimize(q, h, number_of_steps, opt)
+    assert loss < 1.e-6, "Opt error".format(key)
