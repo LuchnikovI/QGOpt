@@ -38,3 +38,5 @@ jobs:
     - name: Unit tests with pytest
       run: |
         pytest tests/test_manifolds.py
+        pytest tests/test_stiefel.py
+        pytest tests/test_optimizers.py
