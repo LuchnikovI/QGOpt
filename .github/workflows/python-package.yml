@@ -5,9 +5,9 @@ name: Python package
 
 on:
   push:
-    branches: [ Dev, master, pre-release-development]
+    branches: [ Dev, master, pre-release-development ]
   pull_request:
-    branches: [ Dev, master, pre-release-development]
+    branches: [ Dev, master, pre-release-development ]
 
 jobs:
   build:
@@ -28,10 +28,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install --upgrade tensorflow
         pip install flake8 pytest
-        pip install nbval
-        pip install matplotlib
-        pip install QGOpt
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
@@ -41,6 +37,3 @@ jobs:
     - name: Unit tests with pytest
       run: |
         pytest
-#    - name: Examples tests with nbval
-#      run: |
-#        py.test --nbval examples/Stiefel_1_toy_quadratic_optimization.ipynb
