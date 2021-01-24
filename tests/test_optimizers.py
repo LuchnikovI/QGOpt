@@ -2,6 +2,8 @@ import tensorflow as tf
 from QGOpt import manifolds, optimizers
 import math
 
+assert 0.1<0.0, "lklk"
+'''
 #---------------------------------------------------------------------------------#
 ham_dim = 20  # dimension of a hamiltonian
 renorm_ham_dim = 10  # dimension of a renormalized hamiltonian
@@ -50,3 +52,4 @@ err_dict = {}
 for key, opt in opts.items():
     loss = optimize(q, h, number_of_steps, opt)
     assert loss < 1.e-6, "Opt error".format(key)
+'''
