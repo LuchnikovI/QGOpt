@@ -22,13 +22,6 @@ q = stiefel.random((ham_dim, renorm_ham_dim), dtype=tf.complex128)
 q = manifolds.complex_to_real(q)
 q = tf.Variable(q)
 
-# optimizers
-opts = {'GD':optimizers.RSGD(stiefel, 0.05),
-        'momentum_GD':optimizers.RSGD(stiefel, 0.1, 0.9),
-        'Nesterov_momentum_GD':optimizers.RSGD(stiefel, 0.1, 0.9, use_nesterov=True),
-        'Adam':optimizers.RAdam(stiefel, 0.2),
-        'AmsGrad':optimizers.RAdam(stiefel, 0.2, ams=True)}
-
 # exact solution of the problem
 exact_solution = tf.math.real(tf.reduce_sum(tf.linalg.eigvalsh(h)[:renorm_ham_dim]))
 
@@ -49,15 +42,15 @@ def optimize(q, h, number_of_steps, opt):
 
 # optimization loops
 testdata = [
-    (q, h, number_of_steps, exact_solution, optimizers.RSGD(stiefel, 0.05), 1.e-6),
-    (q, h, number_of_steps, exact_solution, optimizers.RSGD(stiefel, 0.1, 0.9), 1.e-6),
-    (q, h, number_of_steps, exact_solution, optimizers.RSGD(stiefel, 0.1, 0.9, use_nesterov=True), 1.e-6),
-    (q, h, number_of_steps, exact_solution, optimizers.RAdam(stiefel, 0.2), 1.e-6),
-    (q, h, number_of_steps, exact_solution, optimizers.RAdam(stiefel, 0.2, ams=True), 1.e-6)
+    (q, h, number_of_steps, exact_solution, 'GD', optimizers.RSGD(stiefel, 0.05), 1.e-6),
+    (q, h, number_of_steps, exact_solution, 'MGD', optimizers.RSGD(stiefel, 0.1, 0.9), 1.e-6),
+    (q, h, number_of_steps, exact_solution, 'NMGD', optimizers.RSGD(stiefel, 0.1, 0.9, use_nesterov=True), 1.e-6),
+    (q, h, number_of_steps, exact_solution, 'Adam', optimizers.RAdam(stiefel, 0.2), 1.e-6),
+    (q, h, number_of_steps, exact_solution, 'AG', optimizers.RAdam(stiefel, 0.2, ams=True), 1.e-6)
 ]
 
-@pytest.mark.parametrize("q,h,number_of_steps,exact_solution,opt,tol", testdata)
-def test_opts(q, h, number_of_steps, exact_solution, opt, tol):
+@pytest.mark.parametrize("q,h,number_of_steps,exact_solution,key, opt,tol", testdata)
+def test_opts(q, h, number_of_steps, exact_solution, key, opt, tol):
     loss = optimize(q, h, number_of_steps, opt)
     loss = tf.math.abs(loss - exact_solution)
-    assert loss < tol, "Optimizer error."
+    assert loss < tol, "Optimizer error: {}.".format(key)
