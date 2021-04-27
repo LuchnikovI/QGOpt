@@ -76,12 +76,19 @@ or from pypi (might be different in comparison with the current state of master)
 ```pip install QGOpt```
 
 ## Paper
-We have a tutorial [paper](https://arxiv.org/abs/2011.01894). If you use QGOpt we kindly ask you to cite this paper
+We have a tutorial [paper](https://scipost.org/SciPostPhys.10.3.079). If you use QGOpt we kindly ask you to cite this paper
 ```
-@article{luchnikov2020qgopt,
-  title={QGOpt: Riemannian optimization for quantum technologies},
-  author={Luchnikov, IA and Ryzhov, A and Filippov, SN and Ouerdane, H},
-  journal={arXiv preprint arXiv:2011.01894},
-  year={2020}
+×
+@Article{10.21468/SciPostPhys.10.3.079,
+	title={{QGOpt: Riemannian optimization for quantum technologies}},
+	author={I. A. Luchnikov and A. Ryzhov and S. N. Filippov and H. Ouerdane},
+	journal={SciPost Phys.},
+	volume={10},
+	issue={3},
+	pages={79},
+	year={2021},
+	publisher={SciPost},
+	doi={10.21468/SciPostPhys.10.3.079},
+	url={https://scipost.org/10.21468/SciPostPhys.10.3.079},
 }
 ```
