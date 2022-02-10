@@ -1,2 +1,2 @@
-tensorflow==2.1.2
+tensorflow==2.5.3
 nbsphinx==0.7.1
