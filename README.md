@@ -75,10 +75,10 @@ or from pypi (might be different in comparison with the current state of master)
 
 ```pip install QGOpt```
 
-## Paper
-We have a tutorial [paper](https://scipost.org/SciPostPhys.10.3.079). If you use QGOpt we kindly ask you to cite this paper
+## Papers
+We have a tutorial [paper](https://scipost.org/SciPostPhys.10.3.079) and a [paper](https://iopscience.iop.org/article/10.1088/1367-2630/ac0b02/pdf) with overview of possible application.
+If you use QGOpt we kindly ask you to cite these papers:
 ```
-×
 @Article{10.21468/SciPostPhys.10.3.079,
 	title={{QGOpt: Riemannian optimization for quantum technologies}},
 	author={I. A. Luchnikov and A. Ryzhov and S. N. Filippov and H. Ouerdane},
@@ -90,5 +90,36 @@ We have a tutorial [paper](https://scipost.org/SciPostPhys.10.3.079). If you use
 	publisher={SciPost},
 	doi={10.21468/SciPostPhys.10.3.079},
 	url={https://scipost.org/10.21468/SciPostPhys.10.3.079},
+}
+```
+```
+@article{luchnikov2021riemannian,
+  title={Riemannian geometry and automatic differentiation for optimization problems of quantum physics and quantum technologies},
+  author={Luchnikov, Ilia A and Krechetov, Mikhail E and Filippov, Sergey N},
+  journal={New Journal of Physics},
+  volume={23},
+  number={7},
+  pages={073006},
+  year={2021},
+  publisher={IOP Publishing}
+}
+```
+
+
+Riemannian gradient optimization over Stiefel manifolds for controlling open quantum systems for tasks of quantum technologies was developed in the following [work](https://iopscience.iop.org/article/10.1088/1751-8113/42/20/205305) (of which we were not aware before) which we also ask to cite:
+
+```
+@article{OzaJPA2009.42.205305,
+doi = {10.1088/1751-8113/42/20/205305},
+url = {https://doi.org/10.1088/1751-8113/42/20/205305},
+year = 2009,
+month = {may},
+publisher = {{IOP} Publishing},
+volume = {42},
+number = {20},
+pages = {205305},
+author = {Anand Oza and Alexander Pechen and Jason Dominy and Vincent Beltrani and Katharine Moore and Herschel Rabitz},
+title = {Optimization search effort over the control landscapes for open quantum systems with Kraus-map evolution},
+journal = {Journal of Physics A: Mathematical and Theoretical},
 }
 ```
